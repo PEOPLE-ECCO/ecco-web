@@ -5,6 +5,10 @@ import { defineBuildConfig } from "@open-pioneer/build-support";
 export default defineBuildConfig({
     i18n: ["en"],
     ui: {
-        references: ["sample-package.Greeter", "authentication.AuthService"]
+        references: [
+            "sample-package.Greeter", 
+            "authentication.AuthService",
+            "http.HttpService"
+        ]
     }
 });
