@@ -1,0 +1,14 @@
+{
+    "name": "main",
+    "private": true,
+    "dependencies": {
+        "@open-pioneer/http": "2.2.0",
+        "@open-pioneer/authentication": "2.2.0",
+        "@open-pioneer/authentication-keycloak": "2.2.0",
+        "@open-pioneer/chakra-integration": "catalog:",
+        "@open-pioneer/runtime": "catalog:",
+        "data-viewer": "workspace:^",
+        "docs": "workspace:^",
+        "upload": "workspace:^"
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "name": "upload",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@open-pioneer/http": "2.2.0",
+        "@open-pioneer/authentication": "2.2.0",
+        "@open-pioneer/authentication-keycloak": "2.2.0",
+        "@open-pioneer/chakra-integration": "catalog:",
+        "@open-pioneer/runtime": "catalog:"
+    }
+}

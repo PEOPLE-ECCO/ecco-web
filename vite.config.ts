@@ -42,14 +42,13 @@ export default defineConfig(({ mode }) => {
         plugins: [
             pioneer({
                 // Whether to include src/index.html in the built output
-                rootSite: true,
+                rootSite: false,
 
                 // Additional directories to include as html (must contain index.html files)
                 sites: [
-                    "sites/empty",
+                    "sites/main"
 
                     // Include sample sites in the build
-                    ...sampleSites
                 ],
 
                 // Apps to distribute as .js files for embedded use cases
