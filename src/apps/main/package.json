@@ -8,6 +8,7 @@
         "@open-pioneer/chakra-integration": "catalog:",
         "@open-pioneer/runtime": "catalog:",
         "data-viewer": "workspace:^",
+        "process-viewer": "workspace:^",
         "docs": "workspace:^",
         "upload": "workspace:^"
     }

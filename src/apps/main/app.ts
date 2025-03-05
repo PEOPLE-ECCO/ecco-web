@@ -24,8 +24,8 @@ const mainUI = createCustomElement({
                         // scope: "openid address phone"
                     },
                     keycloakConfig: {
-                        url: "https://people-ecco.local/auth",
-                        realm: "ecco",
+                        url: "https://people-ecco.dev.52north.org/auth",
+                        realm: "people-ecco",
                         clientId: "ecco-proxy"
                     }
                 }

@@ -5,30 +5,30 @@ import { Notifier } from "@open-pioneer/notifier";
 import { useState } from "react";
 import Header from "./HeaderUI";
 import { ExploreUI } from "data-viewer/ExploreUI";
+import { ExploreProcessesUI } from "process-viewer/ExploreProcessesUI";
 import { UploadUI } from "upload/UploadUI";
+import { Grid } from "@open-pioneer/chakra-integration";
+import { DocsUI } from "docs/DocsUI";
 
 export function AppUI() {
-    const [view, setView] = useState("main");
+    const [view, setView] = useState("explore-data");
 
     return (
-        <>
+        <Grid templateColumns="repeat(12, 1fr)" templateRows="repeat(12, 1fr)">
             <Header view={setView}></Header>
             <Notifier />
             { view == "explore-data" && 
-                <div style={{height: "100vh"}}>
-                    <ExploreUI></ExploreUI>
-                </div>
+                <ExploreUI></ExploreUI>
             }
             { view == "explore-processes" && 
                 <>
                     <ForceAuth>
+                        <ExploreProcessesUI></ExploreProcessesUI>
                     </ForceAuth>
                 </>
             }
             { view == "docs" && 
-                <>
-                    DOCS
-                </>
+                <DocsUI></DocsUI>
             }
             { view == "upload" && 
                 <>
@@ -37,8 +37,7 @@ export function AppUI() {
                     </ForceAuth>
                 </>
             }
-
-        </>
+        </Grid>
     );
 }
 

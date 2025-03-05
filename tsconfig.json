@@ -5,7 +5,7 @@
         "module": "ES2022",
         "moduleResolution": "Bundler",
         "noEmit": true,
-        "allowJs": false,
+        "allowJs": true,
         "jsx": "react-jsx",
 
         "strict": true,

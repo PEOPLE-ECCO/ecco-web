@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
-import { Avatar, Box, Button, Center, Flex, Icon, IconButton, Menu, MenuButton, MenuDivider, MenuItem, MenuList, Popover, PopoverContent, PopoverTrigger, Stack, Text, useBreakpointValue, useColorModeValue, useDisclosure } from "@open-pioneer/chakra-integration";
+import { Avatar, Box, Button, Center, Flex, GridItem, Icon, IconButton, Image, Menu, MenuButton, MenuDivider, MenuItem, MenuList, Popover, PopoverContent, PopoverTrigger, Stack, Text, useColorModeValue, useDisclosure } from "@open-pioneer/chakra-integration";
 import {
     HamburgerIcon,
     CloseIcon,
@@ -9,6 +9,8 @@ import {
 import { AuthService, ForceAuth, useAuthState } from "@open-pioneer/authentication";
 import { useService } from "open-pioneer:react-hooks";
 import { useEffect, useState } from "react";
+
+import logo from "./assets/logo.avif";
 
 const NAV_ITEMS: Array<NavItem> = [
     {
@@ -25,6 +27,7 @@ const NAV_ITEMS: Array<NavItem> = [
                 href: "explore-data",
             },
         ],
+        href: "explore-data",
     },
     {
         label: "Upload Data",
@@ -52,44 +55,41 @@ export default function Header(props: HeaderProps) {
     const { isOpen, onToggle } = useDisclosure();
   
     return (
-        <Box>
-            <Flex
-                bg={useColorModeValue("white", "gray.800")}
-                color={useColorModeValue("gray.600", "white")}
-                minH={"60px"}
-                py={{ base: 2 }}
-                px={{ base: 4 }}
-                borderBottom={1}
-                borderStyle={"solid"}
-                borderColor={useColorModeValue("gray.200", "gray.900")}
-                align={"center"}>
+        <GridItem colSpan={12}>
+            <Box>
                 <Flex
-                    flex={{ base: 1, md: "auto" }}
-                    ml={{ base: -2 }}
-                    display={{ base: "flex", md: "none" }}>
-                    <IconButton
-                        onClick={onToggle}
-                        icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
-                        variant={"ghost"}
-                        aria-label={"Toggle Navigation"}
-                    />
-                </Flex>
-                <Flex flex={{ base: 1 }} justify={{ base: "center", md: "start" }}>
-                    <Text
-                        textAlign={useBreakpointValue({ base: "center", md: "left" })}
-                        fontFamily={"heading"}
-                        color={useColorModeValue("gray.800", "white")}>
-              Logo
-                    </Text>
-  
-                    <Flex display={{ base: "none", md: "flex" }} ml={10}>
-                        <DesktopNav view={props.view} />
+                    bg={useColorModeValue("white", "gray.800")}
+                    color={useColorModeValue("gray.600", "white")}
+                    minH={"60px"}
+                    py={{ base: 2 }}
+                    px={{ base: 4 }}
+                    borderBottom={1}
+                    borderStyle={"solid"}
+                    borderColor={useColorModeValue("gray.200", "gray.900")}
+                    align={"center"}>
+                    <Flex
+                        flex={{ base: 1, md: "auto" }}
+                        ml={{ base: -2 }}
+                        display={{ base: "flex", md: "none" }}>
+                        <IconButton
+                            onClick={onToggle}
+                            icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
+                            variant={"ghost"}
+                            aria-label={"Toggle Navigation"}
+                        />
                     </Flex>
+                    <Flex flex={{ base: 1 }} justify={{ base: "center", md: "start" }}>
+                        <Image src={logo} htmlWidth="100px"></Image>
+    
+                        <Flex display={{ base: "none", md: "flex"}} ml={10} >
+                            <DesktopNav view={props.view} />
+                        </Flex>
+                    </Flex>
+    
+                    <Profile></Profile>
                 </Flex>
-  
-                <Profile></Profile>
-            </Flex>
-        </Box>
+            </Box>
+        </GridItem>
     );
 }
 
@@ -101,14 +101,14 @@ const DesktopNav = (props: HeaderProps) => {
     return (
         <Stack direction={"row"} spacing={4}>
             {NAV_ITEMS.map((navItem) => (
-                <Box key={navItem.label}>
+                <Box key={navItem.label} alignContent={"center"}>
                     <Popover trigger={"hover"} placement={"bottom-start"}>
                         <PopoverTrigger>
                             <Box
                                 as="a"
                                 p={2}
                                 onClick={() => props.view(navItem.href!)}
-                                fontSize={"sm"}
+                                fontSize={"x-large"}
                                 fontWeight={500}
                                 color={linkColor}
                                 _hover={{
@@ -193,7 +193,7 @@ const Profile = () => {
     const authState = useAuthState(authService);
     const sessionInfo = authState.kind == "authenticated" ? authState.sessionInfo : undefined;
 
-    useEffect(() => {   
+    useEffect(() => {
         setAuthenticated(sessionInfo != undefined);
     }, [authService, authState, sessionInfo]);
     const userName = sessionInfo?.attributes?.userName as string;

@@ -3,17 +3,13 @@
 import { defineBuildConfig } from "@open-pioneer/build-support";
 
 export default defineBuildConfig({
-    styles: "./ExploreUI.css",
+    styles: "./ExploreProcessesUI.css",
     i18n: ["en"],
     services: {
-        MainMapProvider: {
-            provides: ["map.MapConfigProvider"]
-        }
     },
     ui: {
         references: [
-            "http.HttpService",
-            "map.MapRegistry"
+            "http.HttpService"
         ]
     }
 });

@@ -1,0 +1,12 @@
+# at least one empty yaml file must exist for each supported language
+# (might be empty if all messages are defined in the packages used by this app)
+messages:
+  ariaLabel:
+    header: "Header bar"
+    footer: "Base bar with scale information, spatial reference system and coordinate display"
+    map: "Map. Use the arrow keys to move the map. Zoom in with the plus button and zoom out with the minus button."
+    topLeft: "Measurement"
+    topRight: "Overview map and basemap switcher"
+    bottomRight: "Maptools"
+  basemapLabel: "Select basemap:"
+  measurementTitle: "Measurement"

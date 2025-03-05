@@ -3,5 +3,6 @@
 import { defineBuildConfig } from "@open-pioneer/build-support";
 
 export default defineBuildConfig({
+    styles: "./DocsUI.css",
     i18n: ["en"],
 });

@@ -1,5 +1,5 @@
 {
-    "name": "data-viewer",
+    "name": "process-viewer",
     "version": "0.0.0",
     "private": true,
     "dependencies": {
@@ -19,9 +19,6 @@
         "@open-pioneer/runtime": "catalog:",
         "@open-pioneer/scale-bar": "catalog:",
         "@open-pioneer/scale-viewer": "catalog:",
-        "@open-pioneer/theme": "catalog:",
-
-        "ol": "catalog:",
-        "ol-stac": "1.0.0-beta.10"
+        "@open-pioneer/theme": "catalog:"
     }
 }
