@@ -4,6 +4,15 @@ import { defineBuildConfig } from "@open-pioneer/build-support";
 
 export default defineBuildConfig({
     i18n: ["en"],
+    services:
+    {
+        TokenInterceptor: {
+            provides: "http.Interceptor",
+            references: {
+                "authService": "authentication.AuthService"
+            }
+        }
+    },
     ui: {
         references: [
             "authentication.AuthService",

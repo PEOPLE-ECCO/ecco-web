@@ -197,9 +197,6 @@ function FormatItem(k: string, v:Item, mapService: MapRegistry): JSX.Element {
         //const stacproj = new Projection({code: "EPSG:" + v.properties["proj:epsg"]});
         const stacproj = new Projection({code: "EPSG:4326"});
 
-        console.log(k);
-        console.log(stacproj);
-
         const layer = new SimpleLayer({
             id: "current_item",
             title: v.id,
