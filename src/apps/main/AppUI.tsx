@@ -9,28 +9,38 @@ import { ExploreProcessesUI } from "process-viewer/ExploreProcessesUI";
 import { UploadUI } from "upload/UploadUI";
 import { Grid } from "@open-pioneer/chakra-integration";
 import { DocsUI } from "docs/DocsUI";
+import { ExploreSitesUI } from "sites-viewer/ExploreSitesUI";
 
 export function AppUI() {
-    const [view, setView] = useState("explore-data");
+    const [view, setView] = useState("explore-sites");
 
     return (
-        <Grid templateColumns="repeat(12, 1fr)" templateRows="repeat(12, 1fr)">
+        <Grid templateColumns="repeat(12, 1fr)" templateRows="repeat(12, 1fr)" style={{height:"99%"}}>
             <Header view={setView}></Header>
             <Notifier />
-            { view == "explore-data" && 
-                <ExploreUI></ExploreUI>
+            {view == "explore-data" &&
+                <ForceAuth>
+                    <ExploreUI></ExploreUI>
+                </ForceAuth>
             }
-            { view == "explore-processes" && 
+            {view == "explore-processes" &&
                 <>
                     <ForceAuth>
                         <ExploreProcessesUI></ExploreProcessesUI>
                     </ForceAuth>
                 </>
             }
-            { view == "docs" && 
+            {view == "explore-sites" &&
+                <>
+                    <ForceAuth>
+                        <ExploreSitesUI></ExploreSitesUI>
+                    </ForceAuth>
+                </>
+            }
+            {view == "docs" &&
                 <DocsUI></DocsUI>
             }
-            { view == "upload" && 
+            {view == "upload" &&
                 <>
                     <ForceAuth>
                         <UploadUI></UploadUI>

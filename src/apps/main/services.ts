@@ -21,9 +21,7 @@ export class TokenInterceptor implements Interceptor {
         const keycloak = sessionInfo?.attributes?.keycloak;
         if (keycloak) {
             const token = (keycloak as { token: string }).token;
-
-            //TODO: only do this for our own api
-            if (token) {
+            if (target.href.startsWith(import.meta.env.VITE_API_ROOT) && token) {
                 options.headers.set("Authorization", "Bearer " + token);
             }
         }

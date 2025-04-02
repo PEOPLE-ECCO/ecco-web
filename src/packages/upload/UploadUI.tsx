@@ -17,7 +17,7 @@ export const UploadUI: FC = () => {
         
         console.log(value);
         // Get prepared request
-        const response = await httpService.fetch("http://localhost:5000/upload", {
+        const response = await httpService.fetch(import.meta.env.VITE_API_ROOT + "/upload", {
             method: "POST",
             body: JSON.stringify(
                 {

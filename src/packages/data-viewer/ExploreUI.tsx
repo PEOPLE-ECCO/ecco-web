@@ -39,12 +39,10 @@ export const ExploreUI: FC = () => {
 
     return (
         <>
-            <GridItem colSpan={6} rowSpan={10} borderWidth="1px" margin="1%" padding="1%">
-                <Box borderWidth="1px">
-                    {ResourceList(mapService)}
-                </Box>
+            <GridItem colSpan={6} rowSpan={10} borderWidth="1px" margin="2px" padding="2px">
+                {ResourceList(mapService)}
             </GridItem>
-            <GridItem colSpan={6} rowSpan={10} borderWidth="1px" margin="1%" padding="1%">
+            <GridItem colSpan={6} rowSpan={10} borderWidth="1px" margin="2px" padding="2px">
                 <Box height="85vh">
                     <Flex height="100%" direction="column" overflow="hidden">
                         <Flex flex="1" direction="column" position="relative">
@@ -146,13 +144,7 @@ function ResourceList(mapService: MapRegistry): JSX.Element {
     const [items] = useState<Map<string, Item>>(new Map());
     const [render, setRender] = useState<number>(0);
 
-    useEffect(() => {
-        httpService
-            .fetch("http://localhost:5000/stac")
-            .then(async res => {
-                return setCatalog(await res.json());
-            });
-    }, [httpService]);
+    
 
     useEffect(() => {
         if (catalog != undefined) {

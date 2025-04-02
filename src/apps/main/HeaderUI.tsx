@@ -27,7 +27,7 @@ const NAV_ITEMS: Array<NavItem> = [
                 href: "explore-data",
             },
         ],
-        href: "explore-data",
+        href: "explore-sites",
     },
     {
         label: "Upload Data",
@@ -55,7 +55,7 @@ export default function Header(props: HeaderProps) {
     const { isOpen, onToggle } = useDisclosure();
   
     return (
-        <GridItem colSpan={12}>
+        <GridItem colSpan={12} rowSpan={1}>
             <Box>
                 <Flex
                     bg={useColorModeValue("white", "gray.800")}
@@ -196,7 +196,10 @@ const Profile = () => {
     useEffect(() => {
         setAuthenticated(sessionInfo != undefined);
     }, [authService, authState, sessionInfo]);
+
     const userName = sessionInfo?.attributes?.userName as string;
+    const givenName = sessionInfo?.attributes?.givenName as string;
+    const familyName = sessionInfo?.attributes?.familyName as string;
 
     authService.on("changed", () => {
         setAuthenticated(false);
@@ -230,7 +233,7 @@ const Profile = () => {
                                 src={"https://52north.org/wp-content/uploads/2016/06/logo-main.png"}
                             />
                         </MenuButton>
-                        <MenuList alignItems={"center"}>
+                        <MenuList zIndex={100} alignItems={"center"}>
                             <br />
                             <Center>
                                 <Avatar
@@ -241,6 +244,8 @@ const Profile = () => {
                             <br />
                             <Center>
                                 <p>{userName}</p>
+                                <br></br>
+                                <p>{givenName} {familyName}</p>
                             </Center>
                             <br />
                             <MenuDivider />

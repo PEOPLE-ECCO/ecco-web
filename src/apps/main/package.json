@@ -9,6 +9,7 @@
         "@open-pioneer/runtime": "catalog:",
         "data-viewer": "workspace:^",
         "process-viewer": "workspace:^",
+        "sites-viewer": "workspace:^",
         "docs": "workspace:^",
         "upload": "workspace:^"
     }
