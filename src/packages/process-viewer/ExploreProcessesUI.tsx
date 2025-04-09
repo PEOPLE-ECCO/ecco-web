@@ -14,7 +14,7 @@ export const ExploreProcessesUI: FC = () => {
 
     useEffect(() => {
         httpService
-            .fetch(import.meta.env.VITE_API_ROOT + "/processes")
+            .fetch(import.meta.env.VITE_API_ROOT + "/processes/")
             .then(async res => {
                 return setProcesses(await res.json());
             });

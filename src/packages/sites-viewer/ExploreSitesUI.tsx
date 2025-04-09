@@ -18,6 +18,7 @@ import { register } from "ol/proj/proj4.js";
 import STAC from "ol-stac";
 import { Projection } from "ol/proj";
 import proj4 from "proj4";
+import { CreateJobUI } from "./CreateJobUI";
 
 
 register(proj4);
@@ -99,10 +100,18 @@ export const ExploreSitesUI: FC = () => {
         []
     );
 
+    // Cleanup on unmount
     useEffect(() => {
-        setSelectedScenario(undefined);
-        setSelectedTimeseries(undefined);
-        setSelectedJob(undefined);
+        return () => {
+            console.log("UNLOADING!");
+            remove_current_item();
+            setSelectedScenario(undefined);
+            setSelectedTimeseries(undefined);
+            setSelectedJob(undefined);
+        };
+    }, []);
+
+    useEffect(() => {
         httpService
             .fetch(import.meta.env.VITE_API_ROOT + "/scenarios/")
             .then(async res => {
@@ -112,8 +121,6 @@ export const ExploreSitesUI: FC = () => {
 
     useEffect(() => {
         if (SelectedScenario) {
-            setSelectedTimeseries(undefined);
-            setSelectedJob(undefined);
             httpService
                 .fetch(import.meta.env.VITE_API_ROOT + "/scenarios/" + SelectedScenario?.id + "/timeseries/")
                 .then(async res => {
@@ -124,10 +131,9 @@ export const ExploreSitesUI: FC = () => {
 
     useEffect(() => {
         if (SelectedTimeseries != undefined) {
-            setSelectedJob(undefined);
             for (const job of SelectedTimeseries.jobs) {
                 httpService
-                    .fetch(job.catalog)
+                    .fetch(import.meta.env.VITE_API_ROOT.slice(0,-4) + job.catalog)
                     .then(async res => {
                         const cat = await res.json();
                         jobs.set(job.id.toString(), cat);
@@ -144,11 +150,17 @@ export const ExploreSitesUI: FC = () => {
     }, [SelectedJob]);
 
 
-    async function viewOnMap(catalog: Item) {
+    async function remove_current_item() {
         const map = await mapService.expectMapModel("main");
 
         // remove old layer
         map.layers.removeLayerById("current_item");
+        map.removeHighlights();
+    }
+
+    async function viewOnMap(catalog: Item) {
+        const map = await mapService.expectMapModel("main");
+        await remove_current_item();
 
         const google = new Projection({ code: "EPSG:3857" });
         //const stacproj = new Projection({code: "EPSG:" + v.properties["proj:epsg"]});
@@ -204,6 +216,9 @@ export const ExploreSitesUI: FC = () => {
                 <>
                     <GridItem colSpan={2} rowSpan={12} borderWidth="1px" margin="2px" padding="2px">
                         <Accordion>
+                            <AccordionItem key="new-job">
+                                <CreateJobUI></CreateJobUI>
+                            </AccordionItem>
                             {Timeseries && Timeseries.map(Timeseries =>
                                 <AccordionItem key={Timeseries.id}>
                                     <h2>
@@ -219,7 +234,7 @@ export const ExploreSitesUI: FC = () => {
                                             <ListItem>ID: {Timeseries.id}</ListItem>
                                             <ListItem>Description: {Timeseries.description}</ListItem>
                                         </UnorderedList>
-                                        <Button onClick={() => { console.log(Timeseries); setSelectedTimeseries(Timeseries); }}>View on Map</Button>
+                                        <Button onClick={() => { setSelectedTimeseries(Timeseries); }}>View on Map</Button>
                                     </AccordionPanel>
                                 </AccordionItem>
                             )}
