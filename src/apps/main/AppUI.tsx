@@ -3,7 +3,7 @@
 import { ForceAuth } from "@open-pioneer/authentication";
 import { Notifier } from "@open-pioneer/notifier";
 import { useState } from "react";
-import Header from "./HeaderUI";
+import Header from "./components/Header/Header";
 import { ExploreUI } from "data-viewer/ExploreUI";
 import { ExploreProcessesUI } from "process-viewer/ExploreProcessesUI";
 import { UploadUI } from "upload/UploadUI";
