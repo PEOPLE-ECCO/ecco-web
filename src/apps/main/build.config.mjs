@@ -11,12 +11,16 @@ export default defineBuildConfig({
             references: {
                 "authService": "authentication.AuthService"
             }
+        },
+        MainMapProvider: {
+            provides: "map.MapConfigProvider"
         }
     },
     ui: {
         references: [
             "authentication.AuthService",
-            "http.HttpService"
+            "http.HttpService",
+            "map.MapRegistry"
         ]
     }
 });

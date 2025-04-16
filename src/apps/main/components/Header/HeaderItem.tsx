@@ -9,6 +9,7 @@ import {
     Stack,
     useColorModeValue
 } from "@open-pioneer/chakra-integration";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { HeaderSubItem } from "./HeaderSubItem";
 
@@ -27,40 +28,40 @@ const NAV_ITEMS: Array<NavItem> = [
                 href: "explore-data",
             },
         ],
-        href: "sites",
+        href: "/sites",
     },
     {
         label: "Data Inventory",
-        href: "dataInventory",
+        href: "/dataInventory",
     },
     {
         label: "Documentation",
-        href: "documentation",
+        href: "/documentation",
     },
 ];
 
-
 interface NavItem {
-    label: string
-    subLabel?: string
-    children?: Array<NavItem>
-    href?: string
+    label: string;
+    subLabel?: string;
+    children?: Array<NavItem>;
+    href?: string;
 }
 
-export interface HeaderProps {
-    view: (v: string) => void;
-    activeHref: string;
-}
+export const HeaderItem = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
 
-export const HeaderItem = (props: HeaderProps) => {
     const linkHoverColor = useColorModeValue("gray.800", "white");
     const popoverContentBgColor = useColorModeValue("white", "gray.800");
-    const {view, activeHref} = props;
-  
+
+    const redirect = (href: string) => navigate(href);
+
     return (
         <Stack direction={"row"} spacing={4}>
             {NAV_ITEMS.map((navItem) => {
-                const isActive = activeHref === navItem.href;
+                const isActive =
+                    location.pathname === navItem.href ||
+                    (location.pathname === "/" && navItem.href === "/sites");
 
                 return (
                     <Box key={navItem.label} alignContent={"center"}>
@@ -69,8 +70,9 @@ export const HeaderItem = (props: HeaderProps) => {
                                 <Box
                                     as="a"
                                     p={2}
-                                    onClick={() => navItem.href && view(navItem.href)}
+                                    onClick={() => navItem.href && redirect(navItem.href)}
                                     fontSize={"x-large"}
+                                    fontWeight={isActive ? 700 : 500}
                                     color={isActive ? "yellow.300" : "white"}
                                     borderBottom={isActive ? "2px solid" : "none"}
                                     borderColor={isActive ? "yellow.300" : "transparent"}
@@ -78,11 +80,13 @@ export const HeaderItem = (props: HeaderProps) => {
                                         textDecoration: "none",
                                         color: linkHoverColor,
                                         cursor: "pointer",
-                                    }}>
+                                    }}
+                                >
                                     {navItem.label}
                                 </Box>
                             </PopoverTrigger>
 
+                            {/* Uncomment if needed:
                             {navItem.children && (
                                 <PopoverContent
                                     border={0}
@@ -98,12 +102,12 @@ export const HeaderItem = (props: HeaderProps) => {
                                                 label={child.label}
                                                 href={child.href!}
                                                 subLabel={child.subLabel!}
-                                                menu={view}
+                                                menu={redirect}
                                             />
                                         ))}
                                     </Stack>
                                 </PopoverContent>
-                            )}
+                            )} */}
                         </Popover>
                     </Box>
                 );

@@ -17,24 +17,20 @@ import {
 } from "@chakra-ui/icons";
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import logo from "../../assets/logo.avif";
 import { Profile } from "./Profile";
-import { HeaderItem, HeaderProps } from "./HeaderItem";
+import { HeaderItem } from "./HeaderItem";
 
-export default function Header({ view }: HeaderProps) {
+export default function Header() {
     const { isOpen, onToggle } = useDisclosure();
-    const [activeHref, setActiveHref] = useState<string>("sites");
+    const navigate = useNavigate();
 
     const bgColor = useColorModeValue("#2C7D75", "gray.800");
     const textColor = useColorModeValue("gray.600", "white");
     const borderColor = useColorModeValue("gray.200", "gray.900");
-
-    const handleView = (href: string) => {
-        setActiveHref(href);
-        view(href);
-    };
-  
+ 
     return (
         <GridItem colSpan={12} rowSpan={1}>
             <Box>
@@ -47,7 +43,8 @@ export default function Header({ view }: HeaderProps) {
                     borderBottom={1}
                     borderStyle={"solid"}
                     borderColor={borderColor}
-                    align={"center"}>
+                    align={"center"}
+                >
                     <Flex
                         flex={{ base: 1, md: "auto" }}
                         ml={{ base: -2 }}
@@ -61,7 +58,9 @@ export default function Header({ view }: HeaderProps) {
                         />
                     </Flex>
                     <Flex flex={1} align="center">
-                        <Image src={logo} htmlWidth="148px" height="82px" />
+                        <Box onClick={() => navigate("/")} cursor="pointer">
+                            <Image src={logo} htmlWidth="148px" height="82px" />
+                        </Box>
                     </Flex>
 
                     <Flex
@@ -70,7 +69,7 @@ export default function Header({ view }: HeaderProps) {
                         justify="flex-end"
                         mr={20}
                     >
-                        <HeaderItem view={handleView} activeHref={activeHref} />
+                        <HeaderItem />
                     </Flex>
 
                     <Profile />

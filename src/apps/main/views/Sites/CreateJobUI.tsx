@@ -14,13 +14,13 @@ import {
 import { HttpService } from "@open-pioneer/http";
 import { useService } from "open-pioneer:react-hooks";
 import { useEffect } from "react";
-import { Scenario } from "./ExploreSitesUI";
+import { Scenario } from "./Sites";
 
 export function CreateJobUI(scenario: Scenario): JSX.Element {
     const httpService = useService<HttpService>("http.HttpService");
 
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const [SelectedScenario, setSelectedScenario] = useState<Processes | undefined>();
+    //const [SelectedScenario, setSelectedScenario] = useState<Processes | undefined>();
 
 
     useEffect(() => {

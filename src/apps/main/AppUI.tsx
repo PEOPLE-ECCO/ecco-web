@@ -1,53 +1,84 @@
 // SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
+
 import { ForceAuth } from "@open-pioneer/authentication";
 import { Notifier } from "@open-pioneer/notifier";
-import { useState } from "react";
+import { Box, ChakraProvider, Container, Flex } from "@open-pioneer/chakra-integration";
+
+import { useMeasure } from "react-use";
+
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import Header from "./components/Header/Header";
-import { ExploreUI } from "data-viewer/ExploreUI";
-import { ExploreProcessesUI } from "process-viewer/ExploreProcessesUI";
-import { UploadUI } from "upload/UploadUI";
-import { Grid } from "@open-pioneer/chakra-integration";
-import { DocsUI } from "docs/DocsUI";
-import { ExploreSitesUI } from "sites-viewer/ExploreSitesUI";
+import { Sites } from "./views/Sites/Sites";
+import { DataInventory } from "./views/DataInventory/DataInventory";
+import { Documentation } from "./views/Documentation/Documentation";
+import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
+
+const basePath = "/";
+
+const router = createBrowserRouter([
+    {
+        path: `${basePath}`,
+        element: <Layout />,
+        children: [
+            {
+                path: ``,
+                element: <Sites />
+            },
+            {
+                path: `sites`,
+                element: <Sites />
+            },
+            {
+                path: `site/:id`,
+                element: <SiteDetails />
+            },
+            {
+                path: `dataInventory`,
+                element: <DataInventory />
+            },
+            {
+                path: `documentation`,
+                element: <Documentation />
+            }
+        ]
+    }
+]);
 
 export function AppUI() {
-    const [view, setView] = useState("explore-sites");
+    return <RouterProvider router={router} />;
+}
 
+export function Layout() {
+    const [headerRef, { height }] = useMeasure<HTMLElement>();
     return (
-        <Grid templateColumns="repeat(12, 1fr)" templateRows="repeat(12, 1fr)" style={{height:"99%"}}>
-            <Header view={setView}></Header>
-            <Notifier />
-            {view == "explore-data" &&
+        <>
+            <ChakraProvider>
+                <Notifier />
+                <Flex
+                    as="header"
+                    position="fixed"
+                    w="100%"
+                    bg="white"
+                    zIndex="1001"
+                    ref={headerRef}
+                >
+                    <Container maxW="100%" paddingLeft={"0px"} paddingRight={"0px"}>
+                        <Header />
+                    </Container>
+                </Flex>
+
                 <ForceAuth>
-                    <ExploreUI></ExploreUI>
+                    <Box as="main" w="100%" pt={height + 15}>
+                        <Outlet />
+                    </Box>
                 </ForceAuth>
-            }
-            {view == "explore-processes" &&
-                <>
-                    <ForceAuth>
-                        <ExploreProcessesUI></ExploreProcessesUI>
-                    </ForceAuth>
-                </>
-            }
-            {view == "explore-sites" &&
-                <>
-                    <ForceAuth>
-                        <ExploreSitesUI></ExploreSitesUI>
-                    </ForceAuth>
-                </>
-            }
-            {view == "docs" &&
-                <DocsUI></DocsUI>
-            }
-            {view == "upload" &&
-                <>
-                    <ForceAuth>
-                        <UploadUI></UploadUI>
-                    </ForceAuth>
-                </>
-            }
-        </Grid>
+
+                {/*<Box as="footer" w="100%">
+                    <Footer></Footer>
+                </Box>*/}
+            </ChakraProvider>
+        </>
     );
 }
 

@@ -25,7 +25,7 @@ import {register} from "ol/proj/proj4.js";
 
 register(proj4);
 
-export const ExploreUI: FC = () => {
+export const DataInventory: FC = () => {
     const mapService = useService<MapRegistry>("map.MapRegistry");
 
     const intl = useIntl();

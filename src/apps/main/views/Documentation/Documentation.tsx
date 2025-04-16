@@ -5,7 +5,7 @@ import { Box, GridItem } from "@open-pioneer/chakra-integration";
 
 
 
-export const DocsUI: FC = () => {
+export const Documentation: FC = () => {
     return (
         <>
             <GridItem colSpan={12} rowSpan={8} borderWidth="1px" margin="1%" padding="1%">
