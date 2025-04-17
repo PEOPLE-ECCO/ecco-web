@@ -13,6 +13,7 @@ import { Sites } from "./views/Sites/Sites";
 import { DataInventory } from "./views/DataInventory/DataInventory";
 import { Documentation } from "./views/Documentation/Documentation";
 import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
+import { Footer } from "./components/Footer/Footer";
 
 const basePath = "/";
 
@@ -51,10 +52,13 @@ export function AppUI() {
 
 export function Layout() {
     const [headerRef, { height }] = useMeasure<HTMLElement>();
+
     return (
-        <>
-            <ChakraProvider>
-                <Notifier />
+        <ChakraProvider>
+            <Notifier />
+
+            <Flex direction="column" minH="100vh">
+
                 <Flex
                     as="header"
                     position="fixed"
@@ -63,22 +67,20 @@ export function Layout() {
                     zIndex="1001"
                     ref={headerRef}
                 >
-                    <Container maxW="100%" paddingLeft={"0px"} paddingRight={"0px"}>
+                    <Container maxW="100%" paddingLeft="0px" paddingRight="0px">
                         <Header />
                     </Container>
                 </Flex>
 
-                <ForceAuth>
-                    <Box as="main" w="100%" pt={height + 15}>
+                <Box as="main" flex="1" pt={height + 15} bg="#EFEAEA">
+                    <ForceAuth>
                         <Outlet />
-                    </Box>
-                </ForceAuth>
+                    </ForceAuth>
+                </Box>
 
-                {/*<Box as="footer" w="100%">
-                    <Footer></Footer>
-                </Box>*/}
-            </ChakraProvider>
-        </>
+                <Footer />
+            </Flex>
+        </ChakraProvider>
     );
 }
 
