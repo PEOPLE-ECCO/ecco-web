@@ -4,6 +4,7 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
+import { Job } from "../views/Sites/SiteDetails/SiteDetails";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
@@ -32,8 +33,8 @@ export const useServices = () => {
         }
     };
 
-    /*const getJob = async (catalog: string) => {
-        const url = import.meta.env.VITE_API_ROOT.slice(0,-4) + catalog;
+    const getJob = async (job: Job) => {
+        const url = import.meta.env.VITE_API_ROOT.slice(0,-4) + job.catalog;
         const response = await httpService.fetch(url);
         const responseData = await response.json();
         
@@ -42,7 +43,7 @@ export const useServices = () => {
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
-    };*/    
+    }; 
 
-    return { getScenarios, getTimeseries };
+    return { getScenarios, getTimeseries, getJob };
 };

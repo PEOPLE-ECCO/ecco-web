@@ -24,7 +24,7 @@ export const Site = (site: Site) => {
     const navigate = useNavigate();
 
     const handleClick = () => {
-        navigate(`/site/${site.id}`);
+        navigate(`/sites/${site.id}`);
     };
 
     return (

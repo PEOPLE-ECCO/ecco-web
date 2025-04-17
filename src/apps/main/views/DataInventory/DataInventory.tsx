@@ -140,7 +140,7 @@ interface Item {
 function ResourceList(mapService: MapRegistry): JSX.Element {
     const httpService = useService<HttpService>("http.HttpService");
 
-    const [catalog, setCatalog] = useState<StacCatalog>();
+    const [catalog] = useState<StacCatalog>();
     const [items] = useState<Map<string, Item>>(new Map());
     const [render, setRender] = useState<number>(0);
 

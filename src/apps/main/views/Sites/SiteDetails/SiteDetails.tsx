@@ -2,19 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useServices } from "../../../services/Services";
+import { FiFileText, FiInfo, FiMapPin } from "react-icons/fi"; 
 
 import { MAP_ID } from "../../../services";
-import { BasemapSwitcher } from "@open-pioneer/basemap-switcher";
-import { CoordinateViewer } from "@open-pioneer/coordinate-viewer";
-import { ZoomIn, ZoomOut } from "@open-pioneer/map-navigation";
-import { OverviewMap } from "@open-pioneer/overview-map";
-import { ScaleBar } from "@open-pioneer/scale-bar";
-import { Box, Card, CardHeader, CardBody, CardFooter, Button, Heading, Text, SimpleGrid, GridItem, Image, Center, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, ListItem, UnorderedList, Divider, Flex, FormControl, FormLabel, Slider, SliderThumb, SliderTrack, SliderMark, HStack, Icon, Grid } from "@open-pioneer/chakra-integration";
+import { Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, ListItem, UnorderedList, Flex, Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid, Button, HStack, IconButton } from "@open-pioneer/chakra-integration";
 import { MapRegistry, MapContainer, MapAnchor, SimpleLayer } from "@open-pioneer/map";
-import TileLayer from "ol/layer/Tile";
-import { OSM } from "ol/source";
+
+import { Projection } from "ol/proj";
+import { Point } from "ol/geom";
+import STAC from "ol-stac";
+import { useService } from "open-pioneer:react-hooks";
+import { MapZoomControls } from "../../../components/Map/MapZoomControl";
+import { MapInfoControls } from "../../../components/Map/MapInfoControls";
+import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
+import { Timeseries } from "../../../components/Timeseries/Timeseries";
 
 export interface Job {
     credits: number
@@ -28,69 +31,107 @@ export interface Job {
     status: string
 }
 
-export interface Timeseries {
-    id: number
-    scenario_id: number
-    name: string
-    description: string
-    jobs: Job[]
+interface Asset {
+    href: string
+}
+
+interface AssetWrap {
+    asset: Asset
+}
+
+interface STACProperties {
+    "proj:bbox": number[]
+    "proj:epsg": number
+}
+
+interface Item {
+    assets: AssetWrap;
+    id: string
+    bbox: number[]
+    properties: STACProperties
 }
 
 export function SiteDetails() {
     const { id } = useParams();
-    const { getTimeseries } = useServices();
+    const { getTimeseries, getJob } = useServices();
     const [timeseries, setTimeseries] = useState<[Timeseries]>();
-    const [SelectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
-    const [SelectedJob, setSelectedJob] = useState<number | undefined>();
-
-    const overviewMapLayer = useMemo(
-        () =>
-            new TileLayer({
-                source: new OSM()
-            }),
-        []
-    );
+    const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
+    const [selectedJob, setSelectedJob] = useState<number | undefined>();
+    const [jobs] = useState<Map<string, Item>>(new Map());
+    const mapService = useService<MapRegistry>("map.MapRegistry");
 
     useEffect(() => {
-        const fetchScenarios = async () => {
+        const fetchTimeseries = async () => {
             if (!id)
                 return;
             try {
                 const data = await getTimeseries(id);
-                console.log(data);
                 setTimeseries(data);
             } catch (error) {
                 console.error(error);
             }
         };
-
-        fetchScenarios();
+        fetchTimeseries();
     }, []);
+
+    useEffect(() => {
+        if (selectedJob) {
+            viewOnMap(jobs.get(selectedJob.toString())!);
+        }
+    }, [selectedJob]);
+
+    useEffect(() => {
+        const fetchJobs = async () => {
+            if (!selectedTimeseries)
+                return;
+            try {
+                for (const job of selectedTimeseries.jobs) {
+                    const data = await getJob(job);
+                    jobs.set(job.id.toString(), data);
+                    setSelectedJob(job.id);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchJobs();
+    }, [selectedTimeseries]);
+
+    async function remove_current_item() {
+        const map = await mapService.expectMapModel(MAP_ID);
+        map.layers.removeLayerById("current_item");
+        map.removeHighlights();
+    }
+
+    async function viewOnMap(catalog: Item) {
+        const map = await mapService.expectMapModel(MAP_ID);
+        await remove_current_item();
+
+        const google = new Projection({ code: "EPSG:3857" });
+        //const stacproj = new Projection({code: "EPSG:" + v.properties["proj:epsg"]});
+        const stacproj = new Projection({ code: "EPSG:4326" });
+
+        const layer = new SimpleLayer({
+            id: "current_item",
+            title: catalog.id,
+            olLayer: new STAC({
+                data: catalog,
+                displayGeoTiffByDefault: true
+            })
+        });
+        map.layers.addLayer(layer);
+
+        // const bbox = v.properties["proj:bbox"];
+        const bbox = catalog.bbox;
+        //console.log([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)]);
+        map.highlightAndZoom([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)]);
+    }
 
     return (
         <Grid templateColumns="repeat(12, 1fr)" gap={2}>
             <GridItem colSpan={2} rowSpan={12} borderWidth="1px" margin="2px" padding="2px">
-                <Accordion>
-                    {timeseries && timeseries.map((ts, key) =>
-                        <AccordionItem key={key}>
-                            <h2>
-                                <AccordionButton>
-                                    <Box as='span' flex='1' textAlign='left'>
-                                        {ts.name}
-                                    </Box>
-                                    <AccordionIcon />
-                                </AccordionButton>
-                            </h2>
-                            <AccordionPanel pb={4}>
-                                <UnorderedList>
-                                    <ListItem>ID: {ts.id}</ListItem>
-                                    <ListItem>Description: {ts.description}</ListItem>
-                                </UnorderedList>
-                                <Button onClick={() => { setSelectedTimeseries(ts); }}>View on Map</Button>
-                            </AccordionPanel>
-                        </AccordionItem>
-                    )}
-                </Accordion>
+                <Timeseries timeseries={timeseries} onSelect={setSelectedTimeseries} />
             </GridItem>
             <GridItem colSpan={10} rowSpan={12} margin="2px" padding="2px">
                 <Box height="85vh">
@@ -101,57 +142,120 @@ export function SiteDetails() {
                                 role="main"
                                 aria-label=""
                             >
-                                <MapAnchor position="top-right" horizontalGap={5} verticalGap={5}>
-                                    <Box
-                                        backgroundColor="white"
-                                        borderWidth="1px"
-                                        borderRadius="sm"
-                                        padding={2}
-                                        boxShadow="sm"
-                                        role="top-right"
-                                        aria-label=""
-                                    >
-                                        <OverviewMap mapId={MAP_ID} olLayer={overviewMapLayer} />
-                                        <Divider mt={2} />
-                                        <FormControl>
-                                            <FormLabel mt={1}>
-                                                <Text as="b">
-                                                    text
-                                                </Text>
-                                            </FormLabel>
-                                            <BasemapSwitcher mapId={MAP_ID} allowSelectingEmptyBasemap />
-                                        </FormControl>
+                                <MapSidebarControls mapId={MAP_ID} />
+                                <MapInfoControls mapId={MAP_ID} />
+                                <MapZoomControls mapId={MAP_ID} />
 
-                                    </Box>
-                                </MapAnchor>
+                                {selectedTimeseries &&
+                                    <MapAnchor className="full-width" position="bottom-left" horizontalGap={5} verticalGap={5}>
+                                        <Box
+                                            backgroundColor="white"
+                                            borderWidth="1px"
+                                            borderRadius="sm"
+                                            padding={4}
+                                            role="top-right"
+                                            aria-label="">
+                                            {selectedTimeseries.jobs.length == 1 &&
+                                                <Slider aria-label='slider-ex-1' value={50} isReadOnly={true}>
+                                                    <SliderMark mt='5' ml='-120' key={50} value={50}>{selectedTimeseries.jobs[0]!.scheduleTime}</SliderMark>
+                                                    <SliderThumb />
+                                                </Slider>
+                                            }
+                                            {selectedTimeseries.jobs.length > 1 &&
+                                                <Center w="100%">
+                                                    <Slider w="80%" aria-label='slider-ex-1' step={1} max={selectedTimeseries.jobs.length - 1} defaultValue={0} onChangeEnd={(val) => setSelectedJob(selectedTimeseries.jobs[val]?.id)}>
+                                                        {selectedTimeseries.jobs.map((Job, i) =>
+                                                            <>
+                                                                <SliderMark fontSize="0.5em" ml='-10em' key={Job.id} value={i}>{Job.scheduleTime}</SliderMark>
+                                                                <SliderMark zIndex='98' ml='-0.5em' mt='-0.9em' key={Job.id + "mark"} value={i}>
+                                                                    <Icon viewBox='0 0 200 200'>
+                                                                        <circle cx="100" cy="100" r="75" fill='black'></circle>
+                                                                    </Icon>
+                                                                </SliderMark>
+                                                            </>
+                                                        )}
+                                                        <SliderTrack>
+                                                        </SliderTrack>
+                                                        <SliderThumb zIndex='99'>
+                                                            <Icon viewBox='0 0 200 200'>
+                                                                <circle cx="100" cy="100" r="100" fill='orange'></circle>
+                                                            </Icon>
+                                                        </SliderThumb>
 
-                                <MapAnchor position="top-left" horizontalGap={0} verticalGap={0}>
-                                    <Flex
-                                        role="top-left"
-                                        aria-label=""
-                                        direction="column"
-                                        gap={1}
-                                        padding={1}
-                                    >
-                                        <HStack>
-                                            <CoordinateViewer mapId={MAP_ID} precision={2} />
-                                            <ScaleBar mapId={MAP_ID} />
-                                        </HStack>
-                                    </Flex>
-                                </MapAnchor>
+                                                    </Slider>
+                                                </Center>
+                                            }
+                                        </Box>
+                                        {selectedJob &&
+                                            <Card marginTop={"2%"} w={"100%"}>
+                                                <CardHeader>
+                                                    <Flex justify="space-between" align="center">
+                                                        <Heading size='md'>
+                                                            Name: {jobs.get(selectedJob!.toString())!.id}
+                                                        </Heading>
+                                                        <HStack spacing={2}>
+                                                            <IconButton
+                                                                aria-label="Document"
+                                                                icon={<FiFileText />}
+                                                                variant="ghost"
+                                                                backgroundColor="black"
+                                                                color="white"
+                                                                _hover={{ backgroundColor: "gray.500" }}
+                                                            />
+                                                            <IconButton
+                                                                aria-label="Info"
+                                                                icon={<FiInfo />}
+                                                                colorScheme="blackAlpha"
+                                                                variant="ghost"
+                                                                backgroundColor="black"
+                                                                color="white"
+                                                                _hover={{ backgroundColor: "gray.500" }}
+                                                            />
+                                                            <IconButton
+                                                                aria-label="Locate on Map"
+                                                                icon={<FiMapPin />}
+                                                                colorScheme="blackAlpha"
+                                                                variant="ghost"
+                                                                backgroundColor="black"
+                                                                color="white"
+                                                                _hover={{ backgroundColor: "gray.500" }}
+                                                            />
+                                                        </HStack>
+                                                    </Flex>
+                                                </CardHeader>
+                                                <CardBody>
+                                                    <HStack spacing={3}>
+                                                        <Button 
+                                                            variant="solid" 
+                                                            backgroundColor="black"
+                                                            color="white"
+                                                            _hover={{ backgroundColor: "gray.500" }}
+                                                        >
+                                                            Download all results
+                                                        </Button>
+                                                        <Button 
+                                                            variant="solid" 
+                                                            backgroundColor="black"
+                                                            color="white"
+                                                            _hover={{ backgroundColor: "gray.500" }}
+                                                        >
+                                                            Download current result
+                                                        </Button>
+                                                        <Button 
+                                                            variant="solid" 
+                                                            backgroundColor="black"
+                                                            color="white"
+                                                            _hover={{ backgroundColor: "gray.500" }}
+                                                        >
+                                                            Execute for timestamp
+                                                        </Button>
+                                                    </HStack>
+                                                </CardBody>
+                                            </Card>                               
+                                        }
+                                    </MapAnchor>
+                                }
 
-                                <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={30}>
-                                    <Flex
-                                        role="bottom-right"
-                                        aria-label=""
-                                        direction="column"
-                                        gap={1}
-                                        padding={1}
-                                    >
-                                        <ZoomIn mapId={MAP_ID} />
-                                        <ZoomOut mapId={MAP_ID} />
-                                    </Flex>
-                                </MapAnchor>
                             </MapContainer>
                         </Flex>
                     </Flex>

@@ -4,14 +4,14 @@
 import {
     Box,
     Popover,
-    PopoverContent,
+    //PopoverContent,
     PopoverTrigger,
     Stack,
     useColorModeValue
 } from "@open-pioneer/chakra-integration";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { HeaderSubItem } from "./HeaderSubItem";
+//import { HeaderSubItem } from "./HeaderSubItem";
 
 const NAV_ITEMS: Array<NavItem> = [
     {
@@ -52,7 +52,7 @@ export const HeaderItem = () => {
     const location = useLocation();
 
     const linkHoverColor = useColorModeValue("gray.800", "white");
-    const popoverContentBgColor = useColorModeValue("white", "gray.800");
+    //const popoverContentBgColor = useColorModeValue("white", "gray.800");
 
     const redirect = (href: string) => navigate(href);
 
@@ -61,7 +61,8 @@ export const HeaderItem = () => {
             {NAV_ITEMS.map((navItem) => {
                 const isActive =
                     location.pathname === navItem.href ||
-                    (location.pathname === "/" && navItem.href === "/sites");
+                    (location.pathname === "/" && navItem.href === "/sites") ||
+                    (navItem.href && location.pathname.startsWith(navItem.href));
 
                 return (
                     <Box key={navItem.label} alignContent={"center"}>
