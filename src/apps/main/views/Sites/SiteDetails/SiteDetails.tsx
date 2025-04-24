@@ -4,11 +4,13 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useServices } from "../../../services/Services";
-import { FiFileText, FiInfo, FiMapPin } from "react-icons/fi"; 
 
 import { MAP_ID } from "../../../services";
-import { Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Flex, Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid, Button, HStack, IconButton } from "@open-pioneer/chakra-integration";
-import { MapRegistry, MapContainer, MapAnchor, SimpleLayer } from "@open-pioneer/map";
+import {
+    Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Flex,
+    Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid
+} from "@open-pioneer/chakra-integration";
+import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
@@ -18,6 +20,8 @@ import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { Timeseries } from "../../../components/Timeseries/Timeseries";
+import { TimeseriesActions } from "../../../components/Timeseries/TimeseriesActions";
+import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
 
 export interface Job {
     credits: number
@@ -163,14 +167,18 @@ export function SiteDetails() {
                                                     <SliderMark mt="5" ml="-120" key={50} value={50}>
                                                         {selectedTimeseries.jobs[0]!.scheduleTime}
                                                     </SliderMark>
-                                                    <SliderThumb />
+                                                    <SliderThumb zIndex="99">
+                                                        <Icon viewBox="0 0 200 200">
+                                                            <circle cx="100" cy="100" r="100" fill="orange" />
+                                                        </Icon>
+                                                    </SliderThumb>
                                                 </Slider>
                                             )}
 
                                             {selectedTimeseries.jobs.length > 1 && (
                                                 <Center w="100%">
                                                     <Slider
-                                                        w="65%"
+                                                        w="75%"
                                                         aria-label="slider-ex-1"
                                                         step={1}
                                                         max={selectedTimeseries.jobs.length - 1}
@@ -211,68 +219,24 @@ export function SiteDetails() {
 
                                     {selectedJob && (
                                         <Card marginTop="2%" w="100%">
-                                            <CardHeader paddingBottom="2" paddingX="4" paddingTop="2">
+                                            <CardHeader paddingBottom="2" paddingX="5" paddingTop="2">
                                                 <Flex justify="space-between" align="center">
                                                     <Heading size="md">
                                                         Name: {jobs.get(selectedJob!.toString())!.id}
                                                     </Heading>
-                                                    <HStack spacing={2}>
-                                                        <IconButton
-                                                            aria-label="Document"
-                                                            icon={<FiFileText />}
-                                                            variant="ghost"
-                                                            backgroundColor="black"
-                                                            color="white"
-                                                            _hover={{ backgroundColor: "gray.500" }}
-                                                        />
-                                                        <IconButton
-                                                            aria-label="Info"
-                                                            icon={<FiInfo />}
-                                                            colorScheme="blackAlpha"
-                                                            variant="ghost"
-                                                            backgroundColor="black"
-                                                            color="white"
-                                                            _hover={{ backgroundColor: "gray.500" }}
-                                                        />
-                                                        <IconButton
-                                                            aria-label="Locate on Map"
-                                                            icon={<FiMapPin />}
-                                                            colorScheme="blackAlpha"
-                                                            variant="ghost"
-                                                            backgroundColor="black"
-                                                            color="white"
-                                                            _hover={{ backgroundColor: "gray.500" }}
-                                                        />
-                                                    </HStack>
+                                                    <TimeseriesIcons
+                                                        onDocumentClick={() => console.log("Document clicked")}
+                                                        onInfoClick={() => console.log("Info clicked")}
+                                                        onLocateClick={() => console.log("Locate clicked")}
+                                                    />
                                                 </Flex>
                                             </CardHeader>
                                             <CardBody>
-                                                <HStack spacing={3}>
-                                                    <Button
-                                                        variant="solid"
-                                                        backgroundColor="black"
-                                                        color="white"
-                                                        _hover={{ backgroundColor: "gray.500" }}
-                                                    >
-                                                        Download all results
-                                                    </Button>
-                                                    <Button
-                                                        variant="solid"
-                                                        backgroundColor="black"
-                                                        color="white"
-                                                        _hover={{ backgroundColor: "gray.500" }}
-                                                    >
-                                                        Download current result
-                                                    </Button>
-                                                    <Button
-                                                        variant="solid"
-                                                        backgroundColor="black"
-                                                        color="white"
-                                                        _hover={{ backgroundColor: "gray.500" }}
-                                                    >
-                                                        Execute for timestamp
-                                                    </Button>
-                                                </HStack>
+                                                <TimeseriesActions
+                                                    onDownloadAll={() => console.log("Downloading all")}
+                                                    onDownloadCurrent={() => console.log("Downloading current")}
+                                                    onExecute={() => console.log("Executing")}
+                                                />
                                             </CardBody>
                                         </Card>
                                     )}
