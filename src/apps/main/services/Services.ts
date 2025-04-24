@@ -20,7 +20,7 @@ export const useServices = () => {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
-
+    
     const getTimeseries = async (id: string) => {
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/timeseries/";
         const response = await httpService.fetch(url);

@@ -54,11 +54,6 @@ export const Site = (site: Site) => {
             <CardBody>
                 <Text>{site.description}</Text>
             </CardBody>
-            <CardFooter>
-                <Text fontWeight="bold" color="blue.600">
-                    Click to view
-                </Text>
-            </CardFooter>
         </Card>
     );
 };

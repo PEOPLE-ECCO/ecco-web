@@ -7,7 +7,7 @@ import { useServices } from "../../../services/Services";
 import { FiFileText, FiInfo, FiMapPin } from "react-icons/fi"; 
 
 import { MAP_ID } from "../../../services";
-import { Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, ListItem, UnorderedList, Flex, Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid, Button, HStack, IconButton } from "@open-pioneer/chakra-integration";
+import { Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Flex, Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid, Button, HStack, IconButton } from "@open-pioneer/chakra-integration";
 import { MapRegistry, MapContainer, MapAnchor, SimpleLayer } from "@open-pioneer/map";
 
 import { Projection } from "ol/proj";
@@ -125,7 +125,7 @@ export function SiteDetails() {
         // const bbox = v.properties["proj:bbox"];
         const bbox = catalog.bbox;
         //console.log([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)]);
-        map.highlightAndZoom([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)]);
+        map.highlightAndZoom([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)], {maxZoom: 11});
     }
 
     return (
@@ -135,129 +135,150 @@ export function SiteDetails() {
             </GridItem>
             <GridItem colSpan={10} rowSpan={12} margin="2px" padding="2px">
                 <Box height="85vh">
-                    <Flex height="100%" direction="column" overflow="hidden">
-                        <Flex flex="1" direction="column" position="relative">
-                            <MapContainer
-                                mapId={MAP_ID}
-                                role="main"
-                                aria-label=""
-                            >
-                                <MapSidebarControls mapId={MAP_ID} />
-                                <MapInfoControls mapId={MAP_ID} />
-                                <MapZoomControls mapId={MAP_ID} />
+                    <Flex flex="1" height="100%" direction="column" overflow="hidden" position="relative">
+                        <MapContainer
+                            mapId={MAP_ID}
+                            role="main"
+                            aria-label=""
+                        >
+                            <MapSidebarControls mapId={MAP_ID} />
+                            <MapInfoControls mapId={MAP_ID} />
+                            <MapZoomControls mapId={MAP_ID} />
 
-                                {selectedTimeseries &&
-                                    <MapAnchor className="full-width" position="bottom-left" horizontalGap={5} verticalGap={5}>
-                                        <Box
-                                            backgroundColor="white"
-                                            borderWidth="1px"
-                                            borderRadius="sm"
-                                            padding={4}
-                                            role="top-right"
-                                            aria-label="">
-                                            {selectedTimeseries.jobs.length == 1 &&
-                                                <Slider aria-label='slider-ex-1' value={50} isReadOnly={true}>
-                                                    <SliderMark mt='5' ml='-120' key={50} value={50}>{selectedTimeseries.jobs[0]!.scheduleTime}</SliderMark>
+                            {selectedTimeseries &&
+                                <Box
+                                    position="absolute"
+                                    bottom="0"
+                                    left="25%"
+                                    transform="translateX(-50%)"
+                                    width="50%"
+                                    padding="4"
+                                    zIndex="10"
+                                    pointerEvents="auto"
+                                >
+                                    <Card w="100%" padding={4}>
+                                        <CardBody>
+                                            {selectedTimeseries.jobs.length === 1 && (
+                                                <Slider aria-label="slider-ex-1" value={50} isReadOnly={true}>
+                                                    <SliderMark mt="5" ml="-120" key={50} value={50}>
+                                                        {selectedTimeseries.jobs[0]!.scheduleTime}
+                                                    </SliderMark>
                                                     <SliderThumb />
                                                 </Slider>
-                                            }
-                                            {selectedTimeseries.jobs.length > 1 &&
+                                            )}
+
+                                            {selectedTimeseries.jobs.length > 1 && (
                                                 <Center w="100%">
-                                                    <Slider w="80%" aria-label='slider-ex-1' step={1} max={selectedTimeseries.jobs.length - 1} defaultValue={0} onChangeEnd={(val) => setSelectedJob(selectedTimeseries.jobs[val]?.id)}>
-                                                        {selectedTimeseries.jobs.map((Job, i) =>
+                                                    <Slider
+                                                        w="65%"
+                                                        aria-label="slider-ex-1"
+                                                        step={1}
+                                                        max={selectedTimeseries.jobs.length - 1}
+                                                        defaultValue={0}
+                                                        onChangeEnd={(val) =>
+                                                            setSelectedJob(selectedTimeseries.jobs[val]?.id)
+                                                        }
+                                                    >
+                                                        {selectedTimeseries.jobs.map((Job, i) => (
                                                             <>
-                                                                <SliderMark fontSize="0.5em" ml='-10em' key={Job.id} value={i}>{Job.scheduleTime}</SliderMark>
-                                                                <SliderMark zIndex='98' ml='-0.5em' mt='-0.9em' key={Job.id + "mark"} value={i}>
-                                                                    <Icon viewBox='0 0 200 200'>
-                                                                        <circle cx="100" cy="100" r="75" fill='black'></circle>
+                                                                <SliderMark key={Job.id} value={i} pt={3} ml="-110" w={"100%"}>
+                                                                    {Job.scheduleTime}
+                                                                </SliderMark>
+                                                                <SliderMark
+                                                                    zIndex="98"
+                                                                    ml="-0.5em"
+                                                                    mt="-0.9em"
+                                                                    key={Job.id + "mark"}
+                                                                    value={i}
+                                                                >
+                                                                    <Icon viewBox="0 0 200 200">
+                                                                        <circle cx="100" cy="100" r="75" fill="black" />
                                                                     </Icon>
                                                                 </SliderMark>
                                                             </>
-                                                        )}
-                                                        <SliderTrack>
-                                                        </SliderTrack>
-                                                        <SliderThumb zIndex='99'>
-                                                            <Icon viewBox='0 0 200 200'>
-                                                                <circle cx="100" cy="100" r="100" fill='orange'></circle>
+                                                        ))}
+                                                        <SliderTrack />
+                                                        <SliderThumb zIndex="99">
+                                                            <Icon viewBox="0 0 200 200">
+                                                                <circle cx="100" cy="100" r="100" fill="orange" />
                                                             </Icon>
                                                         </SliderThumb>
-
                                                     </Slider>
                                                 </Center>
-                                            }
-                                        </Box>
-                                        {selectedJob &&
-                                            <Card marginTop={"2%"} w={"100%"}>
-                                                <CardHeader>
-                                                    <Flex justify="space-between" align="center">
-                                                        <Heading size='md'>
-                                                            Name: {jobs.get(selectedJob!.toString())!.id}
-                                                        </Heading>
-                                                        <HStack spacing={2}>
-                                                            <IconButton
-                                                                aria-label="Document"
-                                                                icon={<FiFileText />}
-                                                                variant="ghost"
-                                                                backgroundColor="black"
-                                                                color="white"
-                                                                _hover={{ backgroundColor: "gray.500" }}
-                                                            />
-                                                            <IconButton
-                                                                aria-label="Info"
-                                                                icon={<FiInfo />}
-                                                                colorScheme="blackAlpha"
-                                                                variant="ghost"
-                                                                backgroundColor="black"
-                                                                color="white"
-                                                                _hover={{ backgroundColor: "gray.500" }}
-                                                            />
-                                                            <IconButton
-                                                                aria-label="Locate on Map"
-                                                                icon={<FiMapPin />}
-                                                                colorScheme="blackAlpha"
-                                                                variant="ghost"
-                                                                backgroundColor="black"
-                                                                color="white"
-                                                                _hover={{ backgroundColor: "gray.500" }}
-                                                            />
-                                                        </HStack>
-                                                    </Flex>
-                                                </CardHeader>
-                                                <CardBody>
-                                                    <HStack spacing={3}>
-                                                        <Button 
-                                                            variant="solid" 
-                                                            backgroundColor="black"
-                                                            color="white"
-                                                            _hover={{ backgroundColor: "gray.500" }}
-                                                        >
-                                                            Download all results
-                                                        </Button>
-                                                        <Button 
-                                                            variant="solid" 
-                                                            backgroundColor="black"
-                                                            color="white"
-                                                            _hover={{ backgroundColor: "gray.500" }}
-                                                        >
-                                                            Download current result
-                                                        </Button>
-                                                        <Button 
-                                                            variant="solid" 
-                                                            backgroundColor="black"
-                                                            color="white"
-                                                            _hover={{ backgroundColor: "gray.500" }}
-                                                        >
-                                                            Execute for timestamp
-                                                        </Button>
-                                                    </HStack>
-                                                </CardBody>
-                                            </Card>                               
-                                        }
-                                    </MapAnchor>
-                                }
+                                            )}
+                                        </CardBody>
+                                    </Card>
 
-                            </MapContainer>
-                        </Flex>
+                                    {selectedJob && (
+                                        <Card marginTop="2%" w="100%">
+                                            <CardHeader paddingBottom="2" paddingX="4" paddingTop="2">
+                                                <Flex justify="space-between" align="center">
+                                                    <Heading size="md">
+                                                        Name: {jobs.get(selectedJob!.toString())!.id}
+                                                    </Heading>
+                                                    <HStack spacing={2}>
+                                                        <IconButton
+                                                            aria-label="Document"
+                                                            icon={<FiFileText />}
+                                                            variant="ghost"
+                                                            backgroundColor="black"
+                                                            color="white"
+                                                            _hover={{ backgroundColor: "gray.500" }}
+                                                        />
+                                                        <IconButton
+                                                            aria-label="Info"
+                                                            icon={<FiInfo />}
+                                                            colorScheme="blackAlpha"
+                                                            variant="ghost"
+                                                            backgroundColor="black"
+                                                            color="white"
+                                                            _hover={{ backgroundColor: "gray.500" }}
+                                                        />
+                                                        <IconButton
+                                                            aria-label="Locate on Map"
+                                                            icon={<FiMapPin />}
+                                                            colorScheme="blackAlpha"
+                                                            variant="ghost"
+                                                            backgroundColor="black"
+                                                            color="white"
+                                                            _hover={{ backgroundColor: "gray.500" }}
+                                                        />
+                                                    </HStack>
+                                                </Flex>
+                                            </CardHeader>
+                                            <CardBody>
+                                                <HStack spacing={3}>
+                                                    <Button
+                                                        variant="solid"
+                                                        backgroundColor="black"
+                                                        color="white"
+                                                        _hover={{ backgroundColor: "gray.500" }}
+                                                    >
+                                                        Download all results
+                                                    </Button>
+                                                    <Button
+                                                        variant="solid"
+                                                        backgroundColor="black"
+                                                        color="white"
+                                                        _hover={{ backgroundColor: "gray.500" }}
+                                                    >
+                                                        Download current result
+                                                    </Button>
+                                                    <Button
+                                                        variant="solid"
+                                                        backgroundColor="black"
+                                                        color="white"
+                                                        _hover={{ backgroundColor: "gray.500" }}
+                                                    >
+                                                        Execute for timestamp
+                                                    </Button>
+                                                </HStack>
+                                            </CardBody>
+                                        </Card>
+                                    )}
+                                </Box>
+                            }
+                        </MapContainer>
                     </Flex>
                 </Box>
             </GridItem>
