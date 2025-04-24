@@ -7,7 +7,6 @@
 import {
     Card,
     CardBody,
-    CardFooter,
     CardHeader,
     Center,
     Heading,
@@ -18,10 +17,8 @@ import {
     MenuButton,
     MenuList,
     MenuItem,
-    MenuDivider,
     Box
 } from "@open-pioneer/chakra-integration";
-import { useNavigate } from "react-router-dom";
 import { FiMoreVertical } from "react-icons/fi"; // Vertical ellipsis icon
 
 export interface Site {
@@ -32,17 +29,11 @@ export interface Site {
 }
 
 export const Dataset = (site: Site) => {
-    const navigate = useNavigate();
-
-    const handleClick = () => {
-        //navigate(`/sites/${site.id}`);
-    };
 
     return (
         <Card
             key={site.id}
             cursor="pointer"
-            onClick={handleClick}
             _hover={{
                 bg: "#abebc6", // light green
                 transform: "scale(1.02)",

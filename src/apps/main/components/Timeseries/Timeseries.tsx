@@ -17,7 +17,6 @@ import {
     MenuItem,
     IconButton,
     Flex,
-    Icon,
     Tooltip // Import Tooltip component from Chakra UI
 } from "@open-pioneer/chakra-integration";
 import { Job } from "../../views/Sites/SiteDetails/SiteDetails";
