@@ -12,6 +12,7 @@ import {
     MenuItem,
     MenuList,
     Stack,
+    HStack
 } from "@open-pioneer/chakra-integration";
 
 import { AuthService, ForceAuth, useAuthState } from "@open-pioneer/authentication";
@@ -60,19 +61,23 @@ export const Profile = () => {
                             rounded={"full"}
                             variant={"link"}
                             cursor={"pointer"}
-                            minW={0}>
-                            <Avatar
-                                size={"sm"}
-                                src={"https://52north.org/wp-content/uploads/2016/06/logo-main.png"}
-                            />
+                            minW={0}
+                            _hover={{ textDecoration: "none" }}
+                        >
+                            <HStack spacing={3}>
+                                <Avatar
+                                    size={"sm"}
+                                    src={"https://52north.org/wp-content/uploads/2016/06/logo-main.png"}
+                                />
+                                <Box
+                                    fontSize={"x-large"}
+                                    fontWeight={500}
+                                    color={"white"}
+                                >
+                                    {familyName}
+                                </Box>
+                            </HStack>
                         </MenuButton>
-                        <Box
-                            p={2}
-                            fontSize={"x-large"}
-                            fontWeight={500}
-                            color={"white"}>
-                            {familyName}
-                        </Box>
                         <MenuList zIndex={100} alignItems={"center"}>
                             <br />
                             <Center>

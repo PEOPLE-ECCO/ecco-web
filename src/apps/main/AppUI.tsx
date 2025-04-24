@@ -14,6 +14,7 @@ import { DataInventory } from "./views/DataInventory/DataInventory";
 import { Documentation } from "./views/Documentation/Documentation";
 import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
+import CreateProcessGraph from "./views/CreateProcessGraph/CreateProcessGraph";
 
 const basePath = "/";
 
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
             {
                 path: `dataInventory`,
                 element: <DataInventory />
+            },
+            {
+                path: `sites/:id/createProcessGraph`,
+                element: <CreateProcessGraph />
             },
             {
                 path: `documentation`,
