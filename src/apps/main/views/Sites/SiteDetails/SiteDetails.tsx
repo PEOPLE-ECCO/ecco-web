@@ -8,7 +8,7 @@ import { useServices } from "../../../services/Services";
 import { MAP_ID } from "../../../services";
 import {
     Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Flex,
-    Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid
+    Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid, Switch, FormControl, FormLabel
 } from "@open-pioneer/chakra-integration";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
@@ -22,6 +22,7 @@ import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { Timeseries } from "../../../components/Timeseries/Timeseries";
 import { TimeseriesActions } from "../../../components/Timeseries/TimeseriesActions";
 import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
+import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
 
 export interface Job {
     credits: number
@@ -63,6 +64,7 @@ export function SiteDetails() {
     const [selectedJob, setSelectedJob] = useState<number | undefined>();
     const [jobs] = useState<Map<string, Item>>(new Map());
     const mapService = useService<MapRegistry>("map.MapRegistry");
+    const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
     useEffect(() => {
         const fetchTimeseries = async () => {
@@ -108,6 +110,23 @@ export function SiteDetails() {
         map.removeHighlights();
     }
 
+    function downloadCurrentResult() {
+        if (!selectedJob)
+            return;
+    
+        const href = jobs.get(selectedJob.toString())?.assets.asset.href;
+        if (!href)
+            return;
+    
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+
     async function viewOnMap(catalog: Item) {
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
@@ -115,6 +134,7 @@ export function SiteDetails() {
         const google = new Projection({ code: "EPSG:3857" });
         //const stacproj = new Projection({code: "EPSG:" + v.properties["proj:epsg"]});
         const stacproj = new Projection({ code: "EPSG:4326" });
+        console.log(catalog);
 
         const layer = new SimpleLayer({
             id: "current_item",
@@ -129,7 +149,15 @@ export function SiteDetails() {
         // const bbox = v.properties["proj:bbox"];
         const bbox = catalog.bbox;
         //console.log([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)]);
-        map.highlightAndZoom([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)], {maxZoom: 11});
+        if (shouldHighlightAndZoom) {
+            map.highlightAndZoom(
+                [
+                    new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
+                    new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
+                ],
+                { maxZoom: 11 }
+            );
+        }
     }
 
     return (
@@ -147,6 +175,7 @@ export function SiteDetails() {
                         >
                             <MapSidebarControls mapId={MAP_ID} />
                             <MapInfoControls mapId={MAP_ID} />
+                            <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} />
                             <MapZoomControls mapId={MAP_ID} />
 
                             {selectedTimeseries &&
@@ -234,7 +263,7 @@ export function SiteDetails() {
                                             <CardBody>
                                                 <TimeseriesActions
                                                     onDownloadAll={() => console.log("Downloading all")}
-                                                    onDownloadCurrent={() => console.log("Downloading current")}
+                                                    onDownloadCurrent={() => downloadCurrentResult()}
                                                     onExecute={() => console.log("Executing")}
                                                 />
                                             </CardBody>
