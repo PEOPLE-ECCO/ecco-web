@@ -7,9 +7,10 @@ interface ActionButtonProps {
     label: string;
     tooltip: string;
     onClick?: () => void;
+    w?: string;
 }
 
-export function ActionButton({ label, tooltip, onClick }: ActionButtonProps) {
+export function ActionButton({ label, tooltip, onClick, w }: ActionButtonProps) {
     return (
         <Tooltip label={tooltip} aria-label={`${label} tooltip`} placement="top">
             <Button
@@ -18,6 +19,7 @@ export function ActionButton({ label, tooltip, onClick }: ActionButtonProps) {
                 color="white"
                 _hover={{ backgroundColor: "gray.500" }}
                 onClick={onClick}
+                w={w}
             >
                 {label}
             </Button>

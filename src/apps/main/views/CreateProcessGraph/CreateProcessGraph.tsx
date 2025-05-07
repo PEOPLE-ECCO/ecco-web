@@ -4,17 +4,25 @@
 import { FC, useState } from "react";
 import {
     Box,
-    Button,
     Heading,
     Select,
     HStack,
     Text
 } from "@open-pioneer/chakra-integration";
+import { ActionButton } from "../../components/Timeseries/ActionButton";
 
 const CreateProcessGraph: FC = () => {
     const [selectedOption, setSelectedOption] = useState<string>("");
 
-    const handleButtonClick = (buttonType: string) => {
+    const cancel = (buttonType: string) => {
+        console.log(`Button clicked: ${buttonType}`);
+    };
+
+    const create = (buttonType: string) => {
+        console.log(`Button clicked: ${buttonType}`);
+    };
+
+    const execute = (buttonType: string) => {
         console.log(`Button clicked: ${buttonType}`);
     };
 
@@ -40,38 +48,24 @@ const CreateProcessGraph: FC = () => {
             </HStack>
 
             <HStack spacing={4}>
-                <Button 
-                    onClick={() => handleButtonClick("Button 1")} 
-                    variant="solid"
-                    backgroundColor="black"
-                    color="white"
-                    _hover={{ backgroundColor: "gray.500" }}
+                <ActionButton
+                    label="Cancel"
+                    tooltip="Cancel creation"
+                    onClick={() => cancel("cancel")}
                     w={"170px"}
-                >
-                    Cancel
-                </Button>
-                <Button 
-                    onClick={() => handleButtonClick("Button 2")} 
-                    colorScheme="green"
-                    variant="solid"
-                    backgroundColor="black"
-                    color="white"
-                    _hover={{ backgroundColor: "gray.500" }}
+                />
+                <ActionButton
+                    label="Create"
+                    tooltip="Create process graph"
+                    onClick={() => create("create")} 
                     w={"170px"}
-                >
-                    Create
-                </Button>
-                <Button 
-                    onClick={() => handleButtonClick("Button 3")} 
-                    colorScheme="red"
-                    variant="solid"
-                    backgroundColor="black"
-                    color="white"
-                    _hover={{ backgroundColor: "gray.500" }}    
+                />
+                <ActionButton
+                    label="Create & Execute"
+                    tooltip="Create process graph and run"
+                    onClick={() => execute("create and run")} 
                     w={"170px"}
-                >
-                    Create & Execute
-                </Button>
+                />
             </HStack>
         </Box>
     );
