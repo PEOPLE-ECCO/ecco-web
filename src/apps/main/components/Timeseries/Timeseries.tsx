@@ -16,12 +16,11 @@ import {
     MenuList,
     MenuItem,
     IconButton,
-    Flex,
-    Tooltip // Import Tooltip component from Chakra UI
+    Flex
 } from "@open-pioneer/chakra-integration";
 import { Job } from "../../views/Sites/SiteDetails/SiteDetails";
-import { FiMoreVertical, FiPlus } from "react-icons/fi"; // Plus and More vertical icons
-import { useNavigate } from "react-router-dom"; // To redirect to next page
+import { FiMoreVertical } from "react-icons/fi";
+import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
@@ -38,18 +37,13 @@ export interface Timeseries {
 
 export function Timeseries({ timeseries, onSelect }: TimeseriesProps) {
     const title = "TITLE";
-    const navigate = useNavigate(); // Hook for page navigation
-
+    
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
     };
 
     const handleArchive = (ts: Timeseries) => {
         console.log("Archive:", ts);
-    };
-
-    const handleRedirect = () => {
-        navigate("./createProcessGraph"); // Redirect to your desired page
     };
 
     return (
@@ -88,21 +82,8 @@ export function Timeseries({ timeseries, onSelect }: TimeseriesProps) {
                     ))}
                 </Accordion>
 
-                {/* Plus Button for Redirection with Tooltip */}
-                <Flex justify="center" mt={4}>
-                    <Tooltip label="Add new Timeseries" aria-label="Add new Timeseries Tooltip">
-                        <IconButton
-                            icon={<FiPlus size="30px" />}
-                            aria-label="Add new Process Graph"
-                            onClick={handleRedirect}
-                            bg="green.500"
-                            color="white"
-                            size="lg"
-                            borderRadius="full"
-                            _hover={{ bg: "green.400" }}
-                        />
-                    </Tooltip>
-                </Flex>
+                <TimeseriesAddBtn />
+                
             </Stack>
         </Box>
     );
