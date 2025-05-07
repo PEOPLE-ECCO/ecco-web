@@ -8,7 +8,7 @@ import { useServices } from "../../../services/Services";
 import { MAP_ID } from "../../../services";
 import {
     Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Flex,
-    Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid, Switch, FormControl, FormLabel
+    Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid
 } from "@open-pioneer/chakra-integration";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
@@ -23,6 +23,8 @@ import { Timeseries } from "../../../components/Timeseries/Timeseries";
 import { TimeseriesActions } from "../../../components/Timeseries/TimeseriesActions";
 import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
 import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
+import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
+import { SliderCircle } from "../../../components/Slider/SliderCircle";
 
 export interface Job {
     credits: number
@@ -78,7 +80,7 @@ export function SiteDetails() {
             }
         };
         fetchTimeseries();
-    }, []);
+    });
 
     useEffect(() => {
         if (selectedJob) {
@@ -196,11 +198,7 @@ export function SiteDetails() {
                                                     <SliderMark mt="5" ml="-120" key={50} value={50}>
                                                         {selectedTimeseries.jobs[0]!.scheduleTime}
                                                     </SliderMark>
-                                                    <SliderThumb zIndex="99">
-                                                        <Icon viewBox="0 0 200 200">
-                                                            <circle cx="100" cy="100" r="100" fill="orange" />
-                                                        </Icon>
-                                                    </SliderThumb>
+                                                    <SliderCircle />
                                                 </Slider>
                                             )}
 
@@ -235,11 +233,7 @@ export function SiteDetails() {
                                                             </>
                                                         ))}
                                                         <SliderTrack />
-                                                        <SliderThumb zIndex="99">
-                                                            <Icon viewBox="0 0 200 200">
-                                                                <circle cx="100" cy="100" r="100" fill="orange" />
-                                                            </Icon>
-                                                        </SliderThumb>
+                                                        <SliderCircle />
                                                     </Slider>
                                                 </Center>
                                             )}
@@ -247,27 +241,10 @@ export function SiteDetails() {
                                     </Card>
 
                                     {selectedJob && (
-                                        <Card marginTop="2%" w="100%">
-                                            <CardHeader paddingBottom="2" paddingX="5" paddingTop="2">
-                                                <Flex justify="space-between" align="center">
-                                                    <Heading size="md">
-                                                        Name: {jobs.get(selectedJob!.toString())!.id}
-                                                    </Heading>
-                                                    <TimeseriesIcons
-                                                        onDocumentClick={() => console.log("Document clicked")}
-                                                        onInfoClick={() => console.log("Info clicked")}
-                                                        onLocateClick={() => console.log("Locate clicked")}
-                                                    />
-                                                </Flex>
-                                            </CardHeader>
-                                            <CardBody>
-                                                <TimeseriesActions
-                                                    onDownloadAll={() => console.log("Downloading all")}
-                                                    onDownloadCurrent={() => downloadCurrentResult()}
-                                                    onExecute={() => console.log("Executing")}
-                                                />
-                                            </CardBody>
-                                        </Card>
+                                        <TimeseriesControl
+                                            jobId={jobs.get(selectedJob.toString())!.id}
+                                            onDownloadCurrent={downloadCurrentResult}
+                                        />
                                     )}
                                 </Box>
                             }
