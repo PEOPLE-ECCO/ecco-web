@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, HStack, Spacer, Tooltip } from "@open-pioneer/chakra-integration";
+import { HStack, Spacer } from "@open-pioneer/chakra-integration";
+import { ActionButton } from "./ActionButton";
 
 interface TimeseriesActionsProps {
     onDownloadAll?: () => void;
@@ -16,43 +17,25 @@ export function TimeseriesActions({
 }: TimeseriesActionsProps) {
     return (
         <HStack spacing={3}>
-            <Tooltip label="Download all available timeseries results" aria-label="Download all tooltip" placement="top">
-                <Button
-                    variant="solid"
-                    backgroundColor="black"
-                    color="white"
-                    _hover={{ backgroundColor: "gray.500" }}
-                    onClick={onDownloadAll}
-                >
-                    Download all results
-                </Button>
-            </Tooltip>
+            <ActionButton
+                label="Download all results"
+                tooltip="Download all available timeseries results"
+                onClick={onDownloadAll}
+            />
 
-            <Tooltip label="Download the currently selected result" aria-label="Download current tooltip" placement="top">
-                <Button
-                    variant="solid"
-                    backgroundColor="black"
-                    color="white"
-                    _hover={{ backgroundColor: "gray.500" }}
-                    onClick={onDownloadCurrent}
-                >
-                    Download current result
-                </Button>
-            </Tooltip>
+            <ActionButton
+                label="Download current result"
+                tooltip="Download the currently selected result"
+                onClick={onDownloadCurrent}
+            />
 
             <Spacer />
 
-            <Tooltip label="Execute operation for the selected timestamp" aria-label="Execute tooltip" placement="top">
-                <Button
-                    variant="solid"
-                    backgroundColor="black"
-                    color="white"
-                    _hover={{ backgroundColor: "gray.500" }}
-                    onClick={onExecute}
-                >
-                    Execute for timestamp
-                </Button>
-            </Tooltip>
+            <ActionButton
+                label="Execute for timestamp"
+                tooltip="Execute operation for the selected timestamp"
+                onClick={onExecute}
+            />
         </HStack>
     );
 }
