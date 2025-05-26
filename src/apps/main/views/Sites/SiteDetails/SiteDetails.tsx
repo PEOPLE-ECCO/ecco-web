@@ -7,8 +7,9 @@ import { useServices } from "../../../services/Services";
 
 import { MAP_ID } from "../../../services";
 import {
-    Box, Card, CardHeader, CardBody, Heading, GridItem, Center, Flex,
-    Slider, SliderThumb, SliderTrack, SliderMark, Icon, Grid
+    Box, Card, GridItem, Center, Flex,
+    Slider, SliderTrack, SliderMark, Icon, Grid,
+    CardBody
 } from "@open-pioneer/chakra-integration";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
@@ -20,51 +21,22 @@ import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { Timeseries } from "../../../components/Timeseries/Timeseries";
-import { TimeseriesActions } from "../../../components/Timeseries/TimeseriesActions";
-import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
 import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
 import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
+import { Asset, AssetWrap, Catalog, Job } from "../../../components/definitions";
 
-export interface Job {
-    credits: number
-    executionTimeEnd: string
-    executionTimeStart: string
-    id: number
-    timeseries_id: number
-    log: string
-    catalog: string
-    scheduleTime: string
-    status: string
-}
-
-interface Asset {
-    href: string
-}
-
-interface AssetWrap {
-    asset: Asset
-}
-
-interface STACProperties {
-    "proj:bbox": number[]
-    "proj:epsg": number
-}
-
-interface Item {
-    assets: AssetWrap;
-    id: string
-    bbox: number[]
-    properties: STACProperties
-}
+const _proj3857 = new Projection({code: "EPSG:3857"});
+const _proj32631 = new Projection({code: "EPSG:32631"});
 
 export function SiteDetails() {
     const { id } = useParams();
-    const { getTimeseries, getJob } = useServices();
-    const [timeseries, setTimeseries] = useState<[Timeseries]>();
+    const { getTimeseries, getJobsByTimeseriesId, getJobCatalog } = useServices();
+    const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
-    const [selectedJob, setSelectedJob] = useState<number | undefined>();
-    const [jobs] = useState<Map<string, Item>>(new Map());
+    const [jobs, setJobs] = useState<Job[]>();
+    const [catalogs, setCatalogs] = useState<Catalog[]>();
+    const [asset, setAsset] = useState<Asset>();
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
@@ -80,24 +52,15 @@ export function SiteDetails() {
             }
         };
         fetchTimeseries();
-    });
-
-    useEffect(() => {
-        if (selectedJob) {
-            viewOnMap(jobs.get(selectedJob.toString())!);
-        }
-    }, [selectedJob]);
+    }, []);
 
     useEffect(() => {
         const fetchJobs = async () => {
-            if (!selectedTimeseries)
-                return;
+            if (!selectedTimeseries) return;
             try {
-                for (const job of selectedTimeseries.jobs) {
-                    const data = await getJob(job);
-                    jobs.set(job.id.toString(), data);
-                    setSelectedJob(job.id);
-                }
+                const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
+                setJobs(jobs);
+                await fetchCatalogs(jobs);
             } catch (error) {
                 console.error(error);
             }
@@ -106,6 +69,19 @@ export function SiteDetails() {
         fetchJobs();
     }, [selectedTimeseries]);
 
+    async function fetchCatalogs(newjobs: Job[]) {
+        if (!newjobs) return;
+        setCatalogs([]);
+        const fetched = [];
+        for (const job of newjobs!) {
+            const cat = await getJobCatalog(id!, job);
+            catalogs?.push(cat);
+            job.catalog = cat;
+            fetched.push(job);
+        }
+        setJobs(fetched);
+    }
+
     async function remove_current_item() {
         const map = await mapService.expectMapModel(MAP_ID);
         map.layers.removeLayerById("current_item");
@@ -113,13 +89,10 @@ export function SiteDetails() {
     }
 
     function downloadCurrentResult() {
-        if (!selectedJob)
-            return;
-    
-        const href = jobs.get(selectedJob.toString())?.assets.asset.href;
+        const href = asset?.href;
         if (!href)
             return;
-    
+
         const link = document.createElement("a");
         link.href = href;
         link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
@@ -127,31 +100,32 @@ export function SiteDetails() {
         link.click();
         document.body.removeChild(link);
     }
-    
 
-    async function viewOnMap(catalog: Item) {
+
+    async function setSelectedAsset(job: Job, asset: Asset) {
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
+        setAsset(asset);
 
         const google = new Projection({ code: "EPSG:3857" });
-        //const stacproj = new Projection({code: "EPSG:" + v.properties["proj:epsg"]});
-        const stacproj = new Projection({ code: "EPSG:4326" });
-        console.log(catalog);
+        const stacproj = new Projection({ code: "EPSG:" + asset["proj:epsg"] });
+        // const stacproj = new Projection({ code: "EPSG:4326" });
 
+        const staclayer = new STAC({
+            data: job.catalog,
+            displayGeoTiffByDefault: true
+        });
         const layer = new SimpleLayer({
             id: "current_item",
-            title: catalog.id,
-            olLayer: new STAC({
-                data: catalog,
-                displayGeoTiffByDefault: true
-            })
+            title: asset.title,
+            olLayer: staclayer
         });
         map.layers.addLayer(layer);
 
-        // const bbox = v.properties["proj:bbox"];
-        const bbox = catalog.bbox;
-        //console.log([new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google), new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)]);
+
+        // const bbox = catalog.bbox;
         if (shouldHighlightAndZoom) {
+            const bbox = asset["proj:bbox"];
             map.highlightAndZoom(
                 [
                     new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
@@ -159,7 +133,9 @@ export function SiteDetails() {
                 ],
                 { maxZoom: 11 }
             );
+
         }
+        
     }
 
     return (
@@ -193,43 +169,42 @@ export function SiteDetails() {
                                 >
                                     <Card w="100%" padding={4}>
                                         <CardBody>
-                                            {selectedTimeseries.jobs.length === 1 && (
-                                                <Slider aria-label="slider-ex-1" value={50} isReadOnly={true}>
-                                                    <SliderMark mt="5" ml="-120" key={50} value={50}>
-                                                        {selectedTimeseries.jobs[0]!.scheduleTime}
-                                                    </SliderMark>
-                                                    <SliderCircle />
-                                                </Slider>
-                                            )}
-
-                                            {selectedTimeseries.jobs.length > 1 && (
+                                            {jobs && (
                                                 <Center w="100%">
                                                     <Slider
                                                         w="75%"
                                                         aria-label="slider-ex-1"
                                                         step={1}
-                                                        max={selectedTimeseries.jobs.length - 1}
+                                                        max={5}
                                                         defaultValue={0}
-                                                        onChangeEnd={(val) =>
-                                                            setSelectedJob(selectedTimeseries.jobs[val]?.id)
+                                                        onChangeEnd={(val) => {
+                                                            const job_idx = val >> 16;
+                                                            const asset_idx = Object.keys(jobs[job_idx]!.catalog!.assets)[val % (1 << 16)]!;
+                                                            setSelectedAsset(jobs[job_idx]!, jobs[job_idx]!.catalog!.assets[asset_idx]!);
+                                                        }
                                                         }
                                                     >
-                                                        {selectedTimeseries.jobs.map((Job, i) => (
+                                                        {jobs.map((job, i) => (
                                                             <>
-                                                                <SliderMark key={Job.id} value={i} pt={3} ml="-110" w={"100%"}>
-                                                                    {Job.scheduleTime}
-                                                                </SliderMark>
-                                                                <SliderMark
-                                                                    zIndex="98"
-                                                                    ml="-0.5em"
-                                                                    mt="-0.9em"
-                                                                    key={Job.id + "mark"}
-                                                                    value={i}
-                                                                >
-                                                                    <Icon viewBox="0 0 200 200">
-                                                                        <circle cx="100" cy="100" r="75" fill="black" />
-                                                                    </Icon>
-                                                                </SliderMark>
+
+                                                                {job.catalog && Object.keys(job.catalog!.assets!).map((key: keyof AssetWrap, index) => (
+                                                                    <>
+                                                                        <SliderMark key={job.catalog!.id} value={(i << 16) + index} pt={3} ml="-110" w={"100%"}>
+                                                                            {job.catalog?.assets[key]?.title}
+                                                                        </SliderMark>
+                                                                        <SliderMark
+                                                                            zIndex="98"
+                                                                            ml="-0.5em"
+                                                                            mt="-0.9em"
+                                                                            key={job.catalog?.assets[key]?.title}
+                                                                            value={(i << 16) + index}
+                                                                        >
+                                                                            <Icon viewBox="0 0 200 200">
+                                                                                <circle cx="100" cy="100" r="75" fill="black" />
+                                                                            </Icon>
+                                                                        </SliderMark>
+                                                                    </>
+                                                                ))}
                                                             </>
                                                         ))}
                                                         <SliderTrack />
@@ -240,9 +215,9 @@ export function SiteDetails() {
                                         </CardBody>
                                     </Card>
 
-                                    {selectedJob && (
+                                    {asset && (
                                         <TimeseriesControl
-                                            jobId={jobs.get(selectedJob.toString())!.id}
+                                            asset={asset}
                                             onDownloadCurrent={downloadCurrentResult}
                                         />
                                     )}

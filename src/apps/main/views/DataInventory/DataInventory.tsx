@@ -4,7 +4,7 @@
 import { FC, useEffect, useState } from "react";
 import { SimpleGrid, GridItem, Box, Switch, Text, Flex } from "@open-pioneer/chakra-integration";
 
-import { register } from "ol/proj/proj4.js";
+import { fromEPSGCode, register } from "ol/proj/proj4.js";
 import proj4 from "proj4";
 import { useServices } from "../../services/Services";
 import { Site } from "../Sites/Site/Site";
@@ -12,6 +12,10 @@ import { Dataset } from "../../components/Dataset/Dataset";
 import { UploadDataset } from "../../components/Dataset/UploadDataset";
 
 register(proj4);
+
+// We need to register in advance else we run into race conditions later
+fromEPSGCode("EPSG:32631");
+fromEPSGCode("EPSG:3857");
 
 export const DataInventory: FC = () => {
     const { getScenarios } = useServices();

@@ -4,20 +4,28 @@
 import { Card, CardHeader, CardBody, Heading, Flex } from "@open-pioneer/chakra-integration";
 import { TimeseriesIcons } from "./TimeseriesIcons";
 import { TimeseriesActions } from "./TimeseriesActions";
+import { Asset } from "../definitions";
 
 interface TimeseriesControlProps {
-    jobId: string;
+    asset: Asset;
     onDownloadCurrent: () => void;
 }
 
-export function TimeseriesControl({ jobId, onDownloadCurrent }: TimeseriesControlProps) {
+export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesControlProps) {
     return (
         <Card marginTop="2%" w="100%">
             <CardHeader paddingBottom="2" paddingX="5" paddingTop="2">
                 <Flex justify="space-between" align="center">
                     <Heading size="md">
-                        Name: {jobId}
+                        Name: {asset.title}
                     </Heading>
+                    <br></br>
+                    Type: {asset.type}
+                    <br></br>
+                    proj:epsg: {asset["proj:epsg"]}
+                    <br></br>
+                    proj:bbox: {asset["proj:bbox"][0]} {asset["proj:bbox"][1]} {asset["proj:bbox"][2]} {asset["proj:bbox"][3]}
+                    <br></br>
                     <TimeseriesIcons
                         onDocumentClick={() => console.log("Document clicked")}
                         onInfoClick={() => console.log("Info clicked")}

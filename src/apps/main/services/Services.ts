@@ -4,7 +4,7 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job } from "../views/Sites/SiteDetails/SiteDetails";
+import { Job } from "../components/definitions";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
@@ -22,6 +22,7 @@ export const useServices = () => {
     };
     
     const getTimeseries = async (id: string) => {
+        console.log("getTimeseries" + id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/timeseries/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
@@ -33,8 +34,9 @@ export const useServices = () => {
         }
     };
 
-    const getJob = async (job: Job) => {
-        const url = import.meta.env.VITE_API_ROOT.slice(0,-4) + job.catalog;
+    const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string) => {
+        console.log("getJobsByTimeseriesId" + scenario_id + "," + timeseries_id);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + timeseries_id + "/jobs";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
         
@@ -45,5 +47,19 @@ export const useServices = () => {
         }
     }; 
 
-    return { getScenarios, getTimeseries, getJob };
+    const getJobCatalog = async (scenario_id: string, job: Job) => {
+        console.log("getJobCatalog" + scenario_id + "," + job.id);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + job.timeseries_id + "/jobs/" + job.id + "/catalog";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+        
+        if (responseData) {
+            job.catalog = responseData;
+            return responseData;
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    }; 
+
+    return { getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog };
 };

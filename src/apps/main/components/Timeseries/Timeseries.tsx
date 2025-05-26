@@ -18,7 +18,6 @@ import {
     IconButton,
     Flex
 } from "@open-pioneer/chakra-integration";
-import { Job } from "../../views/Sites/SiteDetails/SiteDetails";
 import { FiMoreVertical } from "react-icons/fi";
 import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
 
@@ -28,15 +27,14 @@ interface TimeseriesProps {
 }
 
 export interface Timeseries {
-    id: number;
+    id: string;
     scenario_id: number;
     name: string;
     description: string;
-    jobs: Job[];
 }
 
 export function Timeseries({ timeseries, onSelect }: TimeseriesProps) {
-    const title = "TITLE";
+    const title = "Timeseries";
     
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
