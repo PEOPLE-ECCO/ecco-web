@@ -62,32 +62,33 @@
             "@chakra-ui/menu@2.2.1": "patches/@chakra-ui__menu@2.2.1.patch",
             "@chakra-ui/react-use-outside-click@2.2.0": "patches/@chakra-ui__react-use-outside-click@2.2.0.patch",
             "@chakra-ui/hooks@2.2.1": "patches/@chakra-ui__hooks@2.2.1.patch",
-            "react-select@5.8.0": "patches/react-select@5.8.0.patch"
+            "react-select@5.8.0": "patches/react-select@5.8.0.patch",
+            "geotiff": "patches/geotiff.patch"
         },
         "peerDependencyRules": {}
     },
     "dependencies": {
-        "react-router-dom": "^7.5.0",
-        "@open-pioneer/http": "2.2.0",
         "@open-pioneer/authentication": "2.2.0",
         "@open-pioneer/authentication-keycloak": "2.2.0",
-        "@open-pioneer/chakra-integration": "catalog:",
-        "@open-pioneer/runtime": "catalog:",
         "@open-pioneer/basemap-switcher": "catalog:",
+        "@open-pioneer/chakra-integration": "catalog:",
         "@open-pioneer/coordinate-viewer": "catalog:",
         "@open-pioneer/geolocation": "catalog:",
+        "@open-pioneer/http": "2.2.0",
         "@open-pioneer/map": "catalog:",
         "@open-pioneer/map-navigation": "catalog:",
         "@open-pioneer/map-ui-components": "catalog:",
         "@open-pioneer/measurement": "catalog:",
         "@open-pioneer/notifier": "catalog:",
         "@open-pioneer/overview-map": "catalog:",
+        "@open-pioneer/runtime": "catalog:",
         "@open-pioneer/scale-bar": "catalog:",
         "@open-pioneer/scale-viewer": "catalog:",
         "@open-pioneer/theme": "catalog:",
+        "lucide-react": "0.488.0",
         "ol": "catalog:",
         "ol-stac": "1.0.0-beta.10",
-        "lucide-react": "0.488.0"
+        "react-router-dom": "^7.5.0"
     },
     "devDependencies": {
         "@open-pioneer/build-package-cli": "catalog:",

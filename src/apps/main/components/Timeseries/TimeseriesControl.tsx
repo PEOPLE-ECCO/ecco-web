@@ -4,7 +4,7 @@
 import { Card, CardHeader, CardBody, Heading, Flex } from "@open-pioneer/chakra-integration";
 import { TimeseriesIcons } from "./TimeseriesIcons";
 import { TimeseriesActions } from "./TimeseriesActions";
-import { Asset } from "../definitions";
+import { Asset, Job } from "../definitions";
 
 interface TimeseriesControlProps {
     asset: Asset;

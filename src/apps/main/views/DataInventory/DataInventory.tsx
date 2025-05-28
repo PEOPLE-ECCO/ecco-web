@@ -13,10 +13,6 @@ import { UploadDataset } from "../../components/Dataset/UploadDataset";
 
 register(proj4);
 
-// We need to register in advance else we run into race conditions later
-fromEPSGCode("EPSG:32631");
-fromEPSGCode("EPSG:3857");
-
 export const DataInventory: FC = () => {
     const { getScenarios } = useServices();
     const [sites, setSites] = useState<[Site]>();

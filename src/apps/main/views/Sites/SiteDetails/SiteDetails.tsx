@@ -20,11 +20,11 @@ import { useService } from "open-pioneer:react-hooks";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
-import { Timeseries } from "../../../components/Timeseries/Timeseries";
+import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
 import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { Asset, AssetWrap, Catalog, Job } from "../../../components/definitions";
+import { Asset, AssetWrap, Catalog, Job, Timeseries } from "../../../components/definitions";
 
 const _proj3857 = new Projection({code: "EPSG:3857"});
 const _proj32631 = new Projection({code: "EPSG:32631"});
@@ -36,7 +36,8 @@ export function SiteDetails() {
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
     const [catalogs, setCatalogs] = useState<Catalog[]>();
-    const [asset, setAsset] = useState<Asset>();
+    const [totalAssetCount, setTotalAssetCount] = useState<number>(0);
+    const [selectedAsset, setAsset] = useState<Asset>();
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
@@ -59,7 +60,9 @@ export function SiteDetails() {
             if (!selectedTimeseries) return;
             try {
                 const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
+                selectedTimeseries.jobs = jobs;
                 setJobs(jobs);
+
                 await fetchCatalogs(jobs);
             } catch (error) {
                 console.error(error);
@@ -73,12 +76,18 @@ export function SiteDetails() {
         if (!newjobs) return;
         setCatalogs([]);
         const fetched = [];
+        let assetCount = 0;
         for (const job of newjobs!) {
             const cat = await getJobCatalog(id!, job);
-            catalogs?.push(cat);
-            job.catalog = cat;
-            fetched.push(job);
+            if (cat) {
+                // Catalog might not be ready yet (e.g. because processing is still ongoing)
+                catalogs?.push(cat);
+                assetCount += Object.keys(cat.assets).length;
+                job.catalog = cat;
+                fetched.push(job);
+            }
         }
+        setTotalAssetCount(assetCount);
         setJobs(fetched);
     }
 
@@ -89,7 +98,7 @@ export function SiteDetails() {
     }
 
     function downloadCurrentResult() {
-        const href = asset?.href;
+        const href = selectedAsset?.href;
         if (!href)
             return;
 
@@ -141,7 +150,7 @@ export function SiteDetails() {
     return (
         <Grid templateColumns="repeat(12, 1fr)" gap={2}>
             <GridItem colSpan={2} rowSpan={12} borderWidth="1px" margin="2px" padding="2px">
-                <Timeseries timeseries={timeseries} onSelect={setSelectedTimeseries} />
+                <TimeseriesItem timeseries={timeseries} onSelect={setSelectedTimeseries} />
             </GridItem>
             <GridItem colSpan={10} rowSpan={12} margin="2px" padding="2px">
                 <Box height="85vh">
@@ -175,7 +184,7 @@ export function SiteDetails() {
                                                         w="75%"
                                                         aria-label="slider-ex-1"
                                                         step={1}
-                                                        max={5}
+                                                        max={totalAssetCount - 1}
                                                         defaultValue={0}
                                                         onChangeEnd={(val) => {
                                                             const job_idx = val >> 16;
@@ -215,9 +224,9 @@ export function SiteDetails() {
                                         </CardBody>
                                     </Card>
 
-                                    {asset && (
+                                    {selectedAsset && (
                                         <TimeseriesControl
-                                            asset={asset}
+                                            asset={selectedAsset}
                                             onDownloadCurrent={downloadCurrentResult}
                                         />
                                     )}

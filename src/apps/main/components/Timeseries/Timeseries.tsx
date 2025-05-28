@@ -20,22 +20,16 @@ import {
 } from "@open-pioneer/chakra-integration";
 import { FiMoreVertical } from "react-icons/fi";
 import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
+import { Timeseries } from "../definitions";
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
     onSelect: (ts: Timeseries) => void;
 }
 
-export interface Timeseries {
-    id: string;
-    scenario_id: number;
-    name: string;
-    description: string;
-}
-
-export function Timeseries({ timeseries, onSelect }: TimeseriesProps) {
+export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const title = "Timeseries";
-    
+
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
     };
@@ -74,14 +68,24 @@ export function Timeseries({ timeseries, onSelect }: TimeseriesProps) {
                                     </Menu>
                                 </Flex>
                                 <Text mb={4} whiteSpace="pre-wrap">{ts.description}</Text>
-                                <Button onClick={() => onSelect(ts)}>View on Map</Button>
+                                {ts.jobs && ts.jobs.map((job, _) => (
+                                    <>
+                                        Jobs:<br></br>
+                                        <Text key={job.id} mb={4} whiteSpace="pre-wrap">
+                                            ID: {job.id}<br></br>
+                                            Costs: {job.costs}<br></br>
+                                            Scheduled: {job.scheduleTime}<br></br>
+                                        </Text>
+                                    </>
+                                ))}
+                                <Button onClick={() => onSelect(ts)}>View Details</Button>
                             </AccordionPanel>
                         </AccordionItem>
                     ))}
                 </Accordion>
 
                 <TimeseriesAddBtn />
-                
+
             </Stack>
         </Box>
     );

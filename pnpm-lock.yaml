@@ -193,6 +193,9 @@ patchedDependencies:
   '@chakra-ui/react-use-outside-click@2.2.0':
     hash: uw4qsrve2rd7lemccfb44ornky
     path: patches/@chakra-ui__react-use-outside-click@2.2.0.patch
+  geotiff:
+    hash: mqlhfqmwwb6uuj7bxrkil4we2a
+    path: patches/geotiff.patch
   react-select@5.8.0:
     hash: dmr4eel47u7r4xswxh72mgmyuq
     path: patches/react-select@5.8.0.patch
@@ -6802,7 +6805,7 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  geotiff@2.0.7:
+  geotiff@2.0.7(patch_hash=mqlhfqmwwb6uuj7bxrkil4we2a):
     dependencies:
       '@petamoriken/float16': 3.7.1
       lerc: 3.0.0
@@ -7461,7 +7464,7 @@ snapshots:
       color-rgba: 3.0.0
       color-space: 2.0.1
       earcut: 2.2.4
-      geotiff: 2.0.7
+      geotiff: 2.0.7(patch_hash=mqlhfqmwwb6uuj7bxrkil4we2a)
       pbf: 3.2.1
       rbush: 3.0.1
 

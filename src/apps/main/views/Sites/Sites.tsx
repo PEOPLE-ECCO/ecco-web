@@ -4,12 +4,18 @@
 import { FC, useEffect, useState } from "react";
 import { SimpleGrid, GridItem} from "@open-pioneer/chakra-integration";
 
-import { register } from "ol/proj/proj4.js";
+import { fromEPSGCode, register } from "ol/proj/proj4.js";
 import proj4 from "proj4";
 import { useServices } from "../../services/Services";
 import { Site } from "./Site/Site";
 
 register(proj4);
+
+// We need to register in advance else we run into race conditions later
+fromEPSGCode("EPSG:32631");
+fromEPSGCode("EPSG:3857");
+fromEPSGCode("EPSG:32635");
+
 
 export const Sites: FC = () => {
     const { getScenarios } = useServices();

@@ -1,5 +1,12 @@
+export interface Timeseries {
+    id: string;
+    scenario_id: number;
+    name: string;
+    description: string;
+    jobs: Job[] | undefined
+}
+
 export interface Job {
-    credits: number
     executionTimeEnd: string
     executionTimeStart: string
     id: number
@@ -8,6 +15,9 @@ export interface Job {
     scheduleTime: string
     status: string
     catalog: Catalog | undefined
+    progress: number
+    costs: number
+    usage: object
 }
 
 export interface Asset {

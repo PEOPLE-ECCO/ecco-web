@@ -1,0 +1,39 @@
+diff --git a/dist-module/geotiffimage.js b/dist-module/geotiffimage.js
+index b939f6272781dc86ff8bd7d390eec44a73b560fb..21394f0d48e52001f1d586c0e39706b0826ca46d 100644
+--- a/dist-module/geotiffimage.js
++++ b/dist-module/geotiffimage.js
+@@ -288,16 +288,12 @@ class GeoTIFFImage {
+   }
+ 
+   getSampleByteSize(i) {
+-    if (i >= this.fileDirectory.BitsPerSample.length) {
+-      throw new RangeError(`Sample index ${i} is out of range.`);
+-    }
+-    return Math.ceil(this.fileDirectory.BitsPerSample[i] / 8);
++    return Math.ceil(((i >= this.fileDirectory.BitsPerSample.length)? this.fileDirectory.BitsPerSample[i] : this.fileDirectory.BitsPerSample[0]) / 8);
+   }
+ 
+   getReaderForSample(sampleIndex) {
+-    const format = this.fileDirectory.SampleFormat
+-      ? this.fileDirectory.SampleFormat[sampleIndex] : 1;
+-    const bitsPerSample = this.fileDirectory.BitsPerSample[sampleIndex];
++    const format = this.getSampleFormat(sampleIndex);
++    const bitsPerSample = this.getBitsPerSample(sampleIndex);
+     switch (format) {
+       case 1: // unsigned integer data
+         if (bitsPerSample <= 8) {
+@@ -339,11 +335,12 @@ class GeoTIFFImage {
+ 
+   getSampleFormat(sampleIndex = 0) {
+     return this.fileDirectory.SampleFormat
+-      ? this.fileDirectory.SampleFormat[sampleIndex] : 1;
++      ? (this.fileDirectory.SampleFormat[sampleIndex] ?? Math.max.apply(null, this.fileDirectory.SampleFormat))
++      : 1;
+   }
+ 
+   getBitsPerSample(sampleIndex = 0) {
+-    return this.fileDirectory.BitsPerSample[sampleIndex];
++    return this.fileDirectory.BitsPerSample[sampleIndex] ?? Math.max.apply(null, this.fileDirectory.BitsPerSample);
+   }
+ 
+   getArrayForSample(sampleIndex, size) {
