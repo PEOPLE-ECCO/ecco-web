@@ -14,7 +14,8 @@ import { DataInventory } from "./views/DataInventory/DataInventory";
 import { Documentation } from "./views/Documentation/Documentation";
 import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
-import CreateProcessGraph from "./views/CreateProcessGraph/CreateProcessGraph";
+import CreateTimeseries from "./views/CreateTimeseries/CreateTimeseries";
+import CreateJob from "./views/CreateJob/CreateJobUI";
 
 const basePath = "/";
 
@@ -40,8 +41,12 @@ const router = createBrowserRouter([
                 element: <DataInventory />
             },
             {
-                path: `sites/:id/createProcessGraph`,
-                element: <CreateProcessGraph />
+                path: `sites/:id/createTimeseries`,
+                element: <CreateTimeseries />
+            },
+            {
+                path: `sites/:id/timeseries/:ts_id/createJob`,
+                element: <CreateJob />
             },
             {
                 path: `documentation`,

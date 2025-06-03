@@ -10,7 +10,7 @@ export function TimeseriesAddBtn() {
     const navigate = useNavigate();
     
     const handleRedirect = () => {
-        navigate("./createProcessGraph"); // Redirect to your desired page
+        navigate("./createTimeseries"); // Redirect to your desired page
     };
 
     return (
@@ -18,7 +18,7 @@ export function TimeseriesAddBtn() {
             <Tooltip label="Add new Timeseries" aria-label="Add new Timeseries Tooltip">
                 <IconButton
                     icon={<FiPlus size="30px" />}
-                    aria-label="Add new Process Graph"
+                    aria-label="Add new Timeseries"
                     onClick={handleRedirect}
                     bg="green.500"
                     color="white"

@@ -4,7 +4,7 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job } from "../components/definitions";
+import { Job, Timeseries } from "../components/definitions";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
@@ -34,6 +34,57 @@ export const useServices = () => {
         }
     };
 
+    const createTimeseries = async (ts: Timeseries) => {
+        console.log("createTimeseries" + ts);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
+        const response = await httpService.fetch(url, {
+            "method": "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(
+                {
+                    "name": ts.name,
+                    "description": ts.description,
+                    "process": 1
+                }
+            )
+        });
+        const responseData = await response.text();
+
+        if (responseData) {
+            return responseData;
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    };
+
+    const createJob = async (scenario_id: string, ts_id: string, job: Job) => {
+        console.log("createJob for timeseries: " + ts_id);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + ts_id + "/";
+        const response = await httpService.fetch(url, {
+            "method": "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(
+                {
+                    "name": "asdf",
+                    "description": "asdf",
+                    "process": 7,
+                    "parameters": "ads"
+                }
+            )
+        });
+        const responseData = await response.text();
+
+        if (responseData) {
+            return responseData;
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    };
+
     const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string) => {
         console.log("getJobsByTimeseriesId" + scenario_id + "," + timeseries_id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + timeseries_id + "/jobs";
@@ -53,7 +104,7 @@ export const useServices = () => {
         const response = await httpService.fetch(url);
 
         if (response.status != 200) {
-            console.error("Could not load catalog for job " + job.id + " | got HTTP STatus" + response.status);
+            console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
             return null;
         } else {
             const responseData = await response.json();
@@ -66,5 +117,23 @@ export const useServices = () => {
         }
     };
 
-    return { getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog };
+    const getJobLog = async (scenario_id: string, job: Job) => {
+        console.log("getJobLog" + scenario_id + "," + job.id);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + job.timeseries_id + "/jobs/" + job.id + "/log";
+        const response = await httpService.fetch(url);
+
+        if (response.status != 200) {
+            console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
+            return null;
+        } else {
+            const responseData = await response.json();
+            if (responseData) {
+                return responseData;
+            } else {
+                throw new Error("Unexpected response: " + JSON.stringify(responseData));
+            }
+        }
+    };
+
+    return { getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
 };

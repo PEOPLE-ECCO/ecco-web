@@ -26,8 +26,8 @@ import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesCont
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { Asset, AssetWrap, Catalog, Job, Timeseries } from "../../../components/definitions";
 
-const _proj3857 = new Projection({code: "EPSG:3857"});
-const _proj32631 = new Projection({code: "EPSG:32631"});
+const _proj3857 = new Projection({ code: "EPSG:3857" });
+const _proj32631 = new Projection({ code: "EPSG:32631" });
 
 export function SiteDetails() {
     const { id } = useParams();
@@ -36,8 +36,8 @@ export function SiteDetails() {
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
     const [catalogs, setCatalogs] = useState<Catalog[]>();
-    const [totalAssetCount, setTotalAssetCount] = useState<number>(0);
-    const [selectedAsset, setAsset] = useState<Asset>();
+    const [assets, setAssets] = useState<Asset[]>([]);
+    const [selectedAsset, setSelectedAsset] = useState<number | undefined>(undefined);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
@@ -72,23 +72,33 @@ export function SiteDetails() {
         fetchJobs();
     }, [selectedTimeseries]);
 
+    useEffect(() => {
+        showSelectedAsset();
+    }, [selectedAsset]);
+
     async function fetchCatalogs(newjobs: Job[]) {
         if (!newjobs) return;
         setCatalogs([]);
-        const fetched = [];
-        let assetCount = 0;
+        const fetchedJobs = [];
+        const fetchedAssets = [];
         for (const job of newjobs!) {
             const cat = await getJobCatalog(id!, job);
             if (cat) {
                 // Catalog might not be ready yet (e.g. because processing is still ongoing)
                 catalogs?.push(cat);
-                assetCount += Object.keys(cat.assets).length;
+                for (const a of Object.values(cat.assets)) {
+                    a.job = job;
+                    fetchedAssets.push(a);
+                }
                 job.catalog = cat;
-                fetched.push(job);
+                fetchedJobs.push(job);
             }
         }
-        setTotalAssetCount(assetCount);
-        setJobs(fetched);
+        console.log(fetchedAssets);
+        console.log(fetchedJobs);
+        setAssets(fetchedAssets);
+        setJobs(fetchedJobs);
+        setSelectedAsset(0);
     }
 
     async function remove_current_item() {
@@ -98,7 +108,7 @@ export function SiteDetails() {
     }
 
     function downloadCurrentResult() {
-        const href = selectedAsset?.href;
+        const href = assets[selectedAsset]?.href;
         if (!href)
             return;
 
@@ -111,10 +121,15 @@ export function SiteDetails() {
     }
 
 
-    async function setSelectedAsset(job: Job, asset: Asset) {
+    async function showSelectedAsset() {
+        if (assets.length == 0 || selectedAsset == undefined) {
+            return;
+        }
+        const asset = assets[selectedAsset]!;
+        const job = asset.job;;
+
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
-        setAsset(asset);
 
         const google = new Projection({ code: "EPSG:3857" });
         const stacproj = new Projection({ code: "EPSG:" + asset["proj:epsg"] });
@@ -144,7 +159,6 @@ export function SiteDetails() {
             );
 
         }
-        
     }
 
     return (
@@ -184,36 +198,30 @@ export function SiteDetails() {
                                                         w="75%"
                                                         aria-label="slider-ex-1"
                                                         step={1}
-                                                        max={totalAssetCount - 1}
+                                                        max={assets.length - 1}
                                                         defaultValue={0}
                                                         onChangeEnd={(val) => {
-                                                            const job_idx = val >> 16;
-                                                            const asset_idx = Object.keys(jobs[job_idx]!.catalog!.assets)[val % (1 << 16)]!;
-                                                            setSelectedAsset(jobs[job_idx]!, jobs[job_idx]!.catalog!.assets[asset_idx]!);
+                                                            console.log("onChangeEnd" + val);
+                                                            setSelectedAsset(val);
                                                         }
                                                         }
                                                     >
-                                                        {jobs.map((job, i) => (
+                                                        {assets.map((asset, index) => (
                                                             <>
-
-                                                                {job.catalog && Object.keys(job.catalog!.assets!).map((key: keyof AssetWrap, index) => (
-                                                                    <>
-                                                                        <SliderMark key={job.catalog!.id} value={(i << 16) + index} pt={3} ml="-110" w={"100%"}>
-                                                                            {job.catalog?.assets[key]?.title}
-                                                                        </SliderMark>
-                                                                        <SliderMark
-                                                                            zIndex="98"
-                                                                            ml="-0.5em"
-                                                                            mt="-0.9em"
-                                                                            key={job.catalog?.assets[key]?.title}
-                                                                            value={(i << 16) + index}
-                                                                        >
-                                                                            <Icon viewBox="0 0 200 200">
-                                                                                <circle cx="100" cy="100" r="75" fill="black" />
-                                                                            </Icon>
-                                                                        </SliderMark>
-                                                                    </>
-                                                                ))}
+                                                                <SliderMark key={index} value={index} pt={3} ml="-50" w={"100%"}>
+                                                                    {asset.title.substring(7, asset.title.length - 5)}
+                                                                </SliderMark>
+                                                                <SliderMark
+                                                                    zIndex="98"
+                                                                    ml="-0.5em"
+                                                                    mt="-0.9em"
+                                                                    key={asset.title + index}
+                                                                    value={index}
+                                                                >
+                                                                    <Icon viewBox="0 0 200 200">
+                                                                        <circle cx="100" cy="100" r="75" fill="black" />
+                                                                    </Icon>
+                                                                </SliderMark>
                                                             </>
                                                         ))}
                                                         <SliderTrack />
@@ -223,13 +231,10 @@ export function SiteDetails() {
                                             )}
                                         </CardBody>
                                     </Card>
-
-                                    {selectedAsset && (
-                                        <TimeseriesControl
-                                            asset={selectedAsset}
-                                            onDownloadCurrent={downloadCurrentResult}
-                                        />
-                                    )}
+                                    <TimeseriesControl
+                                        asset={assets[selectedAsset]!}
+                                        onDownloadCurrent={downloadCurrentResult}
+                                    />
                                 </Box>
                             }
                         </MapContainer>

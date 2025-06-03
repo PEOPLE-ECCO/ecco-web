@@ -1,6 +1,6 @@
 export interface Timeseries {
     id: string;
-    scenario_id: number;
+    scenario_id: string;
     name: string;
     description: string;
     jobs: Job[] | undefined
@@ -16,8 +16,20 @@ export interface Job {
     status: string
     catalog: Catalog | undefined
     progress: number
-    costs: number
-    usage: object
+    credits: number | undefined
+    usage: Usage | undefined
+}
+
+export interface UnitValue {
+    unit: string
+    value: number
+}
+
+export interface Usage {
+    cpu: UnitValue
+    duration: UnitValue
+    memory: UnitValue
+    sentinelhub: UnitValue
 }
 
 export interface Asset {
@@ -26,7 +38,7 @@ export interface Asset {
     href: string
     "proj:bbox": number[]
     "proj:epsg": number
-    
+    job: Job
 }
 
 export interface AssetWrap {

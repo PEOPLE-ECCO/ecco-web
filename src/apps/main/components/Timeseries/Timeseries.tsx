@@ -16,11 +16,23 @@ import {
     MenuList,
     MenuItem,
     IconButton,
-    Flex
+    Flex,
+    useDisclosure,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    HStack
 } from "@open-pioneer/chakra-integration";
 import { FiMoreVertical } from "react-icons/fi";
 import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
-import { Timeseries } from "../definitions";
+import { Job, Timeseries } from "../definitions";
+import { useServices } from "../../services/Services";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
@@ -29,6 +41,12 @@ interface TimeseriesProps {
 
 export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const title = "Timeseries";
+    const navigate = useNavigate();
+
+    const { getJobLog } = useServices();
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [log, setLog] = useState<object[]>([]);
+    const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -37,6 +55,17 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const handleArchive = (ts: Timeseries) => {
         console.log("Archive:", ts);
     };
+
+    const viewLog = async (ts: Timeseries, job: Job) => {
+        setLog(await getJobLog("1", job));
+        onOpen();
+    };
+
+    const select = (ts: Timeseries) => {
+        setSelectedTimeseries(ts);
+        onSelect(ts);
+    };
+
 
     return (
         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
@@ -68,24 +97,65 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                     </Menu>
                                 </Flex>
                                 <Text mb={4} whiteSpace="pre-wrap">{ts.description}</Text>
-                                {ts.jobs && ts.jobs.map((job, _) => (
+                                {ts.jobs &&
                                     <>
-                                        Jobs:<br></br>
-                                        <Text key={job.id} mb={4} whiteSpace="pre-wrap">
-                                            ID: {job.id}<br></br>
-                                            Costs: {job.costs}<br></br>
-                                            Scheduled: {job.scheduleTime}<br></br>
-                                        </Text>
+                                        <Text mb={4} whiteSpace="pre-wrap"></Text>Jobs:<br></br>
+                                        {ts.jobs.map((job, _) => (
+                                            <>
+                                                <Text key={job.id} mb={4} whiteSpace="pre-wrap">
+                                                    ID: {job.id}<br></br>
+                                                    Scheduled: {job.scheduleTime}<br></br>
+                                                    {job.usage && <>
+                                                        Costs: {job.credits} Credits<br></br>
+                                                        CPU: {job.usage?.cpu.value} {job.usage?.cpu.unit}<br></br>
+                                                        Duration: {job.usage?.duration.value} {job.usage?.duration.unit}<br></br>
+                                                        Memory: {job.usage?.memory.value} {job.usage?.memory.unit}<br></br>
+                                                        SentinelHub: {job.usage?.sentinelhub.value} {job.usage?.sentinelhub.unit}<br></br>
+                                                    </>}
+                                                </Text>
+                                                <Button onClick={() => viewLog(ts, job)}>View Log</Button>
+                                                {log && isOpen &&
+                                                    <Modal size="full" isOpen={isOpen} onClose={onClose} scrollBehavior="inside">
+                                                        <ModalOverlay />
+                                                        <ModalContent>
+                                                            <ModalHeader>Log</ModalHeader>
+                                                            <ModalCloseButton />
+                                                            <ModalBody>
+                                                                {log!.map((l) => (
+                                                                    <>
+                                                                        {l.time}
+                                                                        {l.level}
+                                                                        {l.message}
+                                                                        <br></br>
+                                                                    </>
+                                                                ))}
+                                                            </ModalBody>
+
+                                                            <ModalFooter>
+                                                                <Button colorScheme='blue' mr={3} onClick={onClose}>
+                                                                    Close
+                                                                </Button>
+                                                            </ModalFooter>
+                                                        </ModalContent>
+                                                    </Modal>
+                                                }
+                                            </>
+                                        ))}
                                     </>
-                                ))}
-                                <Button onClick={() => onSelect(ts)}>View Details</Button>
+                                }
+
+                                <HStack spacing={4}>
+                                    <Button onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>Start Processing</Button>
+
+                                    <Button onClick={() => select(ts)}>View Details</Button>
+                                </HStack>
+
+
                             </AccordionPanel>
                         </AccordionItem>
                     ))}
                 </Accordion>
-
                 <TimeseriesAddBtn />
-
             </Stack>
         </Box>
     );
