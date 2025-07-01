@@ -61,7 +61,7 @@ export const useServices = () => {
 
     const createJob = async (scenario_id: string, ts_id: string, job: Job) => {
         console.log("createJob for timeseries: " + ts_id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + ts_id + "/";
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + ts_id + "/jobs/";
         const response = await httpService.fetch(url, {
             "method": "POST",
             headers: {
