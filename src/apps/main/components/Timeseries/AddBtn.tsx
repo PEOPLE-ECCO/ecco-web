@@ -5,7 +5,7 @@ import { Flex, IconButton, Tooltip } from "@open-pioneer/chakra-integration";
 import { FiPlus } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-export function TimeseriesAddBtn() {
+export function AddBtn() {
 
     const navigate = useNavigate();
     

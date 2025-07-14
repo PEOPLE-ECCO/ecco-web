@@ -8,7 +8,7 @@ import {
 } from "@open-pioneer/chakra-integration";
 import { FC } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { ActionButton } from "../../components/Buttons/ActionButton";
 import { useServices } from "../../services/Services";
 
 const CreateJob: FC = () => {

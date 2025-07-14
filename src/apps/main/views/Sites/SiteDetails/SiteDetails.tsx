@@ -7,9 +7,13 @@ import { useServices } from "../../../services/Services";
 
 import { MAP_ID } from "../../../services";
 import {
-    Box, Card, GridItem, Center, Flex,
-    Slider, SliderTrack, SliderMark, Icon, Grid,
-    CardBody
+    Box, Card, GridItem, Flex,
+    Grid,
+    CardBody,
+    Tabs,
+    TabPanels,
+    TabPanel,
+    useDisclosure
 } from "@open-pioneer/chakra-integration";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
@@ -20,14 +24,16 @@ import { useService } from "open-pioneer:react-hooks";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
-import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
+import { TimeseriesItem } from "../../../components/Timeseries/TimeseriesItem";
 import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
-import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
-import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { Asset, AssetWrap, Catalog, Job, Timeseries } from "../../../components/definitions";
-
-const _proj3857 = new Projection({ code: "EPSG:3857" });
-const _proj32631 = new Projection({ code: "EPSG:32631" });
+import { Control } from "../../../components/Timeseries/DetailsView/Control";
+import { Asset, Job, Timeseries } from "../../../components/definitions";
+import { JobLogModal } from "../../../components/Timeseries/DetailsView/JobLogModal";
+import { JobTabList } from "../../../components/Timeseries/DetailsView/JobTabList";
+import { ActionButton } from "../../../components/Buttons/ActionButton";
+import { TimeSeriesSlider } from "../../../components/Slider/TimeSeriesSlider";
+import { SwitchTimeseriesModal } from "../../../components/Timeseries/SwitchTimeseriesModal";
+import { useNavigate } from "react-router-dom";
 
 export function SiteDetails() {
     const { id } = useParams();
@@ -35,11 +41,21 @@ export function SiteDetails() {
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
-    const [catalogs, setCatalogs] = useState<Catalog[]>();
+    //const [catalogs, setCatalogs] = useState<Catalog[]>();
     const [assets, setAssets] = useState<Asset[]>([]);
     const [selectedAsset, setSelectedAsset] = useState<number | undefined>(undefined);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
+
+    const [groupedAssets, setGroupedAssets] = useState<Record<string, Asset[]>>({});
+    //const [selectedGroup, setSelectedGroup] = useState<string | undefined>(undefined);
+    const navigate = useNavigate();
+
+    const {
+        isOpen: isSwitchOpen,
+        onOpen: onSwitchOpen,
+        onClose: onSwitchClose
+    } = useDisclosure();
 
     useEffect(() => {
         const fetchTimeseries = async () => {
@@ -76,16 +92,24 @@ export function SiteDetails() {
         showSelectedAsset();
     }, [selectedAsset]);
 
+    const { getJobLog } = useServices();
+    const [log, setLog] = useState<object[]>([]);
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const viewLog = async (job: Job) => {
+        setLog(await getJobLog("1", job));
+        onOpen();
+    };
+
     async function fetchCatalogs(newjobs: Job[]) {
         if (!newjobs) return;
-        setCatalogs([]);
+        //setCatalogs([]);
         const fetchedJobs = [];
         const fetchedAssets = [];
         for (const job of newjobs!) {
             const cat = await getJobCatalog(id!, job);
             if (cat) {
                 // Catalog might not be ready yet (e.g. because processing is still ongoing)
-                catalogs?.push(cat);
+                //catalogs?.push(cat);
                 for (const a of Object.values(cat.assets)) {
                     a.job = job;
                     fetchedAssets.push(a);
@@ -94,9 +118,18 @@ export function SiteDetails() {
                 fetchedJobs.push(job);
             }
         }
-        console.log(fetchedAssets);
-        console.log(fetchedJobs);
+        //console.log(fetchedAssets);
+        //console.log(fetchedJobs);
+        
+        const grouped = groupAssetsById(fetchedAssets);
+        setGroupedAssets(grouped);
+        const initialGroup = Object.keys(grouped)[0];
+        //setSelectedGroup(initialGroup);
+        setAssets(grouped[initialGroup] || []);
+
+        console.log(groupedAssets);
         setAssets(fetchedAssets);
+        console.log(assets);
         setJobs(fetchedJobs);
         setSelectedAsset(0);
     }
@@ -120,6 +153,17 @@ export function SiteDetails() {
         document.body.removeChild(link);
     }
 
+    function groupAssetsById(assets: Asset[]): Record<string, Asset[]> {
+        return assets.reduce((grouped, asset) => {
+            const id = asset.job.id ?? "unknown"; // fallback if id is missing
+            if (!grouped[id]) {
+                grouped[id] = [];
+            }
+            grouped[id].push(asset);
+            return grouped;
+        }, {} as Record<string, Asset[]>);
+    }
+
 
     async function showSelectedAsset() {
         if (assets.length == 0 || selectedAsset == undefined) {
@@ -137,7 +181,7 @@ export function SiteDetails() {
 
         const staclayer = new STAC({
             data: job.catalog,
-            displayGeoTiffByDefault: true
+            displayGeoTiffByDefault: false
         });
         const layer = new SimpleLayer({
             id: "current_item",
@@ -163,7 +207,7 @@ export function SiteDetails() {
 
     return (
         <Grid templateColumns="repeat(12, 1fr)" gap={2}>
-            <GridItem colSpan={2} rowSpan={12} borderWidth="1px" margin="2px" padding="2px">
+            <GridItem colSpan={2} rowSpan={12} borderWidth="1px" margin="2px" padding="2px" minW={"250px"}>
                 <TimeseriesItem timeseries={timeseries} onSelect={setSelectedTimeseries} />
             </GridItem>
             <GridItem colSpan={10} rowSpan={12} margin="2px" padding="2px">
@@ -186,55 +230,65 @@ export function SiteDetails() {
                                     left="25%"
                                     transform="translateX(-50%)"
                                     width="50%"
+                                    minW={"700px"}
                                     padding="4"
                                     zIndex="10"
                                     pointerEvents="auto"
                                 >
-                                    <Card w="100%" padding={4}>
+                                    <Card w="100%">
                                         <CardBody>
+                                            <b>Jobs</b>
                                             {jobs && (
-                                                <Center w="100%">
-                                                    <Slider
-                                                        w="75%"
-                                                        aria-label="slider-ex-1"
-                                                        step={1}
-                                                        max={assets.length - 1}
-                                                        defaultValue={0}
-                                                        onChangeEnd={(val) => {
-                                                            console.log("onChangeEnd" + val);
-                                                            setSelectedAsset(val);
-                                                        }
-                                                        }
-                                                    >
-                                                        {assets.map((asset, index) => (
-                                                            <>
-                                                                <SliderMark key={index} value={index} pt={3} ml="-50" w={"100%"}>
-                                                                    {asset.title.substring(7, asset.title.length - 5)}
-                                                                </SliderMark>
-                                                                <SliderMark
-                                                                    zIndex="98"
-                                                                    ml="-0.5em"
-                                                                    mt="-0.9em"
-                                                                    key={asset.title + index}
-                                                                    value={index}
-                                                                >
-                                                                    <Icon viewBox="0 0 200 200">
-                                                                        <circle cx="100" cy="100" r="75" fill="black" />
-                                                                    </Icon>
-                                                                </SliderMark>
-                                                            </>
+                                                <Tabs
+                                                    variant="enclosed"
+                                                    colorScheme="green"
+                                                    onChange={(index) => {
+                                                        const groupIds = Object.keys(groupedAssets);
+                                                        console.log(groupedAssets);
+                                                        const selectedId = groupIds[index];
+                                                        //setSelectedGroup(selectedId);
+                                                        setAssets(groupedAssets[selectedId] || []);
+                                                        setSelectedAsset(0);
+                                                    }}
+                                                >
+                                                    <JobTabList groupedAssets={groupedAssets} />
+
+                                                    <TabPanels>
+                                                        {Object.entries(groupedAssets).map(([groupId, groupAssets]) => (
+                                                            <TabPanel key={groupId}>
+                                                                
+                                                                <TimeSeriesSlider
+                                                                    groupAssets={groupAssets}
+                                                                    onSelectAsset={setSelectedAsset}
+                                                                />
+                                                                
+                                                                <Box pt={8}>
+                                                                    {assets[selectedAsset] && (
+                                                                        <Control
+                                                                            asset={assets[selectedAsset]}
+                                                                            onDownloadCurrent={downloadCurrentResult}
+                                                                        />
+                                                                    )}
+                                                                </Box>
+                                                                {groupAssets[0] &&
+                                                                    <Box pt={3} display="flex" gap={2}>
+                                                                        <ActionButton 
+                                                                            label="View Log" 
+                                                                            tooltip="View Log" 
+                                                                            onClick={() => viewLog(groupAssets[0]!.job)} 
+                                                                        />
+                                                                        <ActionButton label="Start Processing" tooltip="Start Processing" onClick={()=> navigate("timeseries/" + timeseries.id + "/createJob")} />
+                                                                    </Box>
+                                                                }
+                                                                <JobLogModal isOpen={isOpen} onClose={onClose} log={log} />
+                                                                <SwitchTimeseriesModal isOpen={isSwitchOpen} onClose={onSwitchClose} />
+                                                            </TabPanel>
                                                         ))}
-                                                        <SliderTrack />
-                                                        <SliderCircle />
-                                                    </Slider>
-                                                </Center>
+                                                    </TabPanels>
+                                                </Tabs>
                                             )}
                                         </CardBody>
                                     </Card>
-                                    <TimeseriesControl
-                                        asset={assets[selectedAsset]!}
-                                        onDownloadCurrent={downloadCurrentResult}
-                                    />
                                 </Box>
                             }
                         </MapContainer>

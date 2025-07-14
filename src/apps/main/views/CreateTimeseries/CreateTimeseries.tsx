@@ -11,7 +11,7 @@ import {
     Input,
     VStack
 } from "@open-pioneer/chakra-integration";
-import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { ActionButton } from "../../components/Buttons/ActionButton";
 import { useServices } from "../../services/Services";
 import { Timeseries } from "../../components/definitions";
 import { useParams, useNavigate } from "react-router-dom";
