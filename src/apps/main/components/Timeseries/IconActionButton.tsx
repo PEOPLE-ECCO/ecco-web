@@ -22,6 +22,7 @@ export function IconActionButton({ icon, label, tooltip, onClick }: IconActionBu
                 color="white"
                 _hover={{ backgroundColor: "gray.500" }}
                 onClick={onClick}
+                w={"50px"}
             />
         </Tooltip>
     );

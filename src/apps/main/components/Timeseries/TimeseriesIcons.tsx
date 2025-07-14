@@ -1,41 +1,65 @@
 // SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { HStack } from "@open-pioneer/chakra-integration";
-import { FiFileText, FiInfo, FiMapPin } from "react-icons/fi";
+import { SimpleGrid } from "@open-pioneer/chakra-integration";
+import { FiDownload, FiDownloadCloud, FiFileText, FiInfo, FiMapPin, FiPlay } from "react-icons/fi";
 import { IconActionButton } from "./IconActionButton";
 
 interface TimeseriesIconsProps {
-    onDocumentClick?: () => void;
-    onInfoClick?: () => void;
-    onLocateClick?: () => void;
+    downloadCurrentResult: () => void;
+    downloadAllResults: () => void;
+    execute: () => void;
+    downloadProcessGraph: () => void;
+    inspect: () => void;
+    locate: () => void;
 }
 
 export function TimeseriesIcons({
-    onDocumentClick,
-    onInfoClick,
-    onLocateClick
+    downloadCurrentResult,
+    downloadAllResults,
+    execute,
+    downloadProcessGraph,
+    inspect,
+    locate
 }: TimeseriesIconsProps) {
     return (
-        <HStack spacing={2}>
+        <SimpleGrid spacing={5} columns={[6]}>
+            <IconActionButton
+                icon={<FiDownload />}
+                label="Download current result"
+                tooltip="Download current result"
+                onClick={downloadCurrentResult}
+            />
+            <IconActionButton
+                icon={<FiDownloadCloud />}
+                label="Download all results"
+                tooltip="Download all results"
+                onClick={downloadAllResults}
+            />
             <IconActionButton
                 icon={<FiFileText />}
-                label="Document"
+                label="Download Process Graph"
                 tooltip="Download Process Graph"
-                onClick={onDocumentClick}
+                onClick={downloadProcessGraph}
+            />
+            <IconActionButton
+                icon={<FiPlay />}
+                label="Execute for timestamp"
+                tooltip="Execute for timestamp"
+                onClick={execute}
             />
             <IconActionButton
                 icon={<FiInfo />}
-                label="Info"
+                label="Inspect parameters"
                 tooltip="Inspect parameters"
-                onClick={onInfoClick}
+                onClick={inspect}
             />
             <IconActionButton
                 icon={<FiMapPin />}
-                label="Locate on Map"
+                label="Zoom to AOI"
                 tooltip="Zoom to AOI"
-                onClick={onLocateClick}
+                onClick={locate}
             />
-        </HStack>
+        </SimpleGrid>
     );
 }
