@@ -15,7 +15,7 @@ export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesContro
     return (
         <Card 
             marginTop="2%"
-            w="50%"
+            w="70%"
             borderRadius="xl"
             boxShadow="lg"
             bg="white"

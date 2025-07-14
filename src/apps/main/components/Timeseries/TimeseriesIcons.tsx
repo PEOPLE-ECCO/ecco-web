@@ -23,7 +23,7 @@ export function TimeseriesIcons({
     locate
 }: TimeseriesIconsProps) {
     return (
-        <SimpleGrid spacing={5} columns={[6]}>
+        <SimpleGrid spacing={2} columns={[6]}>
             <IconActionButton
                 icon={<FiDownload />}
                 label="Download current result"
