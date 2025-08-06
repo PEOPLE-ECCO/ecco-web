@@ -42,7 +42,7 @@ const CreateJob: FC = () => {
             title: "Step 1",
             description: <>
                 <Stack gap="4">
-                    <Input placeholder="StartDate" variant="outline" onChange={}/>
+                    <Input placeholder="StartDate" variant="outline"/>
                     <Input placeholder="EndDate" variant="outline" />
                 </Stack>
             </>,
