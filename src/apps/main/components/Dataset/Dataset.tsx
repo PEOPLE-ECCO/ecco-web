@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -14,11 +14,11 @@ import {
     Text,
     IconButton,
     Menu,
-    MenuButton,
-    MenuList,
     MenuItem,
-    Box
-} from "@open-pioneer/chakra-integration";
+    Box,
+    Portal
+} from "@chakra-ui/react";
+import { Ellipsis } from "lucide-react";
 import { FiMoreVertical } from "react-icons/fi"; // Vertical ellipsis icon
 
 export interface Site {
@@ -31,7 +31,7 @@ export interface Site {
 export const Dataset = (site: Site) => {
 
     return (
-        <Card
+        <Card.Root
             key={site.id}
             cursor="pointer"
             _hover={{
@@ -60,19 +60,23 @@ export const Dataset = (site: Site) => {
 
             {/* Vertical Ellipsis Menu Button */}
             <Box position="absolute" bottom="10px" right="10px">
-                <Menu>
-                    <MenuButton
-                        as={IconButton}
-                        icon={<FiMoreVertical />}
-                        variant="ghost"
-                        aria-label="More options"
-                    />
-                    <MenuList>
-                        <MenuItem>Archive</MenuItem>
-                        <MenuItem color="red.500">Delete</MenuItem>
-                    </MenuList>
-                </Menu>
+                <Menu.Root>
+                    <Menu.Trigger asChild>
+                        <IconButton variant="outline" size="sm">
+                            <Ellipsis />
+                        </IconButton>
+                    </Menu.Trigger>
+                    <Portal>
+                        <Menu.Positioner>
+                            <Menu.Content>
+                                <Menu.Item value="delete" disabled={true}>Delete</Menu.Item>
+                                <Menu.Item value="archive" disabled={true}>Archive</Menu.Item>
+                            </Menu.Content>
+                        </Menu.Positioner>
+                    </Portal>
+
+                </Menu.Root>
             </Box>
-        </Card>
+        </Card.Root>
     );
 };

@@ -1,28 +1,30 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tooltip } from "@open-pioneer/chakra-integration";
+import { Button, Tooltip } from "@chakra-ui/react";
 
 interface ActionButtonProps {
     label: string;
     tooltip: string;
+    disabled: boolean;
     onClick?: () => void;
     w?: string;
 }
 
-export function ActionButton({ label, tooltip, onClick, w }: ActionButtonProps) {
+export function ActionButton({ label, tooltip, disabled, onClick, w }: ActionButtonProps) {
     return (
-        <Tooltip label={tooltip} aria-label={`${label} tooltip`} placement="top">
+        <>
             <Button
-                variant="solid"
                 backgroundColor="black"
                 color="white"
                 _hover={{ backgroundColor: "gray.500" }}
                 onClick={onClick}
                 w={w}
+                disabled={disabled}
             >
                 {label}
             </Button>
-        </Tooltip>
+        </>
+
     );
 }

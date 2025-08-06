@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 import { useService } from "open-pioneer:react-hooks";
 import { FC, FormEvent } from "react";
 import { HttpService, } from "@open-pioneer/http";
-import { Button, FormControl, FormLabel, Input, FormHelperText, Box} from "@open-pioneer/chakra-integration";
+import { Button, FormControl, FormLabel, Input, FormHelperText, Box} from "@chakra-ui/react";
 
 export const UploadUI: FC = () => {
     const httpService = useService<HttpService>("http.HttpService");

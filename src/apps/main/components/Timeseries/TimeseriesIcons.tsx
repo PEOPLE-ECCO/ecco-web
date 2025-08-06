@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { HStack } from "@open-pioneer/chakra-integration";
+import { HStack } from "@chakra-ui/react";
 import { FiFileText, FiInfo, FiMapPin } from "react-icons/fi";
 import { IconActionButton } from "./IconActionButton";
 
@@ -17,7 +17,7 @@ export function TimeseriesIcons({
     onLocateClick
 }: TimeseriesIconsProps) {
     return (
-        <HStack spacing={2}>
+        <HStack>
             <IconActionButton
                 icon={<FiFileText />}
                 label="Document"

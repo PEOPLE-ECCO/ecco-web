@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -7,12 +7,9 @@ import {
     Icon,
     Stack,
     Text,
-    useColorModeValue
-} from "@open-pioneer/chakra-integration";
+} from "@chakra-ui/react";
 
-import {
-    ChevronRightIcon
-} from "@chakra-ui/icons";
+import { ChevronRight } from 'lucide-react';
 
 interface DesktopSubNavProps {
     label: string
@@ -59,7 +56,7 @@ export const HeaderSubItem = ({ label, subLabel, href, menu }: DesktopSubNavProp
                     align="center"
                     flex={1}
                 >
-                    <Icon as={ChevronRightIcon} w={5} h={5} color={hoverColor} />
+                    <ChevronRight />
                 </Flex>
             </Stack>
         </Box>

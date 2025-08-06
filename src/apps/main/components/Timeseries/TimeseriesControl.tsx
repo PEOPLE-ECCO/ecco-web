@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardHeader, CardBody, Heading, Flex } from "@open-pioneer/chakra-integration";
+import { Card, CardHeader, CardBody, Heading, Flex } from "@chakra-ui/react";
 import { TimeseriesIcons } from "./TimeseriesIcons";
 import { TimeseriesActions } from "./TimeseriesActions";
 import { Asset, Job } from "../definitions";
@@ -14,10 +14,10 @@ interface TimeseriesControlProps {
 export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesControlProps) {
 
     return (
-        <Card marginTop="2%" w="100%">
+        <Card.Root marginTop="2%" w="100%">
             {asset &&
                 <>
-                    <CardHeader paddingBottom="2" paddingX="5" paddingTop="2">
+                    <Card.Header paddingBottom="2" paddingX="5" paddingTop="2">
                         <Flex justify="space-between" align="center">
                             <Heading size="md">
                                 Name: {asset.title}
@@ -35,16 +35,16 @@ export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesContro
                                 onLocateClick={() => console.log("Locate clicked")}
                             />
                         </Flex>
-                    </CardHeader>
-                    <CardBody>
+                    </Card.Header>
+                    <Card.Body>
                         <TimeseriesActions
                             onDownloadAll={() => console.log("Downloading all")}
                             onDownloadCurrent={onDownloadCurrent}
                             onExecute={() => console.log("Executing")}
                         />
-                    </CardBody>
+                    </Card.Body>
                 </>
             }
-        </Card>
+        </Card.Root>
     );
 }

@@ -1,10 +1,10 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, useEffect, useState } from "react";
-import { SimpleGrid, GridItem, Box, Switch, Text, Flex } from "@open-pioneer/chakra-integration";
+import { SwitchCheckedChangeDetails, SimpleGrid, GridItem, Box, Switch, Text, Flex } from "@chakra-ui/react";
 
-import { fromEPSGCode, register } from "ol/proj/proj4.js";
+import { register } from "ol/proj/proj4.js";
 import proj4 from "proj4";
 import { useServices } from "../../services/Services";
 import { Site } from "../Sites/Site/Site";
@@ -31,9 +31,9 @@ export const DataInventory: FC = () => {
         fetchScenarios();
     }, []);
 
-    const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log("switched to", e.target.checked);
-        setShowArchived(e.target.checked);
+    const handleSwitchChange = (details: SwitchCheckedChangeDetails) => {
+        console.log("switched to", details.checked);
+        setShowArchived(details.checked);
     };
 
     return (
@@ -42,10 +42,12 @@ export const DataInventory: FC = () => {
             <Box position="absolute" top="120px" right="20px">
                 <Flex align="center">
                     <Text mr="2">Show Archived</Text>
-                    <Switch 
-                        isChecked={showArchived} 
-                        onChange={handleSwitchChange}
-                    />
+                    <Switch.Root
+                            isChecked={showArchived} 
+                            onCheckedChange={handleSwitchChange}
+                    >
+                        <Switch.HiddenInput />
+                    </Switch.Root>
                 </Flex>
             </Box>
 

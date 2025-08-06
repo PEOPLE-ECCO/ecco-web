@@ -1,13 +1,12 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import {
     Box,
-    Divider,
-    FormControl,
-    FormLabel,
+    Field,
+    Separator,
     Text
-} from "@open-pioneer/chakra-integration";
+} from "@chakra-ui/react";
 import { OverviewMap } from "@open-pioneer/overview-map";
 import { BasemapSwitcher } from "@open-pioneer/basemap-switcher";
 import { MapAnchor } from "@open-pioneer/map";
@@ -41,14 +40,14 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
                 role="top-right"
                 aria-label="Map sidebar controls"
             >
-                <OverviewMap mapId={mapId} olLayer={overviewMapLayer} />
-                <Divider mt={2} />
-                <FormControl>
-                    <FormLabel mt={1}>
+                <OverviewMap map={mapId} olLayer={overviewMapLayer} />
+                <Separator mt={2} />
+                <Field.Root>
+                    <Field.Label mt={1}>
                         <Text as="b">Select basemap:</Text>
-                    </FormLabel>
+                    </Field.Label>
                     <BasemapSwitcher mapId={mapId} allowSelectingEmptyBasemap />
-                </FormControl>
+                </Field.Root>
             </Box>
         </MapAnchor>
     );

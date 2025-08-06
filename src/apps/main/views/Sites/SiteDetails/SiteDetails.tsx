@@ -1,16 +1,16 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { useServices } from "../../../services/Services";
 
 import { MAP_ID } from "../../../services";
 import {
     Box, Card, GridItem, Center, Flex,
-    Slider, SliderTrack, SliderMark, Icon, Grid,
+    Slider, SliderTrack, Icon, Grid,
     CardBody
-} from "@open-pioneer/chakra-integration";
+} from "@chakra-ui/react";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
 import { Projection } from "ol/proj";
@@ -37,7 +37,7 @@ export function SiteDetails() {
     const [jobs, setJobs] = useState<Job[]>();
     const [catalogs, setCatalogs] = useState<Catalog[]>();
     const [assets, setAssets] = useState<Asset[]>([]);
-    const [selectedAsset, setSelectedAsset] = useState<number | undefined>(undefined);
+    const [selectedAsset, setSelectedAsset] = useState<number>(-1);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
@@ -95,7 +95,7 @@ export function SiteDetails() {
             }
         }
         console.log(fetchedAssets);
-        console.log(fetchedJobs);
+        console.log("fihinsed fetching");
         setAssets(fetchedAssets);
         setJobs(fetchedJobs);
         setSelectedAsset(0);
@@ -137,7 +137,8 @@ export function SiteDetails() {
 
         const staclayer = new STAC({
             data: job.catalog,
-            displayGeoTiffByDefault: true
+            displayGeoTiffByDefault: true,
+            bands: [1]
         });
         const layer = new SimpleLayer({
             id: "current_item",
@@ -167,7 +168,7 @@ export function SiteDetails() {
                 <TimeseriesItem timeseries={timeseries} onSelect={setSelectedTimeseries} />
             </GridItem>
             <GridItem colSpan={10} rowSpan={12} margin="2px" padding="2px">
-                <Box height="85vh">
+                <Box height="88vh">
                     <Flex flex="1" height="100%" direction="column" overflow="hidden" position="relative">
                         <MapContainer
                             mapId={MAP_ID}
@@ -190,47 +191,50 @@ export function SiteDetails() {
                                     zIndex="10"
                                     pointerEvents="auto"
                                 >
-                                    <Card w="100%" padding={4}>
-                                        <CardBody>
-                                            {jobs && (
+                                    <Card.Root w="100%" padding={4}>
+                                        <Card.Body>
+                                            {jobs && assets.length > 0 && (
                                                 <Center w="100%">
-                                                    <Slider
+                                                    <Slider.Root
                                                         w="75%"
-                                                        aria-label="slider-ex-1"
                                                         step={1}
                                                         max={assets.length - 1}
-                                                        defaultValue={0}
-                                                        onChangeEnd={(val) => {
-                                                            console.log("onChangeEnd" + val);
-                                                            setSelectedAsset(val);
+                                                        defaultValue={[0]}
+                                                        onValueChangeEnd={(val) => {
+                                                            console.log("onChangeEnd" + val.value);
+                                                            setSelectedAsset(val.value[0]);
                                                         }
                                                         }
                                                     >
-                                                        {assets.map((asset, index) => (
-                                                            <>
-                                                                <SliderMark key={index} value={index} pt={3} ml="-50" w={"100%"}>
-                                                                    {asset.title.substring(7, asset.title.length - 5)}
-                                                                </SliderMark>
-                                                                <SliderMark
-                                                                    zIndex="98"
-                                                                    ml="-0.5em"
-                                                                    mt="-0.9em"
-                                                                    key={asset.title + index}
-                                                                    value={index}
-                                                                >
-                                                                    <Icon viewBox="0 0 200 200">
-                                                                        <circle cx="100" cy="100" r="75" fill="black" />
-                                                                    </Icon>
-                                                                </SliderMark>
-                                                            </>
-                                                        ))}
-                                                        <SliderTrack />
-                                                        <SliderCircle />
-                                                    </Slider>
+                                                        <Slider.Control>
+                                                            {assets.map((asset, index) => (
+                                                                <>
+                                                                    <Slider.Marker key={index} value={index} pt={3} ml="-50" w={"100%"}>
+                                                                        {asset.title.substring(7, asset.title.length - 5)}
+                                                                    </Slider.Marker>
+                                                                    <Slider.Marker
+                                                                        zIndex="98"
+                                                                        ml="-0.5em"
+                                                                        mt="-0.9em"
+                                                                        key={asset.title + index}
+                                                                        value={index}
+                                                                    >
+                                                                        <Icon viewBox="0 0 200 200">
+                                                                            <circle cx="100" cy="100" r="75" fill="black" />
+                                                                        </Icon>
+                                                                    </Slider.Marker>
+                                                                </>
+                                                            ))}
+                                                            <Slider.Track>
+                                                                <Slider.Range />
+                                                            </Slider.Track>
+                                                            <SliderCircle />
+                                                        </Slider.Control>
+                                                    </Slider.Root>
                                                 </Center>
                                             )}
-                                        </CardBody>
-                                    </Card>
+                                        </Card.Body>
+                                    </Card.Root>
                                     <TimeseriesControl
                                         asset={assets[selectedAsset]!}
                                         onDownloadCurrent={downloadCurrentResult}

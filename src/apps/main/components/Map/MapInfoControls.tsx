@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, HStack } from "@open-pioneer/chakra-integration";
+import { Flex, HStack } from "@chakra-ui/react";
 import { CoordinateViewer } from "@open-pioneer/coordinate-viewer";
 import { ScaleBar } from "@open-pioneer/scale-bar";
 import { MapAnchor } from "@open-pioneer/map";
@@ -21,8 +21,8 @@ export const MapInfoControls = ({ mapId }: MapInfoControlsProps) => {
                 padding={1}
             >
                 <HStack>
-                    <CoordinateViewer mapId={mapId} precision={2} />
-                    <ScaleBar mapId={mapId} />
+                    <CoordinateViewer map={mapId} precision={2} />
+                    <ScaleBar map={mapId} />
                 </HStack>
             </Flex>
         </MapAnchor>

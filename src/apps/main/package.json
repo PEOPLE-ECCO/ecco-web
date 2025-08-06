@@ -1,11 +1,11 @@
 {
-    "name": "main",
+    "name": "ecco-web",
     "private": true,
     "dependencies": {
-        "@open-pioneer/http": "2.2.0",
-        "@open-pioneer/authentication": "2.2.0",
-        "@open-pioneer/authentication-keycloak": "2.2.0",
-        "@open-pioneer/chakra-integration": "catalog:",
+        "@open-pioneer/http": "latest",
+        "@open-pioneer/authentication": "latest",
+        "@open-pioneer/authentication-keycloak": "latest",
+        "@open-pioneer/chakra-snippets": "catalog:",
         "@open-pioneer/runtime": "catalog:",
         "@open-pioneer/basemap-switcher": "catalog:",
         "@open-pioneer/coordinate-viewer": "catalog:",
@@ -18,8 +18,10 @@
         "@open-pioneer/overview-map": "catalog:",
         "@open-pioneer/scale-bar": "catalog:",
         "@open-pioneer/scale-viewer": "catalog:",
-        "@open-pioneer/theme": "catalog:",
         "ol": "catalog:",
-        "ol-stac": "1.0.0-beta.10"
+        "ol-stac": "1.0.0-beta.10",
+        "react-router": "7.5.3",
+        "lucide-react": "0.488.0",
+        "@chakra-ui/react": "catalog:"
     }
 }

@@ -1,15 +1,22 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 import {
     Heading,
     Box,
     HStack,
     VStack,
-} from "@open-pioneer/chakra-integration";
+    Steps,
+    ButtonGroup,
+    Button,
+    Stack,
+    Input,
+    Table,
+} from "@chakra-ui/react";
 import { FC } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { useNavigate, useParams } from "react-router";
 import { useServices } from "../../services/Services";
+import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { setHeapSnapshotNearHeapLimit } from "v8";
 
 const CreateJob: FC = () => {
     const { id, ts_id } = useParams();
@@ -29,33 +36,79 @@ const CreateJob: FC = () => {
         navigate("..");
     };
 
+
+    const steps = [
+        {
+            title: "Step 1",
+            description: <>
+                <Stack gap="4">
+                    <Input placeholder="StartDate" variant="outline" onChange={}/>
+                    <Input placeholder="EndDate" variant="outline" />
+                </Stack>
+            </>,
+        },
+        {
+            title: "Step 2",
+            description: <>
+                <Table.Root>
+                    <Table.Caption />
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Parameter</Table.ColumnHeader>
+                            <Table.ColumnHeader>Value</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+
+                    </Table.Body>
+                </Table.Root>
+            </>,
+        },
+    ];
+
+
     return (
-        <Box p="4" borderRadius="md" boxShadow="sm" bg="white">
+        <>
             <Heading size="md" mb={4}>
                 Create new Job
             </Heading>
 
-            Defined here:
-            - Timestamp that needs to be calculated
+            <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal">
+                <Steps.List>
+                    {steps.map((step, index) => (
+                        <Steps.Item key={index} index={index} title={step.title}>
+                            <Steps.Indicator />
+                            <Steps.Title>{step.title}</Steps.Title>
+                            <Steps.Separator />
+                        </Steps.Item>
+                    ))}
+                </Steps.List>
 
-            <VStack alignItems="left" spacing={4}>
-                <HStack spacing={4}>
-                    <ActionButton
-                        label="Cancel"
-                        tooltip="Cancel creation"
-                        onClick={() => cancel("cancel")}
-                        w={"170px"}
-                    />
+                {steps.map((step, index) => (
+                    <Steps.Content key={index} index={index}>
+                        {step.description}
+                    </Steps.Content>
+                ))}
+                <Steps.CompletedContent>
                     <ActionButton
                         label="Create"
                         tooltip="Create timeseries"
+                        disabled={false}
                         onClick={() => create("create")}
                         w={"170px"}
                     />
-                </HStack>
-            </VStack>
+                </Steps.CompletedContent>
 
-        </Box>
+                <ButtonGroup size="sm" variant="outline">
+                    <Steps.PrevTrigger asChild>
+                        <Button>Prev</Button>
+                    </Steps.PrevTrigger>
+                    <Steps.NextTrigger asChild>
+                        <Button>Next</Button>
+                    </Steps.NextTrigger>
+                </ButtonGroup>
+            </Steps.Root>
+        </>
     );
 };
 

@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { FormControl, FormLabel, Switch } from "@open-pioneer/chakra-integration";
+import { Field, Switch } from "@chakra-ui/react";
 import { MapAnchor } from "@open-pioneer/map";
 
 interface MapSwitcherControlsProps {
@@ -9,28 +9,30 @@ interface MapSwitcherControlsProps {
     onToggle: (checked: boolean) => void;
 }
 
-export function MapSwitcherControls({ 
-    isChecked, 
+export function MapSwitcherControls({
+    isChecked,
     onToggle
 }: MapSwitcherControlsProps) {
     return (
         <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={130}>
-            <FormControl
+            <Field.Root
                 zIndex="1000"
                 bg="white"
                 borderRadius="md"
                 padding="2"
                 boxShadow="md"
             >
-                <FormLabel htmlFor="highlight-switch" mb="0">
+                <Field.Label htmlFor="highlight-switch" mb="0">
                     Zoomer
-                </FormLabel>
-                <Switch
+                </Field.Label>
+                <Switch.Root
                     id="highlight-switch"
-                    isChecked={isChecked}
+                    checked={isChecked}
                     onChange={(e) => onToggle(e.target.checked)}
-                />
-            </FormControl>
+                >
+                    <Switch.Control />
+                </Switch.Root>
+            </Field.Root>
         </MapAnchor>
     );
 }

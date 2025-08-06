@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 import { KeycloakProperties } from "@open-pioneer/authentication-keycloak";
 import { createCustomElement } from "@open-pioneer/runtime";
 import * as appMetadata from "open-pioneer:app";
 import { AppUI } from "./AppUI";
+import { NotifierProperties } from "@open-pioneer/notifier";
 
 const mainUI = createCustomElement({
     component: AppUI,
@@ -29,7 +30,10 @@ const mainUI = createCustomElement({
                         clientId: "ecco-proxy"
                     }
                 }
-            } satisfies KeycloakProperties // for auto completion / validation
+            } satisfies KeycloakProperties, // for auto completion / validation
+            "@open-pioneer/notifier": {
+                position: "top-left"
+            } satisfies NotifierProperties
         }
     }
 });

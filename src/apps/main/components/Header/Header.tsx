@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -7,41 +7,38 @@ import {
     GridItem,
     IconButton,
     Image,
-    useColorModeValue,
     useDisclosure
-} from "@open-pioneer/chakra-integration";
+} from "@chakra-ui/react";
+
+// import { useColorModeValue } from "@chakra-ui/react/col"
 
 import {
-    CloseIcon,
-    HamburgerIcon
-} from "@chakra-ui/icons";
+    Menu,
+    SquareChevronUp
+} from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 import logo from "../../assets/logo.avif";
 import { Profile } from "./Profile";
 import { HeaderItem } from "./HeaderItem";
 
 export default function Header() {
-    const { isOpen, onToggle } = useDisclosure();
+    const { open, onToggle } = useDisclosure();
     const navigate = useNavigate();
-
-    const bgColor = useColorModeValue("#2C7D75", "gray.800");
-    const textColor = useColorModeValue("gray.600", "white");
-    const borderColor = useColorModeValue("gray.200", "gray.900");
  
     return (
         <GridItem colSpan={12} rowSpan={1}>
             <Box>
                 <Flex
-                    bg={bgColor}
-                    color={textColor}
+                    bg={"#2C7D75"}
+                    color={"gray.600"}
                     minH={"86px"}
                     py={{ base: 2 }}
                     px={{ base: 4 }}
                     borderBottom={1}
                     borderStyle={"solid"}
-                    borderColor={borderColor}
+                    borderColor={"gray.200"}
                     align={"center"}
                 >
                     <Flex
@@ -50,11 +47,13 @@ export default function Header() {
                         display={{ base: "flex", md: "none" }}>
                         <IconButton
                             onClick={onToggle}
-                            icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
                             variant="ghost"
                             aria-label="Toggle Navigation"
-                            aria-expanded={isOpen}
-                        />
+                            aria-expanded={open}
+                        >
+                            <Menu></Menu>
+                        </IconButton>
+
                     </Flex>
                     <Flex flex={1} align="center">
                         <Box onClick={() => navigate("/")} cursor="pointer">

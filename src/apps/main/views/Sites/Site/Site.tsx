@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -9,8 +9,8 @@ import {
     Heading,
     Image,
     Text
-} from "@open-pioneer/chakra-integration";
-import { useNavigate } from "react-router-dom";
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router";
 
 export interface Site {
     preview_image: string;
@@ -27,7 +27,7 @@ export const Site = (site: Site) => {
     };
 
     return (
-        <Card
+        <Card.Root
             key={site.id}
             cursor="pointer"
             onClick={handleClick}
@@ -53,6 +53,6 @@ export const Site = (site: Site) => {
             <CardBody>
                 <Text>{site.description}</Text>
             </CardBody>
-        </Card>
+        </Card.Root>
     );
 };

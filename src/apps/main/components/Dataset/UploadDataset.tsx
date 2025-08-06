@@ -1,23 +1,23 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
-
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
-// SPDX-License-Identifier: Apache-2.0
-
 import {
     Card,
     Center,
     Icon,
     Text,
-    VStack,
-    useToast
-} from "@open-pioneer/chakra-integration";
+    VStack
+} from "@chakra-ui/react";
+
+import { NotificationService, Notifier } from "@open-pioneer/notifier";
+
 import { FiPlus } from "react-icons/fi";
 import { useRef } from "react";
+import { useService } from "open-pioneer:react-hooks";
 
 export function UploadDataset() {
     const inputRef = useRef<HTMLInputElement>(null);
-    const toast = useToast();
+
+    const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     const handleClick = () => {
         inputRef.current?.click(); // Trigger file input click
@@ -26,12 +26,11 @@ export function UploadDataset() {
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            toast({
+            notificationService.notify({
                 title: "File selected",
-                description: file.name,
-                status: "info",
-                duration: 3000,
-                isClosable: true
+                message: file.name,
+                level: "info",
+                displayDuration: 3000,
             });
 
             // You can now upload this file to your server or process it
@@ -47,7 +46,7 @@ export function UploadDataset() {
                 onChange={handleFileChange}
                 style={{ display: "none" }}
             />
-            <Card
+            <Card.Root
                 cursor="pointer"
                 min-height="250px"
                 onClick={handleClick}
@@ -60,14 +59,14 @@ export function UploadDataset() {
                 border="2px dashed #ccc"
             >
                 <Center w="100%" h="100%">
-                    <VStack spacing={3}>
+                    <VStack>
                         <Icon as={FiPlus} boxSize="50px" color="gray.500" />
                         <Text fontSize="lg" color="gray.600">
                             Upload Dataset
                         </Text>
                     </VStack>
                 </Center>
-            </Card>
+            </Card.Root>
         </>
     );
 }

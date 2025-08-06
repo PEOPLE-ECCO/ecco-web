@@ -1,15 +1,12 @@
-// SPDX-FileCopyrightText: 2023 Open Pioneer project (https://github.com/open-pioneer)
+// SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
 import {
     Box,
     Popover,
-    //PopoverContent,
-    PopoverTrigger,
-    Stack,
-    useColorModeValue
-} from "@open-pioneer/chakra-integration";
-import { useNavigate, useLocation } from "react-router-dom";
+    Stack
+} from "@chakra-ui/react";
+import { useNavigate, useLocation } from "react-router";
 
 //import { HeaderSubItem } from "./HeaderSubItem";
 
@@ -51,13 +48,13 @@ export const HeaderItem = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const linkHoverColor = useColorModeValue("gray.800", "white");
+    // const linkHoverColor = useColorModeValue("gray.800", "white");
     //const popoverContentBgColor = useColorModeValue("white", "gray.800");
 
     const redirect = (href: string) => navigate(href);
 
     return (
-        <Stack direction={"row"} spacing={4}>
+        <Stack direction={"row"}>
             {NAV_ITEMS.map((navItem) => {
                 const isActive =
                     location.pathname === navItem.href ||
@@ -65,9 +62,10 @@ export const HeaderItem = () => {
                     (navItem.href && location.pathname.startsWith(navItem.href));
 
                 return (
+                    
                     <Box key={navItem.label} alignContent={"center"}>
-                        <Popover trigger={"hover"} placement={"bottom-start"}>
-                            <PopoverTrigger>
+                        <Popover.Root trigger={"hover"} placement={"bottom-start"}>
+                            <Popover.Trigger>
                                 <Box
                                     as="a"
                                     p={2}
@@ -79,13 +77,13 @@ export const HeaderItem = () => {
                                     borderColor={isActive ? "yellow.300" : "transparent"}
                                     _hover={{
                                         textDecoration: "none",
-                                        color: linkHoverColor,
+                                        color: "gray.800",
                                         cursor: "pointer",
                                     }}
                                 >
                                     {navItem.label}
                                 </Box>
-                            </PopoverTrigger>
+                            </Popover.Trigger>
 
                             {/* Uncomment if needed:
                             {navItem.children && (
@@ -109,7 +107,7 @@ export const HeaderItem = () => {
                                     </Stack>
                                 </PopoverContent>
                             )} */}
-                        </Popover>
+                        </Popover.Root>
                     </Box>
                 );
             })}
