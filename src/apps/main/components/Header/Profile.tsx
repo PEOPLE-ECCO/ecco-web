@@ -68,13 +68,13 @@ export const Profile = () => {
                             </Menu.Trigger>
                             <Portal>
                                 <Menu.Positioner>
-                                    <Menu.Content zIndex={99} background={"white"}>
-                                        <Menu.ItemGroup alignItems={"center"} zIndex={99} background="white">
+                                    <Menu.Content zIndex={99}>
+                                        <Menu.ItemGroup alignItems={"center"} zIndex={99}>
                                             <Box backgroundColor="white">
                                                 <br />
                                                 <Center>
                                                     <Avatar.Root>
-                                                        <Avatar.Fallback name="{{givenName}} {{familyName}}" />
+                                                        <Avatar.Fallback name={givenName + " " + familyName} />
                                                         <Avatar.Image src="https://52north.org/wp-content/uploads/2016/06/logo-main.png" />
                                                     </Avatar.Root>
                                                 </Center>
