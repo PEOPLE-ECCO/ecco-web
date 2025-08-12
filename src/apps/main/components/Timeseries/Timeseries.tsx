@@ -113,58 +113,62 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                 <Accordion.ItemIndicator />
                             </Accordion.ItemTrigger>
                             <Accordion.ItemContent pb={4} bg="white">
-                                <Flex align="right" mb={1}>
-                                    <Menu.Root>
-                                        <Menu.Trigger asChild>
-                                            <IconButton variant="outline" size="sm">
-                                                <Ellipsis />
-                                            </IconButton>
-                                        </Menu.Trigger>
-                                        <Portal>
-                                            <Menu.Positioner>
-                                                <Menu.Content>
-                                                    <Menu.Item value="delete" onClick={() => handleDelete(ts)}>Delete</Menu.Item>
-                                                    <Menu.Item value="archive" onClick={() => handleArchive(ts)}>Archive</Menu.Item>
-                                                </Menu.Content>
-                                            </Menu.Positioner>
-                                        </Portal>
-                                    </Menu.Root>
-                                    <IconButton onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>
-                                        <Plus />
-                                    </IconButton>
-                                </Flex>
 
-                                <Text fontWeight="medium">Description:</Text>
-                                <Text mb={4} whiteSpace="pre-wrap">{ts.description}</Text>
-                                <Collapsible.Root>
-                                    <Collapsible.Trigger onClick={() => select(ts)}> &gt; View Job Details</Collapsible.Trigger>
-                                    <Collapsible.Content>
-                                        {ts.jobs &&
-                                            <>
-                                                <Table.Root>
-                                                    <Table.Header>Jobs:</Table.Header>
-                                                    <Table.Header>
-                                                        <Table.Row>
-                                                            <Table.ColumnHeader>Id</Table.ColumnHeader>
-                                                            <Table.ColumnHeader>Details</Table.ColumnHeader>
-                                                            <Table.ColumnHeader>Log</Table.ColumnHeader>
+                                <HStack>
+                                    <Text fontWeight="medium">Description:</Text>
+                                    <Text whiteSpace="pre-wrap">{ts.description}</Text>
+                                </HStack>
+
+                                <HStack>
+                                    <Flex justify="space-between">
+                                        <Button onClick={() => select(ts)}>
+                                            View Results
+                                        </Button>
+                                        <IconButton onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>
+                                            Expand Timeseries
+                                        </IconButton>
+                                        <Menu.Root>
+                                            <Menu.Trigger asChild>
+                                                <IconButton variant="outline" size="sm">
+                                                    <Ellipsis />
+                                                </IconButton>
+                                            </Menu.Trigger>
+                                            <Portal>
+                                                <Menu.Positioner>
+                                                    <Menu.Content>
+                                                        <Menu.Item value="delete" onClick={() => handleDelete(ts)}>Delete</Menu.Item>
+                                                        <Menu.Item value="archive" onClick={() => handleArchive(ts)}>Archive</Menu.Item>
+                                                    </Menu.Content>
+                                                </Menu.Positioner>
+                                            </Portal>
+                                        </Menu.Root>
+                                    </Flex>
+                                </HStack>
+                                <Box>
+                                    {ts.jobs &&
+                                        <>
+                                            <Table.Root>
+                                                <Table.Header>Jobs:</Table.Header>
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Id</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Details</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Log</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {ts.jobs.map((job) => (
+                                                        <Table.Row key={job.id}>
+                                                            <Table.Cell>{job.id}</Table.Cell>
+                                                            <Table.Cell><Button onClick={() => vieDetails(job)}>Details</Button></Table.Cell>
+                                                            <Table.Cell><Button onClick={() => viewLog(job)}>Log</Button></Table.Cell>
                                                         </Table.Row>
-                                                    </Table.Header>
-                                                    <Table.Body>
-                                                        {ts.jobs.map((job) => (
-                                                            <Table.Row key={job.id}>
-                                                                <Table.Cell>{job.id}</Table.Cell>
-                                                                <Table.Cell><Button onClick={() => vieDetails(job)}>Details</Button></Table.Cell>
-                                                                <Table.Cell><Button onClick={() => viewLog(job)}>Log</Button></Table.Cell>
-                                                            </Table.Row>
-                                                        ))}
-                                                    </Table.Body>
-                                                </Table.Root>
-                                            </>
-                                        }
-                                    </Collapsible.Content>
-                                </Collapsible.Root>
-
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+                                        </>
+                                    }
+                                </Box>
                             </Accordion.ItemContent>
                         </Accordion.Item>
                     ))}

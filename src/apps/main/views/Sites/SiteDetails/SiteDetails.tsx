@@ -9,7 +9,8 @@ import { MAP_ID } from "../../../services";
 import {
     Box, Card, GridItem, Center, Flex,
     Slider, SliderTrack, Icon, Grid,
-    CardBody
+    CardBody,
+    Circle
 } from "@chakra-ui/react";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
@@ -94,8 +95,6 @@ export function SiteDetails() {
                 fetchedJobs.push(job);
             }
         }
-        console.log(fetchedAssets);
-        console.log("fihinsed fetching");
         setAssets(fetchedAssets);
         setJobs(fetchedJobs);
         setSelectedAsset(0);
@@ -220,7 +219,7 @@ export function SiteDetails() {
                                                                         value={index}
                                                                     >
                                                                         <Icon viewBox="0 0 200 200">
-                                                                            <circle cx="100" cy="100" r="75" fill="black" />
+                                                                            <Circle cx="100" cy="100" r="75" fill="black" />
                                                                         </Icon>
                                                                     </Slider.Marker>
                                                                 </>

@@ -9,6 +9,9 @@ import { NotifierProperties } from "@open-pioneer/notifier";
 const mainUI = createCustomElement({
     component: AppUI,
     appMetadata,
+    advanced: {
+        enableShadowRoot: false
+    },
     config: {
         properties: {
             "@open-pioneer/authentication-keycloak": {

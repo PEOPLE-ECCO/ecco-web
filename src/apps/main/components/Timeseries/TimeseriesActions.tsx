@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { HStack, Spacer } from "@chakra-ui/react";
+import { HStack, Spacer, VStack } from "@chakra-ui/react";
 import { ActionButton } from "./ActionButton";
 
 interface TimeseriesActionsProps {
@@ -16,7 +16,7 @@ export function TimeseriesActions({
     onExecute
 }: TimeseriesActionsProps) {
     return (
-        <HStack>
+        <VStack>
             <ActionButton
                 label="Download all results"
                 tooltip="Download all available timeseries results"
@@ -30,15 +30,6 @@ export function TimeseriesActions({
                 disabled={false}
                 onClick={onDownloadCurrent}
             />
-
-            <Spacer />
-
-            <ActionButton
-                label="Execute for timestamp"
-                tooltip="Execute operation for the selected timestamp"
-                onClick={onExecute}
-                disabled={false}
-            />
-        </HStack>
+        </VStack>
     );
 }

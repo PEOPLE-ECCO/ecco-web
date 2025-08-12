@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Notifier } from "@open-pioneer/notifier";
-import { Box, ChakraProvider, Container, defaultSystem, Flex } from "@chakra-ui/react";
+import { Box, Container, Flex } from "@chakra-ui/react";
 
 import { useMeasure } from "react-use";
 
@@ -60,14 +60,14 @@ export function AppUI() {
 }
 
 export function Layout() {
-    const [headerRef, { height }] = useMeasure<HTMLElement>();
+    const [headerRef, { height }] = useMeasure<HTMLDivElement>();
 
     return (
-        <ChakraProvider value={defaultSystem}>
+        <>
             <Notifier />
             <Flex direction="column" minH="100vh">
                 <Flex
-                    as="header"
+                    as="header"d
                     position="fixed"
                     w="100%"
                     bg="white"
@@ -79,13 +79,13 @@ export function Layout() {
                     </Container>
                 </Flex>
 
-                <Box as="main" flex="1" pt={height + 15} bg="#EFEAEA">
+                <Box as="main" flex="1" pt={height} bg="#EFEAEA">
                     <Outlet />
                 </Box>
 
                 <Footer />
             </Flex>
-        </ChakraProvider>
+        </>
     );
 }
 

@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardHeader, CardBody, Heading, Flex } from "@chakra-ui/react";
+import { Card, Flex, HStack } from "@chakra-ui/react";
 import { TimeseriesIcons } from "./TimeseriesIcons";
 import { TimeseriesActions } from "./TimeseriesActions";
-import { Asset, Job } from "../definitions";
+import { Asset } from "../definitions";
 
 interface TimeseriesControlProps {
     asset: Asset;
@@ -18,30 +18,29 @@ export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesContro
             {asset &&
                 <>
                     <Card.Header paddingBottom="2" paddingX="5" paddingTop="2">
-                        <Flex justify="space-between" align="center">
-                            <Heading size="md">
-                                Name: {asset.title}
-                            </Heading>
-                            <br></br>
-                            Type: {asset.type}
-                            <br></br>
-                            proj:epsg: {asset["proj:epsg"]}
-                            <br></br>
-                            proj:bbox: {asset["proj:bbox"][0]} {asset["proj:bbox"][1]} {asset["proj:bbox"][2]} {asset["proj:bbox"][3]}
-                            <br></br>
-                            <TimeseriesIcons
-                                onDocumentClick={() => console.log("Document clicked")}
-                                onInfoClick={() => console.log("Info clicked")}
-                                onLocateClick={() => console.log("Locate clicked")}
-                            />
-                        </Flex>
+                        {asset.title}
                     </Card.Header>
                     <Card.Body>
-                        <TimeseriesActions
-                            onDownloadAll={() => console.log("Downloading all")}
-                            onDownloadCurrent={onDownloadCurrent}
-                            onExecute={() => console.log("Executing")}
-                        />
+                        <HStack>
+                            <Flex justify="space-between" align="center">
+                                Type: {asset.type}
+                                <br></br>
+                                proj:epsg: {asset["proj:epsg"]}
+                                <br></br>
+                                proj:bbox: {asset["proj:bbox"][0]} {asset["proj:bbox"][1]} {asset["proj:bbox"][2]} {asset["proj:bbox"][3]}
+                                <br></br>
+                                <TimeseriesIcons
+                                    onDocumentClick={() => console.log("Document clicked")}
+                                    onInfoClick={() => console.log("Info clicked")}
+                                    onLocateClick={() => console.log("Locate clicked")}
+                                />
+                            </Flex>
+                            <TimeseriesActions
+                                onDownloadAll={() => console.log("Downloading all")}
+                                onDownloadCurrent={onDownloadCurrent}
+                                onExecute={() => console.log("Executing")}
+                            />
+                        </HStack>
                     </Card.Body>
                 </>
             }
