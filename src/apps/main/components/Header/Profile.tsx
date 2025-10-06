@@ -29,6 +29,12 @@ export const Profile = () => {
         return authService.getAuthState().kind == "authenticated";
     }, [authService]);
 
+    const accountSettings = [
+        {
+            title: "Account Settings",
+            href: "https://people-ecco.dev.52north.org/auth/realms/people-ecco/account"
+        }];
+
     return (
         <>
             {!authenticated &&
@@ -76,14 +82,15 @@ export const Profile = () => {
                                     {familyName}
                                 </Button>
                             </Menu.Trigger>
+
                             <Portal>
                                 <Menu.Positioner>
-                                    <Menu.Content zIndex={99}>
+                                    <Menu.Content zIndex={10000}>
                                         <Menu.ItemGroup alignItems={"center"} zIndex={99}>
                                             <Box backgroundColor="white">
                                                 <br />
                                                 <Center>
-                                                    <Avatar.Root>
+                                                    <Avatar.Root size={"2xl"}>
                                                         <Avatar.Fallback name={givenName + " " + familyName} />
                                                         <Avatar.Image src="https://52north.org/wp-content/uploads/2016/06/logo-main.png" />
                                                     </Avatar.Root>
@@ -96,7 +103,13 @@ export const Profile = () => {
                                                 </Center>
                                                 <br />
                                                 <Menu.Separator />
-                                                <Menu.Item value="settings">Account Settings (tbd)</Menu.Item>
+                                                    {accountSettings.map((link) => (
+                                                        <Menu.Item key={link.href} asChild value={link.title}>
+                                                            <a href={link.href} target="_blank" rel="noreferrer">
+                                                                {link.title}
+                                                            </a>
+                                                        </Menu.Item>
+                                                    ))}
                                                 <Menu.Item value="logout" onClick={() => authService.logout()}>Logout</Menu.Item>
                                             </Box>
                                         </Menu.ItemGroup>
