@@ -36,7 +36,15 @@ export const Profile = () => {
                     flex={{ base: 1, md: 0 }}
                     justify={"flex-end"}
                     direction={"row"}>
-                    <Button asChild as={"a"} fontSize={"lg"} color={"#2C7D75"} fontWeight={"semibold"} colorPalette={"white"} variant={"subtle"} onClick={() => (authService.getLoginBehavior() as LoginEffect).login()}>
+                    <Button asChild 
+                        as={"a"} 
+                        fontSize={"lg"} 
+                        color={"#2C7D75"} 
+                        fontWeight={"semibold"} 
+                        colorPalette={"white"} 
+                        variant={"subtle"} 
+                        onClick={() => (authService.getLoginBehavior() as LoginEffect).login()}
+                        >
                         <a href={"#"}>Sign In</a>
                     </Button>
                 </Stack>
@@ -46,25 +54,27 @@ export const Profile = () => {
                     <ForceAuth>
                         <Menu.Root>
                             <Menu.Trigger asChild
-                                rounded={"full"}
                                 cursor={"pointer"}
                                 minW={0}
                                 _hover={{ textDecoration: "none" }}
                             >
-                                <HStack>
-                                    <Avatar.Root
-                                        size={"sm"}
+                                <Button 
+                                    as={"a"} 
+                                    fontSize={"lg"} 
+                                    color={"#2C7D75"} 
+                                    fontWeight={"semibold"} 
+                                    colorPalette={"white"} 
+                                    variant={"subtle"}
                                     >
-                                        <Avatar.Image src="https://52north.org/wp-content/uploads/2016/06/logo-main.png"></Avatar.Image>
-                                    </Avatar.Root>
-                                    <Box
-                                        fontSize={"x-large"}
-                                        fontWeight={500}
-                                        color={"white"}
-                                    >
-                                        {familyName}
-                                    </Box>
-                                </HStack>
+                                    <HStack>
+                                        <Avatar.Root
+                                            size={"xs"}
+                                        >
+                                            <Avatar.Image src="https://52north.org/wp-content/uploads/2016/06/logo-main.png"></Avatar.Image>
+                                        </Avatar.Root>
+                                    </HStack>
+                                    {familyName}
+                                </Button>
                             </Menu.Trigger>
                             <Portal>
                                 <Menu.Positioner>
