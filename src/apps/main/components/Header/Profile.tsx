@@ -36,8 +36,8 @@ export const Profile = () => {
                     flex={{ base: 1, md: 0 }}
                     justify={"flex-end"}
                     direction={"row"}>
-                    <Button as={"a"} fontSize={"sm"} fontWeight={400} variant={"link"} href={"#"} onClick={() => (authService.getLoginBehavior() as LoginEffect).login()}>
-                        Sign In
+                    <Button asChild as={"a"} fontSize={"lg"} color={"#2C7D75"} fontWeight={"semibold"} colorPalette={"white"} variant={"subtle"} onClick={() => (authService.getLoginBehavior() as LoginEffect).login()}>
+                        <a href={"#"}>Sign In</a>
                     </Button>
                 </Stack>
             }
