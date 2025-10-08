@@ -22,13 +22,12 @@ import { Extend, Timeseries } from "../../components/definitions";
 import { useParams, useNavigate } from "react-router";
 import { MAP_ID } from "../../services";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
-import { CoordinateViewer } from "@open-pioneer/coordinate-viewer";
 import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
-import { Measurement } from "@open-pioneer/measurement";
 import VectorSource from "ol/source/Vector";
 import { useService } from "open-pioneer:react-hooks";
 import VectorLayer from "ol/layer/Vector.js";
 import Draw, {createBox, createRegularPolygon} from "ol/interaction/Draw.js";
+import { CloseButton } from "@chakra-ui/react";
 
 function BboxSearch() {
     
@@ -93,7 +92,7 @@ function BboxSearch() {
     return (
         <>
             Please select extend:
-            <Box height="50vh">                
+            <Box height="65vh">                
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
                         mapId={MAP_ID}
@@ -101,9 +100,9 @@ function BboxSearch() {
                         aria-label=""
                     >
                         <Box bg="white" width="20%">
-                            <CoordinateViewer mapId={MAP_ID} precision={2} />
+                            <MapInfoControls mapId={MAP_ID}></MapInfoControls>
                             <Text>
-                                Selected Box: <br />
+                                Extend Cordinates: <br />
                                 x1: {extend.x1}, y1: {extend.y1} <br />
                                 x2: {extend.x2}, y2: {extend.y2}
                             </Text>
@@ -121,6 +120,10 @@ const CreateTimeseries: FC = () => {
     const [description, setDescription] = useState<string>("");
     const { createTimeseries } = useServices();
     const navigate = useNavigate();
+
+    const handleClick = () => {
+        navigate(-1);
+    };
 
     const create = async () => {
         const timeseries: Timeseries = {
@@ -205,11 +208,13 @@ const CreateTimeseries: FC = () => {
 
     return (
         <>
-            <Heading size="md" mb={4}>
+            <Flex gap="10">
+                <Heading height="12" size="lg" mb={4} order="1">
                 Create new Timeseries
-            </Heading>
-
-            <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal">
+                </Heading>
+                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleClick}/>
+            </Flex>
+            <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal" width="100%">
                 <Steps.List>
                     {steps.map((step, index) => (
                         <Steps.Item colorPalette="teal" key={index} index={index} title={step.title}>

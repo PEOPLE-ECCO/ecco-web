@@ -72,9 +72,9 @@ export const HeaderItem = () => {
                                     onClick={() => navItem.href && redirect(navItem.href)}
                                     fontSize={"x-large"}
                                     fontWeight={isActive ? 700 : 500}
-                                    color={isActive ? "yellow.300" : "white"}
+                                    color={isActive ? "teal.50" : "white"}
                                     borderBottom={isActive ? "2px solid" : "none"}
-                                    borderColor={isActive ? "yellow.300" : "transparent"}
+                                    borderColor={isActive ? "teal.50" : "transparent"}
                                     _hover={{
                                         textDecoration: "none",
                                         color: "gray.800",

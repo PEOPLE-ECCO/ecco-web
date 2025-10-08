@@ -32,7 +32,7 @@ export const Site = (site: Site) => {
             cursor="pointer"
             onClick={handleClick}
             _hover={{
-                bg: "#abebc6", // light green
+                bg: "teal.50", // light teal
                 transform: "scale(1.02)",
                 transition: "all 0.2s ease-in-out"
             }}

@@ -19,11 +19,11 @@ export function TimeseriesAddBtn() {
                 <IconButton
                     aria-label="Add new Timeseries"
                     onClick={handleRedirect}
-                    bg="green.500"
+                    bg="#2C7D75"
                     color="white"
                     size="lg"
                     borderRadius="full"
-                    _hover={{ bg: "green.400" }}
+                    _hover={{ bg: "teal.700" }}
                 >
                     <FiPlus></FiPlus>
                 </IconButton>

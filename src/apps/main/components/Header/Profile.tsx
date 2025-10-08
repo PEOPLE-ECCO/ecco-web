@@ -97,9 +97,7 @@ export const Profile = () => {
                                                 </Center>
                                                 <br />
                                                 <Center>
-                                                    <p>{userName}</p>
-                                                    <br></br>
-                                                    <p>{givenName} {familyName}</p>
+                                                    <p>{userName} <br /> {givenName} {familyName}</p>
                                                 </Center>
                                                 <br />
                                                 <Menu.Separator />
