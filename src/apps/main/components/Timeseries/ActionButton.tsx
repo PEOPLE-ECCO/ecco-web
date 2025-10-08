@@ -15,9 +15,9 @@ export function ActionButton({ label, tooltip, disabled, onClick, w }: ActionBut
     return (
         <>
             <Button
-                backgroundColor="black"
+                backgroundColor="#2C7D75"
                 color="white"
-                _hover={{ backgroundColor: "gray.500" }}
+                _hover={{ backgroundColor: "teal.700" }}
                 onClick={onClick}
                 w={w}
                 disabled={disabled}

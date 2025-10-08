@@ -35,7 +35,7 @@ export const Dataset = (site: Site) => {
             key={site.id}
             cursor="pointer"
             _hover={{
-                bg: "#abebc6", // light green
+                bg: "teal.50", // light teal
                 transform: "scale(1.02)",
                 transition: "all 0.2s ease-in-out"
             }}

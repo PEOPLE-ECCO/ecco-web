@@ -121,10 +121,10 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
 
                                 <HStack>
                                     <Flex justify="space-between">
-                                        <Button onClick={() => select(ts)}>
+                                        <Button size="sm" bg="#2C7D75" onClick={() => select(ts)}>
                                             View Results
                                         </Button>
-                                        <IconButton onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>
+                                        <IconButton size="sm" bg="#2C7D75" onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>
                                             Expand Timeseries
                                         </IconButton>
                                         <Menu.Root>
@@ -190,7 +190,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                 </Dialog.Body>
 
                                 <Dialog.Footer>
-                                    <Button colorPalette='blue' mr={3} onClick={onClose}>
+                                    <Button colorPalette='teal' mr={3} onClick={onClose}>
                                         Close
                                     </Button>
                                 </Dialog.Footer>

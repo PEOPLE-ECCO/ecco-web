@@ -18,6 +18,7 @@ export const MapZoomControls = ({ mapId }: MapZoomControlsProps) => {
                 direction="column"
                 gap={1}
                 padding={1}
+                colorPalette={"teal"}
             >
                 <ZoomIn mapId={mapId} />
                 <ZoomOut mapId={mapId} />
