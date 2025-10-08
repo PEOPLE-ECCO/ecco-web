@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import {
     Heading,
     Text,
@@ -11,30 +11,103 @@ import {
     ButtonGroup,
     Flex,
     Box,
-    Table
+    Table,
+    Field,
+    Stack
 } from "@chakra-ui/react";
 
 import { ActionButton } from "../../components/Timeseries/ActionButton";
 import { useServices } from "../../services/Services";
-import { Timeseries } from "../../components/definitions";
+import { Extend, Timeseries } from "../../components/definitions";
 import { useParams, useNavigate } from "react-router";
 import { MAP_ID } from "../../services";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
-import { MapContainer } from "@open-pioneer/map";
+import { CoordinateViewer } from "@open-pioneer/coordinate-viewer";
+import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
+import { Measurement } from "@open-pioneer/measurement";
+import VectorSource from "ol/source/Vector";
+import { useService } from "open-pioneer:react-hooks";
+import VectorLayer from "ol/layer/Vector.js";
+import Draw, {createBox, createRegularPolygon} from "ol/interaction/Draw.js";
 
 function BboxSearch() {
+    
+    const source = new VectorSource();
+    const vector = new VectorLayer({
+        source: source,
+        style: {
+            "fill-color": "rgba(255, 255, 255, 0.2)",
+            "stroke-color": "#2C7D75",
+            "stroke-width": 2,
+            "circle-radius": 7,
+            "circle-fill-color": "#2C7D75",
+                },
+            });
+
+    const mapService = useService<MapRegistry>("map.MapRegistry");
+    
+    const[extend, setExtend] = useState({x1: 0, y1: 0, x2: 0, y2: 0});
+
+    const drawInteraction = new Draw({
+        source: source,
+        type: "Circle",
+        geometryFunction: createBox(),
+        style: {
+            "stroke-color": "#2C7D75",
+            "stroke-width": 2,
+            "circle-radius": 7,
+            "circle-fill-color": "#2C7D75",
+                }
+    });
+
+    useEffect(() => {
+        test();
+    }, []);
+
+    async function test() {
+        const map = await mapService.expectMapModel(MAP_ID);
+        map.olMap.addInteraction(drawInteraction);
+
+        map.layers.addLayer(new SimpleLayer({olLayer: vector, title: "temp"}));
+
+        const drawStart = drawInteraction.on("drawstart", () => {
+            console.log("draw start");
+            vector.getSource()?.clear();
+        });
+
+        const drawEnd = drawInteraction.on("drawend", (e) => {
+            const feature = e.feature;
+            const extend = e.feature.getGeometry()!.getExtent();
+            console.log("draw end", feature);
+            console.log("Extend: ", extend);
+            setExtend({
+                x1: extend[0]!,
+                y1: extend[1]!,
+                x2: extend[2]!,
+                y2: extend[3]!
+            });
+            drawInteraction.abortDrawing();
+        });
+    }
 
     return (
         <>
-            TODO: Implement/Import BBOX selection
-            <Box height="50vh">
-                <Flex flex="1" height="100%" width="50%" direction="column" overflow="hidden" position="relative">
+            Please select extend:
+            <Box height="50vh">                
+                <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
                         mapId={MAP_ID}
                         role="main"
                         aria-label=""
                     >
-                        <MapInfoControls mapId={MAP_ID} />
+                        <Box bg="white" width="20%">
+                            <CoordinateViewer mapId={MAP_ID} precision={2} />
+                            <Text>
+                                Selected Box: <br />
+                                x1: {extend.x1}, y1: {extend.y1} <br />
+                                x2: {extend.x2}, y2: {extend.y2}
+                            </Text>
+                        </Box>
                     </MapContainer>
                 </Flex>
             </Box>
@@ -67,18 +140,25 @@ const CreateTimeseries: FC = () => {
         {
             title: "Step 1",
             description: <>
-                <Text >Name:</Text>
-                <Input
-                    value={name}
-                    onChange={(ev) => setName(ev.target.value)}
-                    placeholder='Timeseries 52'
-                />
-                <Text >Description:</Text>
-                <Input
-                    value={description}
-                    onChange={(ev) => setDescription(ev.target.value)}
-                    placeholder='Timeseries for demonstration purposes only!'
-                />
+                <Stack gap="4" align="flex-start" maxW="sm">
+                    <Field.Root required>
+                        <Field.Label>Name</Field.Label>
+                        <Input 
+                            value={name}
+                            onChange={(ev) => setName(ev.target.value)}
+                            placeholder='Timeseries 52'
+                            css={{ "--focus-color": "#2C7D75" }}/>
+                    </Field.Root>
+
+                    <Field.Root required>
+                        <Field.Label>Description</Field.Label>
+                        <Input 
+                            value={description}
+                            onChange={(ev) => setDescription(ev.target.value)}
+                            placeholder='Timeseries for demonstration purposes only!'
+                            css={{ "--focus-color": "#2C7D75" }}/>
+                    </Field.Root>
+                </Stack>
             </>,
         },
         {
@@ -132,7 +212,7 @@ const CreateTimeseries: FC = () => {
             <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal">
                 <Steps.List>
                     {steps.map((step, index) => (
-                        <Steps.Item key={index} index={index} title={step.title}>
+                        <Steps.Item colorPalette="teal" key={index} index={index} title={step.title}>
                             <Steps.Indicator />
                             <Steps.Title>{step.title}</Steps.Title>
                             <Steps.Separator />
@@ -140,7 +220,7 @@ const CreateTimeseries: FC = () => {
                     ))}
                 </Steps.List>
 
-                <ButtonGroup size="sm" variant="outline">
+                <ButtonGroup colorPalette="teal" size="sm" variant="outline">
                     <Steps.PrevTrigger asChild>
                         <Button>Prev</Button>
                     </Steps.PrevTrigger>
