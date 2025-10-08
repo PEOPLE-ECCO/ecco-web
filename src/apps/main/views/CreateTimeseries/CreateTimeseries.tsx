@@ -28,6 +28,8 @@ import { useService } from "open-pioneer:react-hooks";
 import VectorLayer from "ol/layer/Vector.js";
 import Draw, {createBox, createRegularPolygon} from "ol/interaction/Draw.js";
 import { CloseButton } from "@chakra-ui/react";
+import { MapZoomControls } from "../../components/Map/MapZoomControl";
+import { MapSidebarControls } from "../../components/Map/MapSidebarControls";
 
 function BboxSearch() {
     
@@ -107,6 +109,8 @@ function BboxSearch() {
                                 x2: {extend.x2}, y2: {extend.y2}
                             </Text>
                         </Box>
+                        <MapZoomControls mapId={MAP_ID} />
+                        <MapSidebarControls mapId={MAP_ID} />
                     </MapContainer>
                 </Flex>
             </Box>
@@ -123,7 +127,7 @@ const CreateTimeseries: FC = () => {
 
     const handleClick = () => {
         navigate(-1);
-    };
+        };
 
     const create = async () => {
         const timeseries: Timeseries = {
@@ -177,7 +181,7 @@ const CreateTimeseries: FC = () => {
                     <Table.Caption />
                     <Table.Header>
                         <Table.Row>
-                            <Table.ColumnHeader>Parameter</Table.ColumnHeader>
+                            <Table.ColumnHeader font="semibold">Parameter</Table.ColumnHeader>
                             <Table.ColumnHeader>Value</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
@@ -240,7 +244,7 @@ const CreateTimeseries: FC = () => {
                     </Steps.Content>
                 ))}
                 <Steps.CompletedContent>
-                    SUBMIT!!
+                    
                     <ActionButton
                         label="Create"
                         tooltip="Create timeseries"
