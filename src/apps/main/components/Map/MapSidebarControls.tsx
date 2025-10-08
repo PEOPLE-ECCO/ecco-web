@@ -40,7 +40,7 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
                 role="top-right"
                 aria-label="Map sidebar controls"
             >
-                <OverviewMap map={mapId} olLayer={overviewMapLayer} />
+                <OverviewMap mapId={mapId} olLayer={overviewMapLayer} />
                 <Separator mt={2} />
                 <Field.Root>
                     <Field.Label mt={1}>

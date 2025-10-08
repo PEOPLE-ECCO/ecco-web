@@ -77,7 +77,7 @@ const CreateJob: FC = () => {
         <>
             <Flex gap="10">
                 <Heading height="12" size="lg" mb={4} order="1">
-                Create new Timeseries
+                Create new Job
                 </Heading>
                 <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleClick}/>
             </Flex>

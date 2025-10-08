@@ -190,7 +190,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                 </Dialog.Body>
 
                                 <Dialog.Footer>
-                                    <Button colorPalette='teal' mr={3} onClick={onClose}>
+                                    <Button colorPalette='blue' mr={3} onClick={onClose}>
                                         Close
                                     </Button>
                                 </Dialog.Footer>
