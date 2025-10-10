@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router";
 import {
     Heading,
     Text,
@@ -13,23 +14,25 @@ import {
     Box,
     Table,
     Field,
-    Stack
+    Stack,
+    CloseButton
 } from "@chakra-ui/react";
 
-import { ActionButton } from "../../components/Timeseries/ActionButton";
-import { useServices } from "../../services/Services";
-import { Extend, Timeseries } from "../../components/definitions";
-import { useParams, useNavigate } from "react-router";
-import { MAP_ID } from "../../services";
-import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
-import VectorSource from "ol/source/Vector";
 import { useService } from "open-pioneer:react-hooks";
+
+import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
-import Draw, {createBox, createRegularPolygon} from "ol/interaction/Draw.js";
-import { CloseButton } from "@chakra-ui/react";
+import Draw, {createBox} from "ol/interaction/Draw.js";
+
+import { Extend, Timeseries } from "../../components/definitions";
+import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { MapSidebarControls } from "../../components/Map/MapSidebarControls";
+import { ActionButton } from "../../components/Timeseries/ActionButton";
+
+import { useServices } from "../../services/Services";
+import { MAP_BOX } from "../../services";
 
 function BboxSearch() {
     
@@ -47,7 +50,9 @@ function BboxSearch() {
 
     const mapService = useService<MapRegistry>("map.MapRegistry");
     
-    const[extend, setExtend] = useState({x1: 0, y1: 0, x2: 0, y2: 0});
+    const [extend, setExtend] = useState({x1: 0, y1: 0, x2: 0, y2: 0});
+
+    let boxdrawn = false;
 
     const drawInteraction = new Draw({
         source: source,
@@ -66,7 +71,7 @@ function BboxSearch() {
     }, []);
 
     async function test() {
-        const map = await mapService.expectMapModel(MAP_ID);
+        const map = await mapService.expectMapModel(MAP_BOX);
         map.olMap.addInteraction(drawInteraction);
 
         map.layers.addLayer(new SimpleLayer({olLayer: vector, title: "temp"}));
@@ -74,6 +79,7 @@ function BboxSearch() {
         const drawStart = drawInteraction.on("drawstart", () => {
             console.log("draw start");
             vector.getSource()?.clear();
+            console.log("Extend drawn?: ", boxdrawn);
         });
 
         const drawEnd = drawInteraction.on("drawend", (e) => {
@@ -88,6 +94,8 @@ function BboxSearch() {
                 y2: extend[3]!
             });
             drawInteraction.abortDrawing();
+            boxdrawn = true;
+            console.log("Extend drawn?: ",boxdrawn);
         });
     }
 
@@ -97,20 +105,20 @@ function BboxSearch() {
             <Box height="65vh">                
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
-                        mapId={MAP_ID}
+                        mapId={MAP_BOX}
                         role="main"
                         aria-label=""
                     >
                         <Box bg="white" width="20%">
-                            <MapInfoControls mapId={MAP_ID}></MapInfoControls>
+                            <MapInfoControls mapId={MAP_BOX}></MapInfoControls>
                             <Text>
                                 Extend Cordinates: <br />
                                 x1: {extend.x1}, y1: {extend.y1} <br />
                                 x2: {extend.x2}, y2: {extend.y2}
                             </Text>
                         </Box>
-                        <MapZoomControls mapId={MAP_ID} />
-                        <MapSidebarControls mapId={MAP_ID} />
+                        <MapZoomControls mapId={MAP_BOX} />
+                        <MapSidebarControls mapId={MAP_BOX} />
                     </MapContainer>
                 </Flex>
             </Box>
@@ -125,9 +133,12 @@ const CreateTimeseries: FC = () => {
     const { createTimeseries } = useServices();
     const navigate = useNavigate();
 
-    const handleClick = () => {
+    const handleExitClick = () => {
         navigate(-1);
         };
+
+    const [enableNextbutton, setEnableNextbutton] = useState<boolean>(false);
+        // something to check weather inputs are done and enables the next button
 
     const create = async () => {
         const timeseries: Timeseries = {
@@ -145,7 +156,7 @@ const CreateTimeseries: FC = () => {
 
     const steps = [
         {
-            title: "Step 1",
+            title: "Data Input",
             description: <>
                 <Stack gap="4" align="flex-start" maxW="sm">
                     <Field.Root required>
@@ -169,11 +180,11 @@ const CreateTimeseries: FC = () => {
             </>,
         },
         {
-            title: "Step 2",
+            title: "Extend Selection",
             description: <BboxSearch />,
         },
         {
-            title: "Step 3",
+            title: "Check Data",
             description: <>
                 CHECK DATA!
 
@@ -216,12 +227,12 @@ const CreateTimeseries: FC = () => {
                 <Heading height="12" size="lg" mb={4} order="1">
                 Create new Timeseries
                 </Heading>
-                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleClick}/>
+                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick}/>
             </Flex>
             <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal" width="100%">
                 <Steps.List>
                     {steps.map((step, index) => (
-                        <Steps.Item colorPalette="teal" key={index} index={index} title={step.title}>
+                        <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
                             <Steps.Indicator />
                             <Steps.Title>{step.title}</Steps.Title>
                             <Steps.Separator />
@@ -234,7 +245,7 @@ const CreateTimeseries: FC = () => {
                         <Button>Prev</Button>
                     </Steps.PrevTrigger>
                     <Steps.NextTrigger asChild>
-                        <Button>Next</Button>
+                        <Button disabled={enableNextbutton}>Next</Button>
                     </Steps.NextTrigger>
                 </ButtonGroup>
 

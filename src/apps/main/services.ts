@@ -57,3 +57,29 @@ export class MainMapProvider implements MapConfigProvider {
         };
     }    
 }
+
+export const MAP_BOX = "boxselection";
+export class BoxMapProvider implements MapConfigProvider {
+    mapId = MAP_BOX;
+
+    async getMapConfig(): Promise<MapConfig> {
+        return {
+            initialView: {
+                kind: "position",
+                center: { x: 850000, y: 6793120},
+                zoom: 10
+            },
+            projection: "EPSG:3857",
+            layers: [
+                new SimpleLayer({
+                    title: "OpenStreetMap",
+                    olLayer: new TileLayer({
+                        source: new OSM(),
+                        properties: { title: "OSM" }
+                    }),
+                    isBaseLayer: true
+                })
+            ]
+        };
+    }    
+}
