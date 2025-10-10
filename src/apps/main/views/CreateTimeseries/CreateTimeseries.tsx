@@ -106,7 +106,7 @@ function BboxSearch() {
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
                         mapId={MAP_BOX}
-                        role="main"
+                        role="boxselection"
                         aria-label=""
                     >
                         <Box bg="white" width="20%">
@@ -137,8 +137,23 @@ const CreateTimeseries: FC = () => {
         navigate(-1);
         };
 
-    const [enableNextbutton, setEnableNextbutton] = useState<boolean>(false);
+    const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
         // something to check weather inputs are done and enables the next button
+
+    useEffect(() => {
+        console.log(nextButtonDisabled);
+        console.log("start");
+        if (name != "" && description != "") {
+            setNextButtonDisabled(false);
+            console.log(nextButtonDisabled);
+        }
+        else {
+            setNextButtonDisabled(true); 
+            console.log(nextButtonDisabled);
+        }
+        console.log("end");
+         
+    }, [name, description]);
 
     const create = async () => {
         const timeseries: Timeseries = {
@@ -245,7 +260,7 @@ const CreateTimeseries: FC = () => {
                         <Button>Prev</Button>
                     </Steps.PrevTrigger>
                     <Steps.NextTrigger asChild>
-                        <Button disabled={enableNextbutton}>Next</Button>
+                        <Button disabled={nextButtonDisabled}>Next</Button>
                     </Steps.NextTrigger>
                 </ButtonGroup>
 
