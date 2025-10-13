@@ -25,7 +25,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
 import Draw, { createBox } from "ol/interaction/Draw.js";
 
-import { Extend, Timeseries } from "../../components/definitions";
+import { Extent, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { MapSidebarControls } from "../../components/Map/MapSidebarControls";
@@ -34,7 +34,12 @@ import { ActionButton } from "../../components/Timeseries/ActionButton";
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
 
-function BboxSearch() {
+interface BboxSearchProps {
+    onBboxChange: (extent?: Extent) => void;
+    isVisible: boolean
+}
+
+function BboxSearch(props: BboxSearchProps) {
     const source = new VectorSource();
     const vector = new VectorLayer({
         source: source,
@@ -47,8 +52,7 @@ function BboxSearch() {
         },
     });
     const mapService = useService<MapRegistry>("map.MapRegistry");
-    const [extend, setExtend] = useState({ x1: 0, y1: 0, x2: 0, y2: 0 });
-    const [boxDrawn, setBoxDrawn] = useState<boolean>(false);
+    const [extent, setExtent] = useState<Extent>();
 
     const drawInteraction = new Draw({
         source: source,
@@ -62,9 +66,14 @@ function BboxSearch() {
         }
     });
 
+    vector.getSource()?.clear();
+
     useEffect(() => {
-        drawBox();
-    }, []);
+        if (props.isVisible) {
+            drawBox();
+            props.onBboxChange(extent);
+        }
+    }, [props.isVisible]);
 
     async function drawBox() {
         const map = await mapService.expectMapModel(MAP_BOX);
@@ -78,21 +87,30 @@ function BboxSearch() {
 
         const drawEnd = drawInteraction.on("drawend", (e) => {
             const feature = e.feature;
-            const extend = e.feature.getGeometry()!.getExtent();
-            setExtend({
-                x1: extend[0]!,
-                y1: extend[1]!,
-                x2: extend[2]!,
-                y2: extend[3]!
-            });
+            const geom = feature.getGeometry()!.getExtent();
+            const newExtent = {
+                temporal: {
+                    interval: []
+                },
+                spatial: {
+                    bbox:
+                        [
+                            geom[0]!,
+                            geom[1]!,
+                            geom[2]!,
+                            geom[3]!
+                        ]
+                }
+            } as Extent;
+            setExtent(newExtent);
             drawInteraction.abortDrawing();
-            setBoxDrawn(true);
+            props.onBboxChange(newExtent);
         });
     }
 
     return (
         <>
-            Please select extend:
+            Please select extent:
             <Box height="65vh">
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
@@ -103,9 +121,9 @@ function BboxSearch() {
                         <Box bg="white" width="20%">
                             <MapInfoControls mapId={MAP_BOX}></MapInfoControls>
                             <Text>
-                                Extend Cordinates: <br />
-                                x1: {extend.x1}, y1: {extend.y1} <br />
-                                x2: {extend.x2}, y2: {extend.y2}
+                                Extent Cordinates: <br />
+                                x1: {extent?.spatial.bbox[0]}, x2: {extent?.spatial.bbox[1]} <br />
+                                x2: {extent?.spatial.bbox[2]}, y2: {extent?.spatial.bbox[3]}
                             </Text>
                         </Box>
                         <MapZoomControls mapId={MAP_BOX} />
@@ -121,6 +139,8 @@ const CreateTimeseries: FC = () => {
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
+    const [extent, setExtent] = useState<Extent>();
+    const [step, setStep] = useState<number>(0);
     const { createTimeseries } = useServices();
     const navigate = useNavigate();
     const handleExitClick = () => {
@@ -129,12 +149,13 @@ const CreateTimeseries: FC = () => {
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
     useEffect(() => {
+        console.log("disable state");
         if (name != "" && description != "") {
             setNextButtonDisabled(false);
         }
         else {
             setNextButtonDisabled(true);
-            }
+        }
     }, [name, description]);
 
     const create = async () => {
@@ -177,8 +198,11 @@ const CreateTimeseries: FC = () => {
             </>,
         },
         {
-            title: "Extend Selection",
-            description: <BboxSearch />,
+            title: "Extent Selection",
+            description: <BboxSearch isVisible={step == 1} onBboxChange={(ext) => {;
+                setExtent(ext);
+                setNextButtonDisabled(!ext);
+            }} />,
         },
         {
             title: "Check Data",
@@ -203,8 +227,6 @@ const CreateTimeseries: FC = () => {
                         </Table.Row>
                     </Table.Body>
                 </Table.Root>
-
-
             </>,
         },
     ];
@@ -225,7 +247,10 @@ const CreateTimeseries: FC = () => {
                 </Heading>
                 <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
             </Flex>
-            <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal" width="100%">
+
+            <Steps.Root defaultStep={0} count={steps.length-1} onStepChange={(details) => {
+                setStep(details.step);
+            }} orientation="horizontal" width="100%">
                 <Steps.List>
                     {steps.map((step, index) => (
                         <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
@@ -238,11 +263,15 @@ const CreateTimeseries: FC = () => {
 
                 <ButtonGroup colorPalette="teal" size="sm" variant="outline">
                     <Steps.PrevTrigger asChild>
-                        <Button>Prev</Button>
+                        <Button onClick={() => {
+                            setNextButtonDisabled(false);
+                        }}>Prev</Button>
                     </Steps.PrevTrigger>
-                    <Steps.NextTrigger asChild>
-                        <Button disabled={nextButtonDisabled}>Next</Button>
-                    </Steps.NextTrigger>
+                    {(step < 2) &&
+                        <Steps.NextTrigger asChild>
+                            <Button disabled={nextButtonDisabled}>Next</Button>
+                        </Steps.NextTrigger>
+                    }
                 </ButtonGroup>
 
                 {steps.map((step, index) => (
@@ -250,8 +279,8 @@ const CreateTimeseries: FC = () => {
                         {step.description}
                     </Steps.Content>
                 ))}
-                <Steps.CompletedContent>
 
+                <Steps.CompletedContent>
                     <ActionButton
                         label="Create"
                         tooltip="Create timeseries"
