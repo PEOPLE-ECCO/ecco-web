@@ -49,21 +49,21 @@ export interface STACProperties {
 
 }
 
-export interface SpatialExtend {
+export interface SpatialExtent {
     bbox: number[]
 }
 
-export interface TemporalExtend {
+export interface TemporalExtent {
     interval: string[]
 }
 
-export interface Extend {
-    spatial: SpatialExtend
-    temporal: TemporalExtend
+export interface Extent {
+    spatial: SpatialExtent
+    temporal: TemporalExtent
 }
 
 export interface Catalog {
     assets: AssetWrap;
     id: string
-    extend: Extend
+    extent: Extent
 }
