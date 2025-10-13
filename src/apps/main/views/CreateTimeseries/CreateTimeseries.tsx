@@ -23,7 +23,7 @@ import { useService } from "open-pioneer:react-hooks";
 
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
-import Draw, {createBox} from "ol/interaction/Draw.js";
+import Draw, { createBox } from "ol/interaction/Draw.js";
 
 import { Extend, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
@@ -35,7 +35,6 @@ import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
 
 function BboxSearch() {
-    
     const source = new VectorSource();
     const vector = new VectorLayer({
         source: source,
@@ -45,14 +44,11 @@ function BboxSearch() {
             "stroke-width": 2,
             "circle-radius": 7,
             "circle-fill-color": "#2C7D75",
-                },
-            });
-
+        },
+    });
     const mapService = useService<MapRegistry>("map.MapRegistry");
-    
-    const [extend, setExtend] = useState({x1: 0, y1: 0, x2: 0, y2: 0});
-
-    let boxdrawn = false;
+    const [extend, setExtend] = useState({ x1: 0, y1: 0, x2: 0, y2: 0 });
+    const [boxDrawn, setBoxDrawn] = useState<boolean>(false);
 
     const drawInteraction = new Draw({
         source: source,
@@ -63,30 +59,26 @@ function BboxSearch() {
             "stroke-width": 2,
             "circle-radius": 7,
             "circle-fill-color": "#2C7D75",
-                }
+        }
     });
 
     useEffect(() => {
-        test();
+        drawBox();
     }, []);
 
-    async function test() {
+    async function drawBox() {
         const map = await mapService.expectMapModel(MAP_BOX);
-        map.olMap.addInteraction(drawInteraction);
 
-        map.layers.addLayer(new SimpleLayer({olLayer: vector, title: "temp"}));
+        map.olMap.addInteraction(drawInteraction);
+        map.layers.addLayer(new SimpleLayer({ olLayer: vector, title: "temp" }));
 
         const drawStart = drawInteraction.on("drawstart", () => {
-            console.log("draw start");
             vector.getSource()?.clear();
-            console.log("Extend drawn?: ", boxdrawn);
         });
 
         const drawEnd = drawInteraction.on("drawend", (e) => {
             const feature = e.feature;
             const extend = e.feature.getGeometry()!.getExtent();
-            console.log("draw end", feature);
-            console.log("Extend: ", extend);
             setExtend({
                 x1: extend[0]!,
                 y1: extend[1]!,
@@ -94,15 +86,14 @@ function BboxSearch() {
                 y2: extend[3]!
             });
             drawInteraction.abortDrawing();
-            boxdrawn = true;
-            console.log("Extend drawn?: ",boxdrawn);
+            setBoxDrawn(true);
         });
     }
 
     return (
         <>
             Please select extend:
-            <Box height="65vh">                
+            <Box height="65vh">
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
                         mapId={MAP_BOX}
@@ -132,27 +123,18 @@ const CreateTimeseries: FC = () => {
     const [description, setDescription] = useState<string>("");
     const { createTimeseries } = useServices();
     const navigate = useNavigate();
-
     const handleExitClick = () => {
         navigate(-1);
-        };
-
+    };
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
-        // something to check weather inputs are done and enables the next button
 
     useEffect(() => {
-        console.log(nextButtonDisabled);
-        console.log("start");
         if (name != "" && description != "") {
             setNextButtonDisabled(false);
-            console.log(nextButtonDisabled);
         }
         else {
-            setNextButtonDisabled(true); 
-            console.log(nextButtonDisabled);
-        }
-        console.log("end");
-         
+            setNextButtonDisabled(true);
+            }
     }, [name, description]);
 
     const create = async () => {
@@ -176,20 +158,20 @@ const CreateTimeseries: FC = () => {
                 <Stack gap="4" align="flex-start" maxW="sm">
                     <Field.Root required>
                         <Field.Label>Name</Field.Label>
-                        <Input 
+                        <Input
                             value={name}
                             onChange={(ev) => setName(ev.target.value)}
                             placeholder='Timeseries 52'
-                            css={{ "--focus-color": "#2C7D75" }}/>
+                            css={{ "--focus-color": "#2C7D75" }} />
                     </Field.Root>
 
                     <Field.Root required>
                         <Field.Label>Description</Field.Label>
-                        <Input 
+                        <Input
                             value={description}
                             onChange={(ev) => setDescription(ev.target.value)}
                             placeholder='Timeseries for demonstration purposes only!'
-                            css={{ "--focus-color": "#2C7D75" }}/>
+                            css={{ "--focus-color": "#2C7D75" }} />
                     </Field.Root>
                 </Stack>
             </>,
@@ -202,7 +184,6 @@ const CreateTimeseries: FC = () => {
             title: "Check Data",
             description: <>
                 CHECK DATA!
-
                 <Table.Root>
                     <Table.Caption />
                     <Table.Header>
@@ -240,9 +221,9 @@ const CreateTimeseries: FC = () => {
         <>
             <Flex gap="10">
                 <Heading height="12" size="lg" mb={4} order="1">
-                Create new Timeseries
+                    Create new Timeseries
                 </Heading>
-                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick}/>
+                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
             </Flex>
             <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal" width="100%">
                 <Steps.List>
@@ -270,7 +251,7 @@ const CreateTimeseries: FC = () => {
                     </Steps.Content>
                 ))}
                 <Steps.CompletedContent>
-                    
+
                     <ActionButton
                         label="Create"
                         tooltip="Create timeseries"
