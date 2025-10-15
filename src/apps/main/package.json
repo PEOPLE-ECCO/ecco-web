@@ -2,9 +2,9 @@
     "name": "ecco-web",
     "private": true,
     "dependencies": {
-        "@open-pioneer/http": "latest",
-        "@open-pioneer/authentication": "latest",
-        "@open-pioneer/authentication-keycloak": "latest",
+        "@open-pioneer/http": "catalog:",
+        "@open-pioneer/authentication": "catalog:",
+        "@open-pioneer/authentication-keycloak": "catalog:",
         "@open-pioneer/chakra-snippets": "catalog:",
         "@open-pioneer/runtime": "catalog:",
         "@open-pioneer/basemap-switcher": "catalog:",
