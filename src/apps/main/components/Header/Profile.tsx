@@ -15,11 +15,21 @@ import {
 import { AuthService, ForceAuth, LoginEffect, useAuthState } from "@open-pioneer/authentication";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { useService } from "open-pioneer:react-hooks";
+import { useEffect, useState } from "react";
+import { useServices } from "../../services/Services";
+
+
+interface UserDetails {
+    name: string
+}
 
 export const Profile = () => {
     const authService = useService<AuthService>("authentication.AuthService");
     const authState = useAuthState(authService);
     const sessionInfo = authState.kind == "authenticated" ? authState.sessionInfo : undefined;
+    const { getUser } = useServices();
+
+    const [userDetails, setUserDetails] = useState<UserDetails>();
 
     const userName = sessionInfo?.attributes?.userName as string;
     const givenName = sessionInfo?.attributes?.givenName as string;
@@ -28,6 +38,15 @@ export const Profile = () => {
     const authenticated = useReactiveSnapshot(() => {
         return authService.getAuthState().kind == "authenticated";
     }, [authService]);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            if (authenticated) {
+                setUserDetails(await getUser());
+            }
+        };
+        fetchUser();
+    }, [authenticated]);
 
     const accountSettings = [
         {

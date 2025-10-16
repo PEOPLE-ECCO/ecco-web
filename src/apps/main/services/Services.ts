@@ -9,6 +9,18 @@ import { Job, Timeseries } from "../components/definitions";
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
 
+    const getUser = async () => {
+        const url = import.meta.env.VITE_API_ROOT + "/user/";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+
+        if (responseData) {
+            return responseData;
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    };
+
     const getScenarios = async () => {
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/";
         const response = await httpService.fetch(url);
@@ -60,8 +72,7 @@ export const useServices = () => {
     };
 
     const createJob = async (scenario_id: string, ts_id: string, job: Job) => {
-        console.log("createJob for timeseries: " + ts_id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + ts_id + "/jobs/";
+        const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts_id + "/jobs/";
         const response = await httpService.fetch(url, {
             "method": "POST",
             headers: {
@@ -69,10 +80,16 @@ export const useServices = () => {
             },
             body: JSON.stringify(
                 {
-                    "name": "asdf",
-                    "description": "asdf",
-                    "process": 7,
-                    "parameters": "ads"
+                    "parameters": {
+                        "rangeend": 2022,
+                        "rangestart": 2020,
+                        "spatial_extent": {
+                            "east": 4.659337006068995,
+                            "west": 4.516912902851971,
+                            "north": 52.444633712215875,
+                            "south": 52.38976387918794
+                        }
+                    }
                 }
             )
         });
@@ -86,8 +103,7 @@ export const useServices = () => {
     };
 
     const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string) => {
-        console.log("getJobsByTimeseriesId" + scenario_id + "," + timeseries_id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + timeseries_id + "/jobs";
+        const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + timeseries_id + "/jobs/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
 
@@ -100,7 +116,8 @@ export const useServices = () => {
 
     const getJobCatalog = async (scenario_id: string, job: Job) => {
         console.log("getJobCatalog" + scenario_id + "," + job.id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + job.timeseries_id + "/jobs/" + job.id + "/catalog";
+
+        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/catalog";
         const response = await httpService.fetch(url);
 
         if (response.status != 200) {
@@ -118,8 +135,7 @@ export const useServices = () => {
     };
 
     const getJobLog = async (scenario_id: string, job: Job) => {
-        console.log("getJobLog" + scenario_id + "," + job.id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + job.timeseries_id + "/jobs/" + job.id + "/log";
+        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/log/";
         const response = await httpService.fetch(url);
 
         if (response.status != 200) {
@@ -135,5 +151,5 @@ export const useServices = () => {
         }
     };
 
-    return { getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
+    return { getUser, getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
 };
