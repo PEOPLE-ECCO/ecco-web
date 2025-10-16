@@ -243,7 +243,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         }
     }, [name, description]);
 
-    const create = async () => {
+    const createTS = async () => {
         const timeseries: Timeseries = {
             id: "",
             scenario_id: id!.toString(),
@@ -257,13 +257,26 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         handleExitClick();
     };
 
+    const { job_id, ts_id } = useParams();
+
+    const { createJob } = useServices();
+
+    const createJ = async (buttonType: string) => {
+        console.log(`Button clicked: ${buttonType}`);
+
+        const created = await createJob(job_id!, ts_id!, undefined);
+
+        alert("Created Job: " + created);
+        handleExitClick();
+    };
+
 
     const steps = [
         {
             title: "Data Input",
             description: <>
                 <Stack pt="8" gap="4" align="flex-start" maxW="md">
-                    <Field.Root  required>
+                    <Field.Root required>
                         <Field.Label>Name</Field.Label>
                         <Input
                             value={name}
@@ -344,9 +357,59 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                         <Button size="xs" width="35%" bg="#2C7D75" onClick={() => select(ts)}>
                                             View Results
                                         </Button>
-                                        <Button size="xs" width="45%" bg="#2C7D75" onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>
-                                            Expand Timeseries
-                                        </Button>
+
+
+                                        <Dialog.Root size="md" placement="center">
+                                            <Dialog.Trigger asChild>
+                                                <Button size="xs" width="45%" bg="#2C7D75">
+                                                    Expand Timeseries
+                                                </Button>
+                                            </Dialog.Trigger>
+                                            <Portal>
+                                                <Dialog.Backdrop />
+                                                <Dialog.Positioner>
+                                                    <Dialog.Content>
+                                                        <Dialog.Header>
+                                                            <Dialog.Title>
+                                                                <Flex gap="4">
+                                                                    <Heading height="12" size="lg" order="1">
+                                                                        Expand Timeseries
+                                                                    </Heading>
+                                                                </Flex>
+                                                            </Dialog.Title>
+                                                        </Dialog.Header>
+                                                        <Dialog.Body>
+                                                            <Text pb="2" textStyle="lg">Please select Timespan:</Text>
+                                                            <Stack pt="4" gap="4" align="flex-start" maxW="md">
+                                                                <Field.Root>
+                                                                    <Field.Label>Start Date</Field.Label>
+                                                                    <Input
+                                                                        placeholder="MM-DD-YYYY"
+                                                                        css={{ "--focus-color": "#2C7D75" }} />
+                                                                </Field.Root>
+                                                                <Field.Root>
+                                                                    <Field.Label>End Date</Field.Label>
+                                                                    <Input
+                                                                        placeholder="MM-DD-YYYY"
+                                                                        css={{ "--focus-color": "#2C7D75" }} />
+                                                                </Field.Root>
+                                                            </Stack>
+                                                        </Dialog.Body>
+                                                        <Dialog.Footer>
+                                                            <ActionButton
+                                                                label="Expand"
+                                                                tooltip="Expand timeseries"
+                                                                disabled={false}
+                                                                onClick={() => createJ("create")}
+                                                                w={"170px"}></ActionButton>
+                                                        </Dialog.Footer>
+                                                        <Dialog.CloseTrigger asChild>
+                                                            <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
+                                                        </Dialog.CloseTrigger>
+                                                    </Dialog.Content>
+                                                </Dialog.Positioner>
+                                            </Portal>
+                                        </Dialog.Root>
                                         <Menu.Root>
                                             <Menu.Trigger asChild>
                                                 <IconButton variant="outline" size="xs">
@@ -422,58 +485,56 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                         </Flex>
                                     </Dialog.Title>
                                 </Dialog.Header>
-                                    <Steps.Root defaultStep={0} count={steps.length - 1} onStepChange={(details) => {
-                                        setStep(details.step);
-                                    }} orientation="horizontal" width="100%">
-                                        <Dialog.Body>
-                                            <Steps.List>
-                                                {steps.map((step, index) => (
-                                                    <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
-                                                        <Steps.Indicator />
-                                                        <Steps.Title>{step.title}</Steps.Title>
-                                                        <Steps.Separator />
-                                                    </Steps.Item>
-                                                ))}
-                                            </Steps.List >
+                                <Steps.Root defaultStep={0} count={steps.length - 1} onStepChange={(details) => {
+                                    setStep(details.step);
+                                }} orientation="horizontal" width="100%">
+                                    <Dialog.Body>
+                                        <Steps.List>
                                             {steps.map((step, index) => (
-                                                <Steps.Content key={index} index={index}>
-                                                    {step.description}
-                                                </Steps.Content>
+                                                <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
+                                                    <Steps.Indicator />
+                                                    <Steps.Title>{step.title}</Steps.Title>
+                                                    <Steps.Separator />
+                                                </Steps.Item>
                                             ))}
-                                        </Dialog.Body>
-                                        <Dialog.Footer>
-                                            <ButtonGroup colorPalette="teal" size="sm" variant="outline">
-                                                <Steps.PrevTrigger asChild>
-                                                    <Button onClick={() => {
-                                                        setNextButtonDisabled(false);
-                                                    }}>Prev</Button>
-                                                </Steps.PrevTrigger>
-                                                {(step < 2) &&
-                                                    <Steps.NextTrigger asChild>
-                                                        <Button disabled={nextButtonDisabled}>Next</Button>
-                                                    </Steps.NextTrigger>
-                                                }
-                                            </ButtonGroup>
-                                            <Steps.CompletedContent>
-                                                <ActionButton
-                                                    label="Create"
-                                                    tooltip="Create timeseries"
-                                                    disabled={false}
-                                                    onClick={() => create()}
-                                                    w={"170px"}
-                                                />
-                                            </Steps.CompletedContent>
-                                        </Dialog.Footer>
-                                    </Steps.Root>
+                                        </Steps.List >
+                                        {steps.map((step, index) => (
+                                            <Steps.Content key={index} index={index}>
+                                                {step.description}
+                                            </Steps.Content>
+                                        ))}
+                                    </Dialog.Body>
+                                    <Dialog.Footer>
+                                        <ButtonGroup colorPalette="teal" size="sm" variant="outline">
+                                            <Steps.PrevTrigger asChild>
+                                                <Button onClick={() => {
+                                                    setNextButtonDisabled(false);
+                                                }}>Prev</Button>
+                                            </Steps.PrevTrigger>
+                                            {(step < 2) &&
+                                                <Steps.NextTrigger asChild>
+                                                    <Button disabled={nextButtonDisabled}>Next</Button>
+                                                </Steps.NextTrigger>
+                                            }
+                                        </ButtonGroup>
+                                        <Steps.CompletedContent>
+                                            <ActionButton
+                                                label="Create"
+                                                tooltip="Create timeseries"
+                                                disabled={false}
+                                                onClick={() => createTS()}
+                                                w={"170px"}
+                                            />
+                                        </Steps.CompletedContent>
+                                    </Dialog.Footer>
+                                </Steps.Root>
                                 <Dialog.CloseTrigger asChild>
-                                    <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick}/>
+                                    <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
                                 </Dialog.CloseTrigger>
                             </Dialog.Content>
                         </Dialog.Positioner>
                     </Portal>
                 </Dialog.Root>
-
-
 
                 {modalContent && open &&
                     <Dialog.Root size="full" open={open} onExitComplete={onClose} scrollBehavior="inside">
@@ -487,7 +548,6 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                 <Dialog.Body>
                                     {modalContent}
                                 </Dialog.Body>
-
                                 <Dialog.Footer>
                                     <Button colorPalette='blue' mr={3} onClick={onClose}>
                                         Close
