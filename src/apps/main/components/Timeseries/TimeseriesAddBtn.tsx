@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, IconButton, Tooltip } from "@chakra-ui/react";
+import { Flex, IconButton} from "@chakra-ui/react";
+import { Tooltip } from "../../components/ui/tooltip";
 import { FiPlus } from "react-icons/fi";
 import { useNavigate } from "react-router";
 
@@ -15,7 +16,7 @@ export function TimeseriesAddBtn() {
 
     return (
         <Flex justify="center" mt={4}>
-            <Tooltip.Root label="Add new Timeseries" aria-label="Add new Timeseries Tooltip">
+            <Tooltip content="Add new Timeseries">
                 <IconButton
                     aria-label="Add new Timeseries"
                     onClick={handleRedirect}
@@ -27,7 +28,7 @@ export function TimeseriesAddBtn() {
                 >
                     <FiPlus></FiPlus>
                 </IconButton>
-            </Tooltip.Root>
+            </Tooltip>
         </Flex>
     );
 }
