@@ -4,7 +4,6 @@
 import {
     Box,
     Button,
-    Collapsible,
     Stack,
     Text,
     Menu,
@@ -24,17 +23,15 @@ import {
     Input
 } from "@chakra-ui/react";
 
-import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
 import { ActionButton } from "./ActionButton";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
-import { MapSidebarControls } from "../../components/Map/MapSidebarControls";
 import { Job, Timeseries, Extent } from "../definitions";
 import { useServices } from "../../services/Services";
 
 import { ReactNode, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { Ellipsis, Plus } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { FiPlus } from "react-icons/fi";
 
 import VectorSource from "ol/source/Vector";
@@ -123,24 +120,24 @@ function BboxSearch(props: BboxSearchProps) {
 
     return (
         <>
-            Please select extent:
-            <Box height="65vh">
+            <Text pt="8" pb="2" textStyle="lg">Please select extent:</Text>
+            <Box height="60vh" border="1px solid black">
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
                     <MapContainer
                         mapId={MAP_BOX}
                         role="boxselection"
                         aria-label=""
                     >
-                        <Box bg="white" width="20%">
-                            <MapInfoControls mapId={MAP_BOX}></MapInfoControls>
+                        <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
+
                             <Text>
                                 Extent Cordinates: <br />
                                 x1: {extent?.spatial.bbox[0]}, x2: {extent?.spatial.bbox[1]} <br />
                                 x2: {extent?.spatial.bbox[2]}, y2: {extent?.spatial.bbox[3]}
                             </Text>
                         </Box>
+                        <MapInfoControls mapId={MAP_BOX}></MapInfoControls>
                         <MapZoomControls mapId={MAP_BOX} />
-                        <MapSidebarControls mapId={MAP_BOX} />
                     </MapContainer>
                 </Flex>
             </Box>
@@ -232,7 +229,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const { createTimeseries } = useServices();
 
     const handleExitClick = () => {
-        navigate(-1);
+        navigate(0);
     };
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
@@ -257,7 +254,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         const created = await createTimeseries(timeseries);
 
         alert("Created Timeseries: " + created);
-        navigate("..");
+        handleExitClick();
     };
 
 
@@ -265,8 +262,8 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         {
             title: "Data Input",
             description: <>
-                <Stack gap="4" align="flex-start" maxW="sm">
-                    <Field.Root required>
+                <Stack pt="8" gap="4" align="flex-start" maxW="md">
+                    <Field.Root  required>
                         <Field.Label>Name</Field.Label>
                         <Input
                             value={name}
@@ -297,7 +294,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         {
             title: "Check Data",
             description: <>
-                CHECK DATA!
+                <Text pt="8" pb="2" textStyle="lg">CHECK DATA!</Text>
                 <Table.Root>
                     <Table.Caption />
                     <Table.Header>
@@ -397,9 +394,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                     ))}
                 </Accordion.Root>
 
-                <TimeseriesAddBtn />
-
-                <Dialog.Root>
+                <Dialog.Root size="xl" placement="center">
                     <Dialog.Trigger asChild>
                         <Flex justify="center" mt={4}>
                             <IconButton
@@ -420,71 +415,63 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                             <Dialog.Content>
                                 <Dialog.Header>
                                     <Dialog.Title>
-                                        <Flex gap="10">
-                                            <Heading height="12" size="lg" mb={4} order="1">
+                                        <Flex gap="4">
+                                            <Heading height="12" size="lg" order="1">
                                                 Create new Timeseries
                                             </Heading>
                                         </Flex>
                                     </Dialog.Title>
                                 </Dialog.Header>
-                                <Steps.Root defaultStep={0} count={steps.length - 1} onStepChange={(details) => {
-                                    setStep(details.step);
-                                }} orientation="horizontal" width="100%">
-                                    <Dialog.Body>
-
-                                        <Steps.List>
+                                    <Steps.Root defaultStep={0} count={steps.length - 1} onStepChange={(details) => {
+                                        setStep(details.step);
+                                    }} orientation="horizontal" width="100%">
+                                        <Dialog.Body>
+                                            <Steps.List>
+                                                {steps.map((step, index) => (
+                                                    <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
+                                                        <Steps.Indicator />
+                                                        <Steps.Title>{step.title}</Steps.Title>
+                                                        <Steps.Separator />
+                                                    </Steps.Item>
+                                                ))}
+                                            </Steps.List >
                                             {steps.map((step, index) => (
-                                                <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
-                                                    <Steps.Indicator />
-                                                    <Steps.Title>{step.title}</Steps.Title>
-                                                    <Steps.Separator />
-                                                </Steps.Item>
+                                                <Steps.Content key={index} index={index}>
+                                                    {step.description}
+                                                </Steps.Content>
                                             ))}
-                                        </Steps.List>
-
-
-
-                                    </Dialog.Body>
-                                    <Dialog.Footer>
-                                        <ButtonGroup colorPalette="teal" size="sm" variant="outline">
-                                            <Steps.PrevTrigger asChild>
-                                                <Button onClick={() => {
-                                                    setNextButtonDisabled(false);
-                                                }}>Prev</Button>
-                                            </Steps.PrevTrigger>
-                                            {(step < 2) &&
-                                                <Steps.NextTrigger asChild>
-                                                    <Button disabled={nextButtonDisabled}>Next</Button>
-                                                </Steps.NextTrigger>
-                                            }
-                                        </ButtonGroup>
-
-                                        {steps.map((step, index) => (
-                                            <Steps.Content key={index} index={index}>
-                                                {step.description}
-                                            </Steps.Content>
-                                        ))}
-
-                                        <Steps.CompletedContent>
-                                            <ActionButton
-                                                label="Create"
-                                                tooltip="Create timeseries"
-                                                disabled={false}
-                                                onClick={() => create()}
-                                                w={"170px"}
-                                            />
-                                        </Steps.CompletedContent>
-                                    </Dialog.Footer>
-                                </Steps.Root>
+                                        </Dialog.Body>
+                                        <Dialog.Footer>
+                                            <ButtonGroup colorPalette="teal" size="sm" variant="outline">
+                                                <Steps.PrevTrigger asChild>
+                                                    <Button onClick={() => {
+                                                        setNextButtonDisabled(false);
+                                                    }}>Prev</Button>
+                                                </Steps.PrevTrigger>
+                                                {(step < 2) &&
+                                                    <Steps.NextTrigger asChild>
+                                                        <Button disabled={nextButtonDisabled}>Next</Button>
+                                                    </Steps.NextTrigger>
+                                                }
+                                            </ButtonGroup>
+                                            <Steps.CompletedContent>
+                                                <ActionButton
+                                                    label="Create"
+                                                    tooltip="Create timeseries"
+                                                    disabled={false}
+                                                    onClick={() => create()}
+                                                    w={"170px"}
+                                                />
+                                            </Steps.CompletedContent>
+                                        </Dialog.Footer>
+                                    </Steps.Root>
                                 <Dialog.CloseTrigger asChild>
-                                    <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" />
+                                    <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick}/>
                                 </Dialog.CloseTrigger>
                             </Dialog.Content>
                         </Dialog.Positioner>
                     </Portal>
                 </Dialog.Root>
-
-
 
 
 
