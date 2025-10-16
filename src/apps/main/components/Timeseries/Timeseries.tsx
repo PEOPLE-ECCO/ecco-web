@@ -29,7 +29,7 @@ import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { Job, Timeseries, Extent } from "../definitions";
 import { useServices } from "../../services/Services";
 
-import { ReactNode, useState, useEffect } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Ellipsis } from "lucide-react";
 import { FiPlus } from "react-icons/fi";
@@ -41,15 +41,16 @@ import Draw, { createBox } from "ol/interaction/Draw.js";
 import { MAP_BOX } from "../../services";
 import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
 import { useService } from "open-pioneer:react-hooks";
+import { start } from "repl";
 
 
-
-interface BboxSearchProps {
+// Extend
+interface ExtentSelectionProps {
     onBboxChange: (extent?: Extent) => void;
     isVisible: boolean
 }
 
-function BboxSearch(props: BboxSearchProps) {
+function ExtentSelection(props: ExtentSelectionProps) {
     const source = new VectorSource();
     const vector = new VectorLayer({
         source: source,
@@ -146,6 +147,9 @@ function BboxSearch(props: BboxSearchProps) {
 }
 
 
+
+
+// Timeseries
 interface TimeseriesProps {
     timeseries?: Timeseries[];
     onSelect: (ts: Timeseries) => void;
@@ -220,7 +224,43 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         onSelect(ts);
     };
 
+    const handleExitClick = () => {
+        navigate(0);
+    };
 
+
+
+
+
+    // Expand TimeSeries 
+    const { job_id, ts_id } = useParams();
+    const { createJob } = useServices();
+    const [expandButtonDisabled, setExpandButtonDisabled] = useState<boolean>(true);
+    const [startDate, setStartDate] = useState<string>("");
+    const [endDate, setEndDate] = useState<string>("");
+
+    useEffect(() => {
+        if (startDate != "" && endDate != "") {
+            setExpandButtonDisabled(false);
+        }
+        else {
+            setExpandButtonDisabled(true);
+        }
+    }, [startDate, endDate]);
+
+    const createJ = async (buttonType: string) => {
+        console.log(`Button clicked: ${buttonType}`);
+
+        const created = await createJob(job_id!, ts_id!, undefined);
+
+        alert("Created Job: " + created);
+        handleExitClick();
+    };
+
+
+
+
+    // CreateTimeseries (& Expand TimeSeries )
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
@@ -228,13 +268,9 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const [step, setStep] = useState<number>(0);
     const { createTimeseries } = useServices();
 
-    const handleExitClick = () => {
-        navigate(0);
-    };
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
     useEffect(() => {
-        console.log("disable state");
         if (name != "" && description != "") {
             setNextButtonDisabled(false);
         }
@@ -254,19 +290,6 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         const created = await createTimeseries(timeseries);
 
         alert("Created Timeseries: " + created);
-        handleExitClick();
-    };
-
-    const { job_id, ts_id } = useParams();
-
-    const { createJob } = useServices();
-
-    const createJ = async (buttonType: string) => {
-        console.log(`Button clicked: ${buttonType}`);
-
-        const created = await createJob(job_id!, ts_id!, undefined);
-
-        alert("Created Job: " + created);
         handleExitClick();
     };
 
@@ -298,7 +321,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         },
         {
             title: "Extent Selection",
-            description: <BboxSearch isVisible={step == 1} onBboxChange={(ext) => {
+            description: <ExtentSelection isVisible={step == 1} onBboxChange={(ext) => {
                 ;
                 setExtent(ext);
                 setNextButtonDisabled(!ext);
@@ -332,6 +355,9 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     ];
 
 
+
+
+    // Page Content
     return (
         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
             <Stack gap="4">
@@ -357,8 +383,6 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                         <Button size="xs" width="35%" bg="#2C7D75" onClick={() => select(ts)}>
                                             View Results
                                         </Button>
-
-
                                         <Dialog.Root size="md" placement="center">
                                             <Dialog.Trigger asChild>
                                                 <Button size="xs" width="45%" bg="#2C7D75">
@@ -384,12 +408,20 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                                 <Field.Root>
                                                                     <Field.Label>Start Date</Field.Label>
                                                                     <Input
+                                                                        value={startDate}
+                                                                        onChange={(ev) => setStartDate(ev.target.value)}
+                                                                        aria-label="Date"
+                                                                        type="date"
                                                                         placeholder="MM-DD-YYYY"
                                                                         css={{ "--focus-color": "#2C7D75" }} />
                                                                 </Field.Root>
                                                                 <Field.Root>
                                                                     <Field.Label>End Date</Field.Label>
                                                                     <Input
+                                                                        value={endDate}
+                                                                        onChange={(ev) => setEndDate(ev.target.value)}
+                                                                        aria-label="Date"
+                                                                        type="date"
                                                                         placeholder="MM-DD-YYYY"
                                                                         css={{ "--focus-color": "#2C7D75" }} />
                                                                 </Field.Root>
@@ -397,9 +429,9 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                         </Dialog.Body>
                                                         <Dialog.Footer>
                                                             <ActionButton
+                                                                disabled={expandButtonDisabled}
                                                                 label="Expand"
                                                                 tooltip="Expand timeseries"
-                                                                disabled={false}
                                                                 onClick={() => createJ("create")}
                                                                 w={"170px"}></ActionButton>
                                                         </Dialog.Footer>
