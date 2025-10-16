@@ -4,7 +4,7 @@
 import {
     Box,
     Button,
-    Collapsible,
+    Code,
     Stack,
     Text,
     Menu,
@@ -22,7 +22,7 @@ import { Job, Timeseries } from "../definitions";
 import { useServices } from "../../services/Services";
 import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router";
-import { Ellipsis, Plus } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
@@ -36,7 +36,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const { getJobLog } = useServices();
     const { open, onOpen, onClose } = useDisclosure();
     const [modalContent, setModalContent] = useState<ReactNode>();
-    const [_, setSelectedTimeseries] = useState<Timeseries>();
+    const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -47,9 +47,13 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
     const viewLog = async (job: Job) => {
-        const log = await getJobLog("1", job);
+        const log = await getJobLog(selectedTimeseries!.scenario_id, job);
         setModalContent(
             <>
+                <Button onClick={(_) => console.log("TODO: handle this button")}>ALL</Button>
+                <Button onClick={(_) => console.log("TODO: handle this button")}>DEBUG</Button>
+                <Button onClick={(_) => console.log("TODO: handle this button")}>WARNING</Button>
+                <Button onClick={(_) => console.log("TODO: handle this button")}>ERROR</Button>
                 <Table.Root>
                     <Table.Caption />
                     <Table.Header>
@@ -62,7 +66,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                     <Table.Body>
                         {log.map((item, key) => (
                             <Table.Row key={key}>
-                                <Table.Cell>{item.time}</Table.Cell>
+                                <Table.Cell>{item.timestamp}</Table.Cell>
                                 <Table.Cell>{item.level}</Table.Cell>
                                 <Table.Cell>{item.message}</Table.Cell>
                             </Table.Row>
@@ -75,18 +79,11 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
     const vieDetails = async (job: Job) => {
+        console.log(job);
         const content = (
-            <Text>
-                ID: {job.id}<br></br>
-                Scheduled: {job.scheduleTime}<br></br>
-                {job.usage && <>
-                    Costs: {job.credits} Credits<br></br>
-                    CPU: {job.usage?.cpu.value} {job.usage?.cpu.unit}<br></br>
-                    Duration: {job.usage?.duration.value} {job.usage?.duration.unit}<br></br>
-                    Memory: {job.usage?.memory.value} {job.usage?.memory.unit}<br></br>
-                    SentinelHub: {job.usage?.sentinelhub.value} {job.usage?.sentinelhub.unit}<br></br>
-                </>}
-            </Text>
+            <Code>
+                {JSON.stringify(job)}
+            </Code>
         );
 
         setModalContent([content]);
