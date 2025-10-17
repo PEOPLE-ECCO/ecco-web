@@ -104,39 +104,6 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
 
-    /*
-
-    // Expand TimeSeries 
-    const { createJob } = useServices();
-    const [expandButtonDisabled, setExpandButtonDisabled] = useState<boolean>(true);
-
-    const [startDate, setStartDate] = useState<Date | null>();
-    const [endDate, setEndDate] = useState<Date | null>();
-    const [jobParams, setJobParams] = useState<JobParameters>();
-
-
-    useEffect(() => {
-        if (startDate != null && endDate != null) {
-            setExpandButtonDisabled(false);
-            setJobParams([startDate, endDate]);
-        }
-        else {
-            setExpandButtonDisabled(true);
-        }
-    }, [startDate, endDate]);
-
-    const createJ = async (buttonType: string) => {
-        console.log(`Button clicked: ${buttonType} ${selectedTimeseries?.id}`);
-
-        const created = await createJob(selectedTimeseries!.scenario_id, selectedTimeseries!.id!, jobParams!.timespan!);
-
-        alert("Created Job: " + created);
-        handleExitClick();
-    };
-
-    */
-
-
     return (
         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
             <Stack gap="4">

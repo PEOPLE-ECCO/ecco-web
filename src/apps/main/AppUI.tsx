@@ -67,7 +67,7 @@ export function Layout() {
             <Notifier />
             <Flex direction="column" minH="100vh">
                 <Flex
-                    as="header"d
+                    as="header"
                     position="fixed"
                     w="100%"
                     bg="white"

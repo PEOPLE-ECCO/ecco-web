@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, IconButton} from "@chakra-ui/react";
-import { Tooltip } from "../../components/ui/tooltip";
+import { Tooltip } from "../../components/tooltip";
 import { FiPlus } from "react-icons/fi";
 import { useNavigate } from "react-router";
 
