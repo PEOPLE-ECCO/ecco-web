@@ -4,10 +4,7 @@
 import {
     Box,
     Button,
-<<<<<<< HEAD
-=======
     Code,
->>>>>>> 2fb0d5502ac6bf394f572f6c97b6b24e5a5505d9
     Stack,
     Text,
     Menu,
@@ -18,151 +15,19 @@ import {
     Accordion,
     Portal,
     Dialog,
-    Table,
-    CloseButton,
-    Heading,
-    Steps,
-    ButtonGroup,
-    Field,
-    Input
+    Table
 } from "@chakra-ui/react";
-<<<<<<< HEAD
-=======
-import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
-import { Job, Timeseries } from "../definitions";
+
+import { CreateTimeseries } from "./TimeseriesCreateDialog";
+import { CreateJob } from "./TimeseriesExpandDialog";
+import { Job, Timeseries, JobParameters } from "../definitions";
 import { useServices } from "../../services/Services";
-import { ReactNode, useState } from "react";
+
+import { ReactNode, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Ellipsis } from "lucide-react";
->>>>>>> 2fb0d5502ac6bf394f572f6c97b6b24e5a5505d9
-
-import { ActionButton } from "./ActionButton";
-import { MapInfoControls } from "../../components/Map/MapInfoControls";
-import { MapZoomControls } from "../../components/Map/MapZoomControl";
-import { Job, Timeseries, Extent } from "../definitions";
-import { useServices } from "../../services/Services";
-
-import React, { ReactNode, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
-import { Ellipsis } from "lucide-react";
-import { FiPlus } from "react-icons/fi";
-
-import VectorSource from "ol/source/Vector";
-import VectorLayer from "ol/layer/Vector.js";
-import Draw, { createBox } from "ol/interaction/Draw.js";
-
-import { MAP_BOX } from "../../services";
-import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
-import { useService } from "open-pioneer:react-hooks";
-import { start } from "repl";
 
 
-// Extend
-interface ExtentSelectionProps {
-    onBboxChange: (extent?: Extent) => void;
-    isVisible: boolean
-}
-
-function ExtentSelection(props: ExtentSelectionProps) {
-    const source = new VectorSource();
-    const vector = new VectorLayer({
-        source: source,
-        style: {
-            "fill-color": "rgba(255, 255, 255, 0.2)",
-            "stroke-color": "#2C7D75",
-            "stroke-width": 2,
-            "circle-radius": 7,
-            "circle-fill-color": "#2C7D75",
-        },
-    });
-    const mapService = useService<MapRegistry>("map.MapRegistry");
-    const [extent, setExtent] = useState<Extent>();
-
-    const drawInteraction = new Draw({
-        source: source,
-        type: "Circle",
-        geometryFunction: createBox(),
-        style: {
-            "stroke-color": "#2C7D75",
-            "stroke-width": 2,
-            "circle-radius": 7,
-            "circle-fill-color": "#2C7D75",
-        }
-    });
-
-    vector.getSource()?.clear();
-
-    useEffect(() => {
-        if (props.isVisible) {
-            drawBox();
-            props.onBboxChange(extent);
-        }
-    }, [props.isVisible]);
-
-    async function drawBox() {
-        const map = await mapService.expectMapModel(MAP_BOX);
-
-        map.olMap.addInteraction(drawInteraction);
-        map.layers.addLayer(new SimpleLayer({ olLayer: vector, title: "temp" }));
-
-        const drawStart = drawInteraction.on("drawstart", () => {
-            vector.getSource()?.clear();
-        });
-
-        const drawEnd = drawInteraction.on("drawend", (e) => {
-            const feature = e.feature;
-            const geom = feature.getGeometry()!.getExtent();
-            const newExtent = {
-                temporal: {
-                    interval: []
-                },
-                spatial: {
-                    bbox:
-                        [
-                            geom[0]!,
-                            geom[1]!,
-                            geom[2]!,
-                            geom[3]!
-                        ]
-                }
-            } as Extent;
-            setExtent(newExtent);
-            drawInteraction.abortDrawing();
-            props.onBboxChange(newExtent);
-        });
-    }
-
-    return (
-        <>
-            <Text pt="8" pb="2" textStyle="lg">Please select extent:</Text>
-            <Box height="60vh" border="1px solid black">
-                <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
-                    <MapContainer
-                        mapId={MAP_BOX}
-                        role="boxselection"
-                        aria-label=""
-                    >
-                        <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
-
-                            <Text>
-                                Extent Cordinates: <br />
-                                x1: {extent?.spatial.bbox[0]}, x2: {extent?.spatial.bbox[1]} <br />
-                                x2: {extent?.spatial.bbox[2]}, y2: {extent?.spatial.bbox[3]}
-                            </Text>
-                        </Box>
-                        <MapInfoControls mapId={MAP_BOX}></MapInfoControls>
-                        <MapZoomControls mapId={MAP_BOX} />
-                    </MapContainer>
-                </Flex>
-            </Box>
-        </>
-    );
-}
-
-
-
-
-// Timeseries
 interface TimeseriesProps {
     timeseries?: Timeseries[];
     onSelect: (ts: Timeseries) => void;
@@ -217,7 +82,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         onOpen();
     };
 
-    const vieDetails = async (job: Job) => {
+    const viewDetails = async (job: Job) => {
         console.log(job);
         const content = (
             <Code>
@@ -239,19 +104,21 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
 
-
-
+    /*
 
     // Expand TimeSeries 
-    const { job_id, ts_id } = useParams();
     const { createJob } = useServices();
     const [expandButtonDisabled, setExpandButtonDisabled] = useState<boolean>(true);
-    const [startDate, setStartDate] = useState<string>("");
-    const [endDate, setEndDate] = useState<string>("");
+
+    const [startDate, setStartDate] = useState<Date | null>();
+    const [endDate, setEndDate] = useState<Date | null>();
+    const [jobParams, setJobParams] = useState<JobParameters>();
+
 
     useEffect(() => {
-        if (startDate != "" && endDate != "") {
+        if (startDate != null && endDate != null) {
             setExpandButtonDisabled(false);
+            setJobParams([startDate, endDate]);
         }
         else {
             setExpandButtonDisabled(true);
@@ -259,115 +126,17 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     }, [startDate, endDate]);
 
     const createJ = async (buttonType: string) => {
-        console.log(`Button clicked: ${buttonType}`);
+        console.log(`Button clicked: ${buttonType} ${selectedTimeseries?.id}`);
 
-        const created = await createJob(job_id!, ts_id!, undefined);
+        const created = await createJob(selectedTimeseries!.scenario_id, selectedTimeseries!.id!, jobParams!.timespan!);
 
         alert("Created Job: " + created);
         handleExitClick();
     };
 
+    */
 
 
-
-    // CreateTimeseries (& Expand TimeSeries )
-    const { id } = useParams();
-    const [name, setName] = useState<string>("");
-    const [description, setDescription] = useState<string>("");
-    const [extent, setExtent] = useState<Extent>();
-    const [step, setStep] = useState<number>(0);
-    const { createTimeseries } = useServices();
-
-    const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
-
-    useEffect(() => {
-        if (name != "" && description != "") {
-            setNextButtonDisabled(false);
-        }
-        else {
-            setNextButtonDisabled(true);
-        }
-    }, [name, description]);
-
-    const createTS = async () => {
-        const timeseries: Timeseries = {
-            id: "",
-            scenario_id: id!.toString(),
-            name: name,
-            description: description,
-            jobs: undefined
-        };
-        const created = await createTimeseries(timeseries);
-
-        alert("Created Timeseries: " + created);
-        handleExitClick();
-    };
-
-
-    const steps = [
-        {
-            title: "Data Input",
-            description: <>
-                <Stack pt="8" gap="4" align="flex-start" maxW="md">
-                    <Field.Root required>
-                        <Field.Label>Name</Field.Label>
-                        <Input
-                            value={name}
-                            onChange={(ev) => setName(ev.target.value)}
-                            placeholder='Timeseries 52'
-                            css={{ "--focus-color": "#2C7D75" }} />
-                    </Field.Root>
-
-                    <Field.Root required>
-                        <Field.Label>Description</Field.Label>
-                        <Input
-                            value={description}
-                            onChange={(ev) => setDescription(ev.target.value)}
-                            placeholder='Timeseries for demonstration purposes only!'
-                            css={{ "--focus-color": "#2C7D75" }} />
-                    </Field.Root>
-                </Stack>
-            </>,
-        },
-        {
-            title: "Extent Selection",
-            description: <ExtentSelection isVisible={step == 1} onBboxChange={(ext) => {
-                ;
-                setExtent(ext);
-                setNextButtonDisabled(!ext);
-            }} />,
-        },
-        {
-            title: "Check Data",
-            description: <>
-                <Text pt="8" pb="2" textStyle="lg">CHECK DATA!</Text>
-                <Table.Root>
-                    <Table.Caption />
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.ColumnHeader font="semibold">Parameter</Table.ColumnHeader>
-                            <Table.ColumnHeader>Value</Table.ColumnHeader>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        <Table.Row key="name">
-                            <Table.Cell>name</Table.Cell>
-                            <Table.Cell>{name}</Table.Cell>
-                        </Table.Row>
-                        <Table.Row key="description">
-                            <Table.Cell>description</Table.Cell>
-                            <Table.Cell>{description}</Table.Cell>
-                        </Table.Row>
-                    </Table.Body>
-                </Table.Root>
-            </>,
-        },
-    ];
-
-
-
-
-    // Page Content
     return (
         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
             <Stack gap="4">
@@ -384,77 +153,21 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                             <Accordion.ItemContent pb={4} bg="white">
 
                                 <HStack>
-                                    <Text fontWeight="medium">Description:</Text>
-                                    <Text whiteSpace="pre-wrap">{ts.description}</Text>
+                                    <Text fontWeight="medium" pb="2">Description:</Text>
+                                    <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                 </HStack>
 
                                 <HStack>
                                     <Flex justify="space-between">
-                                        <Button size="xs" width="35%" bg="#2C7D75" onClick={() => select(ts)}>
+                                        <Button size="md" width="35%" bg="#2C7D75" onClick={() => select(ts)}>
                                             View Results
                                         </Button>
-                                        <Dialog.Root size="md" placement="center">
-                                            <Dialog.Trigger asChild>
-                                                <Button size="xs" width="45%" bg="#2C7D75">
-                                                    Expand Timeseries
-                                                </Button>
-                                            </Dialog.Trigger>
-                                            <Portal>
-                                                <Dialog.Backdrop />
-                                                <Dialog.Positioner>
-                                                    <Dialog.Content>
-                                                        <Dialog.Header>
-                                                            <Dialog.Title>
-                                                                <Flex gap="4">
-                                                                    <Heading height="12" size="lg" order="1">
-                                                                        Expand Timeseries
-                                                                    </Heading>
-                                                                </Flex>
-                                                            </Dialog.Title>
-                                                        </Dialog.Header>
-                                                        <Dialog.Body>
-                                                            <Text pb="2" textStyle="lg">Please select Timespan:</Text>
-                                                            <Stack pt="4" gap="4" align="flex-start" maxW="md">
-                                                                <Field.Root>
-                                                                    <Field.Label>Start Date</Field.Label>
-                                                                    <Input
-                                                                        value={startDate}
-                                                                        onChange={(ev) => setStartDate(ev.target.value)}
-                                                                        aria-label="Date"
-                                                                        type="date"
-                                                                        placeholder="MM-DD-YYYY"
-                                                                        css={{ "--focus-color": "#2C7D75" }} />
-                                                                </Field.Root>
-                                                                <Field.Root>
-                                                                    <Field.Label>End Date</Field.Label>
-                                                                    <Input
-                                                                        value={endDate}
-                                                                        onChange={(ev) => setEndDate(ev.target.value)}
-                                                                        aria-label="Date"
-                                                                        type="date"
-                                                                        placeholder="MM-DD-YYYY"
-                                                                        css={{ "--focus-color": "#2C7D75" }} />
-                                                                </Field.Root>
-                                                            </Stack>
-                                                        </Dialog.Body>
-                                                        <Dialog.Footer>
-                                                            <ActionButton
-                                                                disabled={expandButtonDisabled}
-                                                                label="Expand"
-                                                                tooltip="Expand timeseries"
-                                                                onClick={() => createJ("create")}
-                                                                w={"170px"}></ActionButton>
-                                                        </Dialog.Footer>
-                                                        <Dialog.CloseTrigger asChild>
-                                                            <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
-                                                        </Dialog.CloseTrigger>
-                                                    </Dialog.Content>
-                                                </Dialog.Positioner>
-                                            </Portal>
-                                        </Dialog.Root>
+
+                                        <CreateJob timeseries={ts}/>
+                                        
                                         <Menu.Root>
                                             <Menu.Trigger asChild>
-                                                <IconButton variant="outline" size="xs">
+                                                <IconButton variant="outline" size="md">
                                                     <Ellipsis />
                                                 </IconButton>
                                             </Menu.Trigger>
@@ -485,7 +198,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                     {ts.jobs.map((job) => (
                                                         <Table.Row key={job.id}>
                                                             <Table.Cell>{job.id}</Table.Cell>
-                                                            <Table.Cell><Button onClick={() => vieDetails(job)}>Details</Button></Table.Cell>
+                                                            <Table.Cell><Button onClick={() => viewDetails(job)}>Details</Button></Table.Cell>
                                                             <Table.Cell><Button onClick={() => viewLog(job)}>Log</Button></Table.Cell>
                                                         </Table.Row>
                                                     ))}
@@ -499,84 +212,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                     ))}
                 </Accordion.Root>
 
-                <Dialog.Root size="xl" placement="center">
-                    <Dialog.Trigger asChild>
-                        <Flex justify="center" mt={4}>
-                            <IconButton
-                                aria-label="Add new Timeseries"
-                                bg="#2C7D75"
-                                color="white"
-                                size="lg"
-                                borderRadius="full"
-                                _hover={{ bg: "teal.700" }}
-                            >
-                                <FiPlus></FiPlus>
-                            </IconButton>
-                        </Flex>
-                    </Dialog.Trigger>
-                    <Portal>
-                        <Dialog.Backdrop />
-                        <Dialog.Positioner>
-                            <Dialog.Content>
-                                <Dialog.Header>
-                                    <Dialog.Title>
-                                        <Flex gap="4">
-                                            <Heading height="12" size="lg" order="1">
-                                                Create new Timeseries
-                                            </Heading>
-                                        </Flex>
-                                    </Dialog.Title>
-                                </Dialog.Header>
-                                <Steps.Root defaultStep={0} count={steps.length - 1} onStepChange={(details) => {
-                                    setStep(details.step);
-                                }} orientation="horizontal" width="100%">
-                                    <Dialog.Body>
-                                        <Steps.List>
-                                            {steps.map((step, index) => (
-                                                <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
-                                                    <Steps.Indicator />
-                                                    <Steps.Title>{step.title}</Steps.Title>
-                                                    <Steps.Separator />
-                                                </Steps.Item>
-                                            ))}
-                                        </Steps.List >
-                                        {steps.map((step, index) => (
-                                            <Steps.Content key={index} index={index}>
-                                                {step.description}
-                                            </Steps.Content>
-                                        ))}
-                                    </Dialog.Body>
-                                    <Dialog.Footer>
-                                        <ButtonGroup colorPalette="teal" size="sm" variant="outline">
-                                            <Steps.PrevTrigger asChild>
-                                                <Button onClick={() => {
-                                                    setNextButtonDisabled(false);
-                                                }}>Prev</Button>
-                                            </Steps.PrevTrigger>
-                                            {(step < 2) &&
-                                                <Steps.NextTrigger asChild>
-                                                    <Button disabled={nextButtonDisabled}>Next</Button>
-                                                </Steps.NextTrigger>
-                                            }
-                                        </ButtonGroup>
-                                        <Steps.CompletedContent>
-                                            <ActionButton
-                                                label="Create"
-                                                tooltip="Create timeseries"
-                                                disabled={false}
-                                                onClick={() => createTS()}
-                                                w={"170px"}
-                                            />
-                                        </Steps.CompletedContent>
-                                    </Dialog.Footer>
-                                </Steps.Root>
-                                <Dialog.CloseTrigger asChild>
-                                    <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
-                                </Dialog.CloseTrigger>
-                            </Dialog.Content>
-                        </Dialog.Positioner>
-                    </Portal>
-                </Dialog.Root>
+                <CreateTimeseries />
 
                 {modalContent && open &&
                     <Dialog.Root size="full" open={open} onExitComplete={onClose} scrollBehavior="inside">

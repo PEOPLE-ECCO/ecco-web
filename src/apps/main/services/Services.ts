@@ -4,7 +4,7 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job, Timeseries } from "../components/definitions";
+import { Job, JobParameters, Timeseries } from "../components/definitions";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
@@ -71,7 +71,7 @@ export const useServices = () => {
         }
     };
 
-    const createJob = async (scenario_id: string, ts_id: string, job: Job) => {
+    const createJob = async (scenario_id: string, ts_id: string, job_parameters: JobParameters) => {
         const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts_id + "/jobs/";
         const response = await httpService.fetch(url, {
             "method": "POST",

@@ -67,3 +67,8 @@ export interface Catalog {
     id: string
     extent: Extent
 }
+
+export interface JobParameters {
+    timespan: [Date, Date]
+}
+
