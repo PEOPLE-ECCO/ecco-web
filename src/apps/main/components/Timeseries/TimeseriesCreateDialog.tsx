@@ -146,11 +146,13 @@ export const CreateTimeseries: FC = () => {
     const [extent, setExtent] = useState<Extent>();
     const [step, setStep] = useState<number>(0);
     const { createTimeseries } = useServices();
+    const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
+
     const navigate = useNavigate();
     const handleExitClick = () => {
-        navigate(0);
+        setName("");
+        setDescription("");
     };
-    const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
     useEffect(() => {
         if (name != "" && description != "") {
