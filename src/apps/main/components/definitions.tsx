@@ -69,6 +69,11 @@ export interface Catalog {
 }
 
 export interface JobParameters {
-    timespan: [Date, Date]
+    timespan: [Date| null, Date| null]
 }
 
+export interface Item { 
+    timestamp: string
+    level: bigint
+    message: string
+}
