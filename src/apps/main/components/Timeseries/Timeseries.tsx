@@ -15,7 +15,10 @@ import {
     Accordion,
     Portal,
     Dialog,
-    Table
+    Table,
+    Icon,
+    Collapsible,
+    CloseButton
 } from "@chakra-ui/react";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
@@ -99,10 +102,6 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         onSelect(ts);
     };
 
-    const handleExitClick = () => {
-        navigate(0);
-    };
-
 
     return (
         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
@@ -125,16 +124,65 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                 </HStack>
 
                                 <HStack>
-                                    <Flex justify="space-between">
-                                        <Button size="md" width="35%" bg="#2C7D75" onClick={() => select(ts)}>
-                                            View Results
-                                        </Button>
+                                    <Flex pb="2" justify="space-between">
+                                        <Collapsible.Root>
+                                            <Collapsible.Trigger>
+                                                <Button
+                                                    size="md"
+                                                    width="100%"
+                                                    bg="#2C7D75"
+                                                    _hover={{ bg: "teal.700" }}
+                                                    onClick={() => select(ts)}>
+                                                    View Results
+                                                </Button>
+                                                <Collapsible.Indicator />
+                                            </Collapsible.Trigger>
+                                            <Collapsible.Content>
+                                                <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                    {ts.jobs &&
+                                                        <>
+                                                            <Table.Root>
+                                                                <Table.Header>Job-ID:</Table.Header>
+                                                                <Table.Body>
+                                                                    {ts.jobs.map((job) => (
+                                                                        <Table.Row key={job.id}>
+                                                                            <Table.Cell><Box width="25px"></Box>{job.id}</Table.Cell>
+                                                                            <Table.Cell>
+                                                                                <Button 
+                                                                                width="90px" 
+                                                                                variant="outline" 
+                                                                                color="black" 
+                                                                                border="1px solid #2C7D75" 
+                                                                                _hover={{ bg: "#2C7D75" , color: "white", border: "1px solid #2C7D75"}} 
+                                                                                onClick={() => viewDetails(job)}
+                                                                                    >Details</Button>
+                                                                                </Table.Cell>
+                                                                            <Table.Cell>
+                                                                                <Button 
+                                                                                    width="90px" 
+                                                                                    variant="outline" 
+                                                                                    color="black" 
+                                                                                    border="1px solid #2C7D75" 
+                                                                                    _hover={{ bg: "#2C7D75" , color: "white", border: "1px solid #2C7D75"}} 
+                                                                                    onClick={() => viewLog(job)}
+                                                                                    >Log</Button>
+                                                                                </Table.Cell>
+                                                                        </Table.Row>
+                                                                    ))}
+                                                                </Table.Body>
+                                                            </Table.Root>
+                                                        </>
+                                                    }
+                                                </Box>
+                                            </Collapsible.Content>
+                                        </Collapsible.Root>
 
-                                        <CreateJob timeseries={ts}/>
-                                        
+
+                                        <CreateJob timeseries={ts} />
+
                                         <Menu.Root>
                                             <Menu.Trigger asChild>
-                                                <IconButton variant="outline" size="md">
+                                                <IconButton variant="outline" size="md" colorPalette="teal" _hover={{ bg: "teal.50" }}>
                                                     <Ellipsis />
                                                 </IconButton>
                                             </Menu.Trigger>
@@ -149,31 +197,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                         </Menu.Root>
                                     </Flex>
                                 </HStack>
-                                <Box>
-                                    {ts.jobs &&
-                                        <>
-                                            <Table.Root>
-                                                <Table.Header>Jobs:</Table.Header>
-                                                <Table.Header>
-                                                    <Table.Row>
-                                                        <Table.ColumnHeader>Id</Table.ColumnHeader>
-                                                        <Table.ColumnHeader>Details</Table.ColumnHeader>
-                                                        <Table.ColumnHeader>Log</Table.ColumnHeader>
-                                                    </Table.Row>
-                                                </Table.Header>
-                                                <Table.Body>
-                                                    {ts.jobs.map((job) => (
-                                                        <Table.Row key={job.id}>
-                                                            <Table.Cell>{job.id}</Table.Cell>
-                                                            <Table.Cell><Button onClick={() => viewDetails(job)}>Details</Button></Table.Cell>
-                                                            <Table.Cell><Button onClick={() => viewLog(job)}>Log</Button></Table.Cell>
-                                                        </Table.Row>
-                                                    ))}
-                                                </Table.Body>
-                                            </Table.Root>
-                                        </>
-                                    }
-                                </Box>
+
                             </Accordion.ItemContent>
                         </Accordion.Item>
                     ))}
@@ -182,7 +206,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                 <CreateTimeseries />
 
                 {modalContent && open &&
-                    <Dialog.Root size="full" open={open} onExitComplete={onClose} scrollBehavior="inside">
+                    <Dialog.Root size="cover" open={open} onExitComplete={onClose} scrollBehavior="inside">
                         <Dialog.Backdrop />
                         <Dialog.Positioner>
                             <Dialog.Content>
@@ -194,10 +218,10 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                     {modalContent}
                                 </Dialog.Body>
                                 <Dialog.Footer>
-                                    <Button colorPalette='blue' mr={3} onClick={onClose}>
-                                        Close
-                                    </Button>
                                 </Dialog.Footer>
+                                <Dialog.CloseTrigger asChild>
+                                    <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={onClose} />
+                                </Dialog.CloseTrigger>
                             </Dialog.Content>
                         </Dialog.Positioner>
                     </Dialog.Root>

@@ -10,7 +10,8 @@ import {
     Box, Card, GridItem, Center, Flex,
     Slider, SliderTrack, Icon, Grid,
     CardBody,
-    Circle
+    Circle,
+    Text
 } from "@chakra-ui/react";
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 
@@ -192,6 +193,7 @@ export function SiteDetails() {
                                 >
                                     <Card.Root w="100%" padding={4}>
                                         <Card.Body>
+                                            <Text>Info</Text>
                                             {jobs && assets.length > 0 && (
                                                 <Center w="100%">
                                                     <Slider.Root
