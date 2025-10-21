@@ -319,7 +319,7 @@ export const CreateTimeseries: FC = () => {
                                 </Dialog.Footer>
                             </Steps.Root>
                             <Dialog.CloseTrigger asChild>
-                                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
+                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} onClick={handleExitClick} />
                             </Dialog.CloseTrigger>
                         </Dialog.Content>
                     </Dialog.Positioner>

@@ -163,11 +163,11 @@ export function SiteDetails() {
     }
 
     return (
-        <Grid templateColumns="repeat(15, 1fr)" gap={2}>
-            <GridItem colSpan={3} rowSpan={15} borderWidth="1px" margin="2px" padding="2px">
+        <Grid templateColumns="repeat(5, 1fr)" gap={2}>
+            <GridItem colSpan={1} rowSpan={15} borderWidth="1px" margin="2px" padding="2px">
                 <TimeseriesItem timeseries={timeseries} onSelect={setSelectedTimeseries} />
             </GridItem>
-            <GridItem colSpan={12} rowSpan={15} margin="2px" padding="2px">
+            <GridItem colSpan={4} rowSpan={15} margin="2px" padding="2px">
                 <Box height="88vh">
                     <Flex flex="1" height="100%" direction="column" overflow="hidden" position="relative">
                         <MapContainer

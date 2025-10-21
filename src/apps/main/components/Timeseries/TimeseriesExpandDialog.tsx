@@ -87,7 +87,7 @@ export const CreateJob = (props: CreateJobProps) => {
         <>
             <Dialog.Root size="md" placement="center">
                 <Dialog.Trigger asChild>
-                    <Button size="md" width="45%" bg="#2C7D75" _hover={{ bg: "teal.700" }}>
+                    <Button size="md" width="40%" bg="#2C7D75" _hover={{ bg: "teal.700" }}>
                         Expand Timeseries
                     </Button>
                 </Dialog.Trigger>
@@ -159,7 +159,7 @@ export const CreateJob = (props: CreateJobProps) => {
                                 ></ActionButton>
                             </Dialog.Footer>
                             <Dialog.CloseTrigger asChild>
-                                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleExitClick} />
+                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} onClick={handleExitClick} />
                             </Dialog.CloseTrigger>
                         </Dialog.Content>
                     </Dialog.Positioner>
