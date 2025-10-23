@@ -4,7 +4,6 @@
 import {
     Box,
     Button,
-    Code,
     Stack,
     Text,
     Menu,
@@ -16,34 +15,28 @@ import {
     Portal,
     Dialog,
     Table,
-    Icon,
     Collapsible,
     CloseButton,
     Status,
     Listbox,
-    createListCollection,
-    Stat
+    createListCollection
 } from "@chakra-ui/react";
 import { LuChevronDown } from "react-icons/lu";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
-import { Job, Timeseries, JobParameters, Item, LogSelection } from "../definitions";
+import { Job, Timeseries, Item } from "../definitions";
 import { useServices } from "../../services/Services";
 
 import { ReactNode, useState, useEffect, Key } from "react";
 import { Ellipsis, Heading } from "lucide-react";
-import { ViewJobLog } from "./TimeseriesViewLogDialog";
-
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
-    onSelect: (ts: Timeseries) => void;
+    onSelect: (ts: Timeseries | undefined) => void;
 }
 
 export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
-    const title = "Timeseries";
-
     const { getJobLog } = useServices();
     const { open, onOpen, onClose } = useDisclosure();
     const [modalContent, setModalContent] = useState<ReactNode>();
@@ -51,7 +44,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [modalHeading, setModalHeading] = useState<string>("");
     const [selectedLogs, setSelectedLogs] = useState<Array<Item>>([]);
-    const [buttonSelected, setButtonSelected] = useState<string>("");
+    const [timeseriesOpen, setTimeseriesOpen] = useState<boolean>(false);
 
 
     function logLevelcolor(item: Item) {
@@ -77,6 +70,10 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     useEffect(() => {
         console.log(selectedLogs);
     }, [selectedLogs]);
+
+    useEffect(() => {
+        console.log(timeseriesOpen);
+    }, [timeseriesOpen]);
 
     const viewLog = async (job: Job) => {
         const log = await getJobLog(selectedTimeseries!.scenario_id, job);
@@ -140,7 +137,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                     maxW="xl"
                     pb="4"
                 >
-                    <Listbox.Label>Filter Levels:</Listbox.Label>
+                    <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
                     <Listbox.Content>
                         {logTableContent.items.map((item) => (
                             <Listbox.Item
@@ -196,7 +193,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
 
         const content = (
             <>
-                <Table.Root size="lg" variant="outline" stickyHeader>
+                <Table.Root size="lg" variant="outline">
                     <Table.Header bg="teal.50">
                         <Table.Row>
                             <Table.ColumnHeader>Key</Table.ColumnHeader>
@@ -221,10 +218,19 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
     const select = (ts: Timeseries) => {
-        setSelectedTimeseries(ts);
-        onSelect(ts);
+        if (!timeseriesOpen) {
+            setSelectedTimeseries(ts);
+            onSelect(ts);
+        }
+        else {
+            deselect(ts);
+        }
     };
 
+    const deselect = (ts: Timeseries) => {
+        setSelectedTimeseries(undefined);
+        onSelect(undefined);
+    };
 
 
     return (
@@ -247,15 +253,15 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                     <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                 </HStack>
 
-                                <Collapsible.Root>
-                                    <Flex pb="2" justify="space-between" direction="row">
+                                <Collapsible.Root open={timeseriesOpen} onOpenChange={(e) => setTimeseriesOpen(e.open)}>
+                                    <Flex pb="2" gap="2" justify="flex-start" direction="row">
                                         <Collapsible.Trigger>
                                             <Button
                                                 size="md"
                                                 width="100%"
                                                 bg="#2C7D75"
                                                 _hover={{ bg: "teal.700" }}
-                                                onClick={() => select(ts)}>
+                                                onClick={() => {setTimeseriesOpen(true); select(ts);  }}>
                                                 View Results
                                                 <Collapsible.Indicator
                                                     transition="transform 0.2s"
@@ -303,7 +309,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                                             _hover={{ bg: "teal.50" }}
                                                                             onClick={() => viewDetails(job)}>
                                                                             Details
-                                                                            </Button>
+                                                                        </Button>
                                                                     </Table.Cell>
                                                                     <Table.Cell>
                                                                         <Dialog.Root size="cover" scrollBehavior="inside">
@@ -357,7 +363,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                 <CreateTimeseries />
 
                 {modalContent && open &&
-                    <Dialog.Root size="cover" open={open} onExitComplete={onClose} scrollBehavior="inside">
+                    <Dialog.Root size="xl" open={open} onExitComplete={onClose} scrollBehavior="inside">
                         <Dialog.Backdrop />
                         <Dialog.Positioner>
                             <Dialog.Content>
