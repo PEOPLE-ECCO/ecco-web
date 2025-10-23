@@ -74,6 +74,6 @@ export interface JobParameters {
 
 export interface Item { 
     timestamp: string
-    level: bigint
+    level: number
     message: string
 }
