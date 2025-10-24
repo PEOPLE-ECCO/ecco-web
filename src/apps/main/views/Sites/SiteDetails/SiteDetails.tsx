@@ -163,12 +163,12 @@ export function SiteDetails() {
     }
 
     return (
-        <Grid templateColumns="repeat(5, 1fr)" gap={2}>
-            <GridItem colSpan={1} rowSpan={15} borderWidth="1px" margin="2px" padding="2px">
+        <Grid templateColumns="repeat(14, 1fr)">
+            <GridItem colSpan={3} rowSpan={14} margin="2px" padding="2px">
                 <TimeseriesItem timeseries={timeseries} onSelect={setSelectedTimeseries} />
             </GridItem>
-            <GridItem colSpan={4} rowSpan={15} margin="2px" padding="2px">
-                <Box height="88vh">
+            <GridItem colSpan={11} rowSpan={14} margin="2px" padding="2px">
+                <Box height="100%">
                     <Flex flex="1" height="100%" direction="column" overflow="hidden" position="relative">
                         <MapContainer
                             mapId={MAP_ID}
@@ -183,7 +183,7 @@ export function SiteDetails() {
                             {selectedTimeseries &&
                                 <Box
                                     position="absolute"
-                                    bottom="0"
+                                    bottom="2%"
                                     left="25%"
                                     transform="translateX(-50%)"
                                     width="50%"
@@ -193,7 +193,7 @@ export function SiteDetails() {
                                 >
                                     <Card.Root w="100%" padding={4}>
                                         <Card.Body>
-                                            <Text>Info</Text>
+                                            <Text>Info: {selectedTimeseries.name}</Text>
                                             {jobs && assets.length > 0 && (
                                                 <Center w="100%">
                                                     <Slider.Root
