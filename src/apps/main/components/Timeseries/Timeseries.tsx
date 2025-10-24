@@ -75,11 +75,16 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         console.log(timeseriesOpen);
     }, [timeseriesOpen]);
 
+
+
     const viewLog = async (job: Job) => {
+        console.log("viewlog start");
         const log = await getJobLog(selectedTimeseries!.scenario_id, job);
         const debugs = log.filter((e: { level: number; }) => e.level <= 20);
         const warnings = log.filter((e: { level: number; }) => e.level <= 40 && e.level > 20);
         const errors = log.filter((e: { level: number; }) => e.level > 40);
+
+        setSelectedLogs(log);
 
         /*
         const handleSelection = () => {
@@ -109,8 +114,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         }
         );
 
-        setModalHeading("View Logs");
-        setSelectedLogs(log);
+        console.log("viewlog next set content");
 
         setLogViewContent(
             <>
@@ -161,25 +165,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                     </Listbox.Content>
                 </Listbox.Root>
 
-                <Table.Root variant="outline">
-                    <Table.Caption />
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.ColumnHeader fontWeight={16}>Time</Table.ColumnHeader>
-                            <Table.ColumnHeader>Level</Table.ColumnHeader>
-                            <Table.ColumnHeader>Message</Table.ColumnHeader>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {selectedLogs.map((item: Item, key: Key) => (
-                            <Table.Row key={key} bg={logLevelcolor(item)}>
-                                <Table.Cell>{item.timestamp}</Table.Cell>
-                                <Table.Cell>{item.level}</Table.Cell>
-                                <Table.Cell>{item.message}</Table.Cell>
-                            </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
+
             </>
         );
     };
@@ -218,17 +204,15 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
     const select = (ts: Timeseries) => {
-        if (!timeseriesOpen) {
-            setSelectedTimeseries(ts);
-            onSelect(ts);
-        }
-        else {
+        console.log(ts.name);
+        setSelectedTimeseries(ts);
+        onSelect(ts);
+        if (timeseriesOpen) {
             deselect(ts);
         }
     };
 
     const deselect = (ts: Timeseries) => {
-        setSelectedTimeseries(undefined);
         onSelect(undefined);
     };
 
@@ -237,7 +221,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
             <Stack gap="4">
                 <Text fontWeight="700" fontSize={22}>Timeseries</Text>
-                <Accordion.Root collapsible multiple>
+                <Accordion.Root collapsible>
                     {timeseries?.map((ts, key) => (
                         <Accordion.Item value={ts.id} key={key}>
                             <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
@@ -253,15 +237,15 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                     <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                 </HStack>
 
-                                <Collapsible.Root open={timeseriesOpen} onOpenChange={(e) => setTimeseriesOpen(e.open)}>
-                                    <Flex pb="2" gap="2" justify="flex-start" direction="row">
+                                <Collapsible.Root open={timeseriesOpen} onOpenChange={(e) => { setTimeseriesOpen(e.open); select(ts); }}>
+                                    <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                         <Collapsible.Trigger>
                                             <Button
                                                 size="md"
                                                 width="100%"
                                                 bg="#2C7D75"
                                                 _hover={{ bg: "teal.700" }}
-                                                onClick={() => {setTimeseriesOpen(true); select(ts);  }}>
+                                                onClick={() => { }}>
                                                 View Results
                                                 <Collapsible.Indicator
                                                     transition="transform 0.2s"
@@ -335,6 +319,25 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                                                         </Dialog.Header>
                                                                                         <Dialog.Body>
                                                                                             {logViewContent}
+                                                                                            <Table.Root variant="outline">
+                                                                                                <Table.Caption />
+                                                                                                <Table.Header>
+                                                                                                    <Table.Row>
+                                                                                                        <Table.ColumnHeader fontWeight={16}>Time</Table.ColumnHeader>
+                                                                                                        <Table.ColumnHeader>Level</Table.ColumnHeader>
+                                                                                                        <Table.ColumnHeader>Message</Table.ColumnHeader>
+                                                                                                    </Table.Row>
+                                                                                                </Table.Header>
+                                                                                                <Table.Body>
+                                                                                                    {selectedLogs.map((item: Item, key: Key) => (
+                                                                                                        <Table.Row key={key} bg={logLevelcolor(item)}>
+                                                                                                            <Table.Cell>{item.timestamp}</Table.Cell>
+                                                                                                            <Table.Cell>{item.level}</Table.Cell>
+                                                                                                            <Table.Cell>{item.message}</Table.Cell>
+                                                                                                        </Table.Row>
+                                                                                                    ))}
+                                                                                                </Table.Body>
+                                                                                            </Table.Root>
                                                                                         </Dialog.Body>
                                                                                         <Dialog.Footer></Dialog.Footer>
                                                                                         <Dialog.CloseTrigger asChild>
