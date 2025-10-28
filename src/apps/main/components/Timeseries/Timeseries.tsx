@@ -17,7 +17,7 @@ import {
 } from "@chakra-ui/react";
 
 import { LuChevronDown } from "react-icons/lu";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Ellipsis } from "lucide-react";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
@@ -43,27 +43,13 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         console.log("Archive:", ts);
     };
 
-    useEffect(() => {
-        console.log(selectedTimeseries);
-        console.log("open? Effect:", timeseriesOpen);
-    }, [timeseriesOpen]);
-
     const select = (ts: Timeseries) => {
-        console.log("select start", timeseriesOpen, selectedTimeseries?.name);
         setSelectedTimeseries(ts);
         onSelect(ts);
         if (timeseriesOpen) {
-            deselect(ts);
+            onSelect(undefined);
         }
-        console.log("select end", timeseriesOpen, selectedTimeseries?.name);
     };
-
-    const deselect = (ts: Timeseries) => {
-        console.log("deselect start", timeseriesOpen, selectedTimeseries?.name);
-        onSelect(undefined);
-        console.log("deselect end", timeseriesOpen, selectedTimeseries?.name);
-    };
-
 
     return (
         <>
@@ -73,7 +59,8 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
                             <Stack gap="4">
                                 <Text fontWeight="700" fontSize={22}>Timeseries</Text>
-                                <Accordion.Root multiple onValueChange={() => console.log("change")}>
+                                
+                                <Accordion.Root collapsible onValueChange={() => {setTimeseriesOpen(false); onSelect(undefined);}}>
                                     {timeseries?.map((ts, key) => (
                                         <Accordion.Item value={ts.id} key={key}>
                                             <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
@@ -83,21 +70,20 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                 <Accordion.ItemIndicator />
                                             </Accordion.ItemTrigger>
                                             <Accordion.ItemContent pb={4} bg="white">
-
+                                                
                                                 <HStack>
                                                     <Text fontWeight="medium" pb="2">Description:</Text>
                                                     <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                                 </HStack>
-
-                                                <Collapsible.Root open={timeseriesOpen} onOpenChange={(e) => { console.log("2"); select(ts); setTimeseriesOpen(e.open); console.log("2"); }}>
+                                                
+                                                <Collapsible.Root open={timeseriesOpen} onOpenChange={(e) => { select(ts); setTimeseriesOpen(e.open);}}>
                                                     <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                         <Collapsible.Trigger>
                                                             <Button
                                                                 size="md"
                                                                 width="100%"
                                                                 bg="#2C7D75"
-                                                                _hover={{ bg: "teal.700" }}
-                                                                onClick={() => { }}>
+                                                                _hover={{ bg: "teal.700" }}>
                                                                 View Results
                                                                 <Collapsible.Indicator
                                                                     transition="transform 0.2s"
