@@ -44,22 +44,23 @@ export const ViewJobDetails = (props: JobProps) => {
         }
     };
 
-    useEffect(() => {
-        console.log(selectedLogs);
-    }, [selectedLogs]);
+    const handleExitLogviewClick = () => {
+        setLogViewContent([]);
+    };
+
 
     const viewLog = async (job: Job) => {
-        const log = await getJobLog(props.timeseries.scenario_id, job);
-        const debugs = log.filter((e: { level: number; }) => e.level <= 20);
-        const warnings = log.filter((e: { level: number; }) => e.level <= 40 && e.level > 20);
-        const errors = log.filter((e: { level: number; }) => e.level > 40);
+        const alllogs = await getJobLog(props.timeseries.scenario_id, job);
+        const debugs = alllogs.filter((e: { level: number; }) => e.level <= 20);
+        const warnings = alllogs.filter((e: { level: number; }) => e.level <= 40 && e.level > 20);
+        const errors = alllogs.filter((e: { level: number; }) => e.level > 40);
 
-        setSelectedLogs(log);
+        setSelectedLogs(alllogs);
 
         const logTableContent = createListCollection({
             items: [
-                { label: "ALL", value: log, bg: "blue.100", color: "black", border: "1px solid black" },
-                { label: "DEBUGS", value: debugs, bg: "green.100", color: "black", border: "1px solid black", hover: { bg: "teal.50" } },
+                { label: "ALL", value: alllogs, bg: "blue.100", color: "black", border: "1px solid black" },
+                { label: "DEBUGS", value: debugs, bg: "green.100", color: "black", border: "1px solid black" },
                 { label: "WARNINGS", value: warnings, bg: "orange.100", color: "black", border: "1px solid black" },
                 { label: "ERRORS", value: errors, bg: "red.100", color: "black", border: "1px solid black" }
                 ],
@@ -150,7 +151,6 @@ export const ViewJobDetails = (props: JobProps) => {
 
         setDetailsContent([content]);
     };
-
 
     return (
         <>
@@ -245,7 +245,7 @@ export const ViewJobDetails = (props: JobProps) => {
                                                             </Dialog.Body>
                                                             <Dialog.Footer></Dialog.Footer>
                                                             <Dialog.CloseTrigger asChild>
-                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                <CloseButton onClick={handleExitLogviewClick} height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
                                                             </Dialog.CloseTrigger>
                                                         </Dialog.Content>
                                                     </Dialog.Positioner>
