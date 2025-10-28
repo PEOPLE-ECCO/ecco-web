@@ -32,8 +32,8 @@ interface TimeseriesProps {
 }
 
 export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
-    const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [timeseriesOpen, setTimeseriesOpen] = useState<boolean>(false);
+    const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(false);
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -43,11 +43,11 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         console.log("Archive:", ts);
     };
 
-    const select = (ts: Timeseries) => {
-        setSelectedTimeseries(ts);
+    const checkJobCount = (ts: Timeseries) => {
         onSelect(ts);
-        if (timeseriesOpen) {
-            onSelect(undefined);
+        console.log(ts.name);
+        if (ts.jobs!.length < 1) {
+            setViewResultsButtonDisabled(true);
         }
     };
 
@@ -59,10 +59,16 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
                             <Stack gap="4">
                                 <Text fontWeight="700" fontSize={22}>Timeseries</Text>
-                                
-                                <Accordion.Root collapsible onValueChange={() => {setTimeseriesOpen(false); onSelect(undefined);}}>
+
+                                <Accordion.Root
+                                    collapsible
+                                    onValueChange={(e) => {
+                                        const ts: Timeseries = timeseries![e.value[0]!];
+                                        onSelect(undefined);
+                                        checkJobCount(ts);
+                                    }}>
                                     {timeseries?.map((ts, key) => (
-                                        <Accordion.Item value={ts.id} key={key}>
+                                        <Accordion.Item value={key} key={key}>
                                             <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
                                                 <Box as="span" flex="1" textAlign="left" fontWeight="700">
                                                     {ts.name}
@@ -70,20 +76,21 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                 <Accordion.ItemIndicator />
                                             </Accordion.ItemTrigger>
                                             <Accordion.ItemContent pb={4} bg="white">
-                                                
+
                                                 <HStack>
                                                     <Text fontWeight="medium" pb="2">Description:</Text>
                                                     <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                                 </HStack>
-                                                
-                                                <Collapsible.Root open={timeseriesOpen} onOpenChange={(e) => { select(ts); setTimeseriesOpen(e.open);}}>
+
+                                                <Collapsible.Root>
                                                     <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                         <Collapsible.Trigger>
                                                             <Button
                                                                 size="md"
                                                                 width="100%"
                                                                 bg="#2C7D75"
-                                                                _hover={{ bg: "teal.700" }}>
+                                                                _hover={{ bg: "teal.700" }}
+                                                                disabled={viewResultsButtonDisabled}>
                                                                 View Results
                                                                 <Collapsible.Indicator
                                                                     transition="transform 0.2s"
