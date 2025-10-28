@@ -164,7 +164,7 @@ export const ViewJobDetails = (props: JobProps) => {
                                     <Table.Row key={job.id}>
                                         <Table.Cell><Box width="25px"></Box>{job.id}</Table.Cell>
                                         <Table.Cell>
-                                            <Dialog.Root size="xl">
+                                            <Dialog.Root size="xl" scrollBehavior="inside">
                                                 <Dialog.Trigger asChild>
                                                     <Button
                                                         width="90px"

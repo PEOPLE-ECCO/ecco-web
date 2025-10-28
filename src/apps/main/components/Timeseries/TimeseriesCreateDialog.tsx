@@ -148,7 +148,6 @@ export const CreateTimeseries: FC = () => {
     const { createTimeseries } = useServices();
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
-    const navigate = useNavigate();
     const handleExitClick = () => {
         setName("");
         setDescription("");
