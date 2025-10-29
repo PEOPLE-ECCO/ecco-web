@@ -9,27 +9,31 @@ import {
     Portal,
     Text,
     Field,
-    Box
+    Box,
+    CloseButton
 } from "@chakra-ui/react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
+import { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+import { useService } from "open-pioneer:react-hooks";
+import { NotificationService } from "@open-pioneer/notifier";
+
+import { JobParameters, Timeseries } from "../definitions";
 import { useServices } from "../../services/Services";
 import { ActionButton } from "./ActionButton";
 
 import { setHeapSnapshotNearHeapLimit } from "v8";
-import { CloseButton } from "@chakra-ui/react";
 
-import { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { JobParameters, Timeseries } from "../definitions";
 
 interface CreateJobProps {
     timeseries: Timeseries;
 }
 
 interface SelectedDateMeta {
-  date: Date;
-  formattedDate: string;
+    date: Date;
+    formattedDate: string;
 }
 
 export const CreateJob = (props: CreateJobProps) => {
@@ -41,6 +45,8 @@ export const CreateJob = (props: CreateJobProps) => {
     const [endDate, setEndDate] = useState<Date | null>();
     const [jobParams, setJobParams] = useState<JobParameters>();
     const [selectedTimeseries, _] = useState<Timeseries>(props.timeseries);
+
+    const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     const handleChangeRaw = (
         value: string,
@@ -56,7 +62,7 @@ export const CreateJob = (props: CreateJobProps) => {
     const cancel = (buttonType: string) => {
         console.log(`Button clicked: ${buttonType}`);
     };
-    
+
     const handleExitClick = () => {
         setStartDate(null);
         setEndDate(null);
@@ -73,12 +79,10 @@ export const CreateJob = (props: CreateJobProps) => {
         }
     }, [startDate, endDate]);
 
-    const create = async (buttonType: string) => {
-        console.log(`Button clicked: ${buttonType} ${selectedTimeseries}`);
+    const create = async () => {
 
         const created = await createJob(id!, selectedTimeseries!.id, jobParams!);
 
-        alert("Created Job: " + created);
         handleExitClick();
     };
 
@@ -150,13 +154,23 @@ export const CreateJob = (props: CreateJobProps) => {
                                 </Stack>
                             </Dialog.Body>
                             <Dialog.Footer>
-                                <ActionButton
-                                    disabled={expandButtonDisabled}
-                                    label="Expand"
-                                    tooltip="Expand timeseries"
-                                    onClick={() => create("create")}
-                                    w={"170px"}
-                                ></ActionButton>
+                                <Dialog.CloseTrigger asChild>
+                                    <ActionButton
+                                        disabled={expandButtonDisabled}
+                                        label="Expand"
+                                        tooltip="Expand timeseries"
+                                        onClick={() => {
+                                            create();
+                                            notificationService.notify({
+                                                title: "Job created",
+                                                //message: job.id,
+                                                level: "info",
+                                                displayDuration: 5000,
+                                            });
+                                        }}
+                                        w={"170px"}>
+                                    </ActionButton>
+                                </Dialog.CloseTrigger>
                             </Dialog.Footer>
                             <Dialog.CloseTrigger asChild>
                                 <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} onClick={handleExitClick} />

@@ -24,6 +24,7 @@ import {
 
 import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
 import { useService } from "open-pioneer:react-hooks";
+import { NotificationService } from "@open-pioneer/notifier";
 
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
@@ -36,6 +37,7 @@ import { ActionButton } from "../../components/Timeseries/ActionButton";
 
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
+
 
 // Extend
 interface ExtentSelectionProps {
@@ -120,10 +122,8 @@ function ExtentSelection(props: ExtentSelectionProps) {
                     <MapContainer
                         mapId={MAP_BOX}
                         role="boxselection"
-                        aria-label=""
-                    >
+                        aria-label="">
                         <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
-
                             <Text>
                                 Extent Cordinates: <br />
                                 x1: {extent?.spatial.bbox[0]}, x2: {extent?.spatial.bbox[1]} <br />
@@ -147,6 +147,8 @@ export const CreateTimeseries: FC = () => {
     const [step, setStep] = useState<number>(0);
     const { createTimeseries } = useServices();
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
+
+    const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     const handleExitClick = () => {
         setName("");
@@ -172,8 +174,19 @@ export const CreateTimeseries: FC = () => {
         };
         const created = await createTimeseries(timeseries);
 
-        alert("Created Timeseries: " + created);
         handleExitClick();
+
+            <Box
+                position="absolute"
+                bottom="20%"
+                left="25%"
+                transform="translateX(-50%)"
+                width="50%"
+                padding="4"
+                zIndex="10"
+                pointerEvents="auto">
+                <Text>Created Timeseries: {created}</Text>
+            </Box>;
     };
 
     const steps = [
@@ -204,7 +217,6 @@ export const CreateTimeseries: FC = () => {
         {
             title: "Extent Selection",
             description: <ExtentSelection isVisible={step == 1} onBboxChange={(ext) => {
-                ;
                 setExtent(ext);
                 setNextButtonDisabled(!ext);
             }} />,
@@ -255,8 +267,7 @@ export const CreateTimeseries: FC = () => {
                             color="white"
                             size="lg"
                             borderRadius="full"
-                            _hover={{ bg: "teal.700" }}
-                        >
+                            _hover={{ bg: "teal.700" }}>
                             <FiPlus></FiPlus>
                         </IconButton>
                     </Flex>
@@ -274,15 +285,18 @@ export const CreateTimeseries: FC = () => {
                                     </Flex>
                                 </Dialog.Title>
                             </Dialog.Header>
-                            <Steps.Root defaultStep={0} count={steps.length - 1} onStepChange={(details) => {
-                                setStep(details.step);
-                            }} orientation="horizontal" width="100%">
+                            <Steps.Root
+                                defaultStep={0}
+                                count={steps.length - 1}
+                                onStepChange={(details) => { setStep(details.step); }}
+                                orientation="horizontal"
+                                width="100%">
                                 <Dialog.Body>
                                     <Steps.List>
                                         {steps.map((step, index) => (
                                             <Steps.Item colorPalette="teal" key={index} index={index} title={step.title} >
                                                 <Steps.Indicator />
-                                                <Steps.Title>{step.title}</Steps.Title>
+                                                <Steps.Title fontSize="lg">{step.title}</Steps.Title>
                                                 <Steps.Separator />
                                             </Steps.Item>
                                         ))}
@@ -294,31 +308,59 @@ export const CreateTimeseries: FC = () => {
                                     ))}
                                 </Dialog.Body>
                                 <Dialog.Footer>
-                                    <ButtonGroup colorPalette="teal" size="sm" variant="outline">
+                                    <ButtonGroup colorPalette="teal" size="md" variant="outline">
                                         <Steps.PrevTrigger asChild>
-                                            <Button onClick={() => {
-                                                setNextButtonDisabled(false);
-                                            }}>Prev</Button>
+                                            <Button
+                                                color="black"
+                                                border="1px solid #2C7D75"
+                                                _hover={{ bg: "teal.50" }}
+                                                onClick={() => { setNextButtonDisabled(false); }}>
+                                                Prev
+                                            </Button>
                                         </Steps.PrevTrigger>
                                         {(step < 2) &&
                                             <Steps.NextTrigger asChild>
-                                                <Button disabled={nextButtonDisabled}>Next</Button>
+                                                <Button
+                                                    color="black"
+                                                    border="1px solid #2C7D75"
+                                                    _hover={{ bg: "teal.50" }}
+                                                    disabled={nextButtonDisabled}>
+                                                    Next
+                                                </Button>
                                             </Steps.NextTrigger>
                                         }
                                     </ButtonGroup>
                                     <Steps.CompletedContent>
-                                        <ActionButton
-                                            label="Create"
-                                            tooltip="Create timeseries"
-                                            disabled={false}
-                                            onClick={() => create()}
-                                            w={"170px"}
-                                        />
+                                        <Dialog.CloseTrigger asChild>
+                                            <ActionButton
+                                                label="Create"
+                                                tooltip="Create timeseries"
+                                                disabled={false}
+                                                onClick={() => {
+                                                    create();
+                                                    notificationService.notify({
+                                                        title: "Timeseries created",
+                                                        //message: ts.name,
+                                                        level: "info",
+                                                        displayDuration: 5000,
+                                                    });
+                                                }}
+                                                w={"170px"}
+                                            />
+                                        </Dialog.CloseTrigger>
                                     </Steps.CompletedContent>
                                 </Dialog.Footer>
                             </Steps.Root>
                             <Dialog.CloseTrigger asChild>
-                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} onClick={handleExitClick} />
+                                <CloseButton
+                                    height="10"
+                                    variant="outline"
+                                    order="2"
+                                    size="md"
+                                    color="black"
+                                    border="1px solid #2C7D75"
+                                    _hover={{ bg: "teal.50" }}
+                                    onClick={handleExitClick} />
                             </Dialog.CloseTrigger>
                         </Dialog.Content>
                     </Dialog.Positioner>

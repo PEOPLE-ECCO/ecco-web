@@ -35,7 +35,7 @@ const mainUI = createCustomElement({
                 }
             } satisfies KeycloakProperties, // for auto completion / validation
             "@open-pioneer/notifier": {
-                position: "top-left"
+                position: "bottom-right"
             } satisfies NotifierProperties
         }
     }

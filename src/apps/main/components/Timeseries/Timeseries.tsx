@@ -20,6 +20,10 @@ import { LuChevronDown } from "react-icons/lu";
 import { useState } from "react";
 import { Ellipsis } from "lucide-react";
 
+import { EventEmitter } from "@open-pioneer/core";
+import { NotificationService, Notifier } from "@open-pioneer/notifier";
+import { useService } from "open-pioneer:react-hooks";
+
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
 import { Timeseries } from "../definitions";
@@ -32,8 +36,12 @@ interface TimeseriesProps {
 }
 
 export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
-    const [timeseriesOpen, setTimeseriesOpen] = useState<boolean>(false);
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(false);
+    //const tsselectedemitter = new EventEmitter();
+    //const events = [];
+    //const handletsselection = tsselectedemitter.on("tsselected", (selectts: Timeseries) => observed.push(selectts));
+
+    const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -44,11 +52,18 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
     };
 
     const checkJobCount = (ts: Timeseries) => {
-        onSelect(ts);
+        console.log("Check Process start");
+        setViewResultsButtonDisabled(false);
         console.log(ts.name);
+        onSelect(ts);
+        //handletsselection;
+        //tsselectedemitter.emit("tsselected", ts);
+
         if (ts.jobs!.length < 1) {
+            console.log("count check");
             setViewResultsButtonDisabled(true);
-        }
+        };
+        console.log("Check Done");
     };
 
     return (
@@ -111,8 +126,26 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                             <Portal>
                                                                 <Menu.Positioner>
                                                                     <Menu.Content>
-                                                                        <Menu.Item value="delete" onClick={() => handleDelete(ts)}>Delete</Menu.Item>
-                                                                        <Menu.Item value="archive" onClick={() => handleArchive(ts)}>Archive</Menu.Item>
+                                                                        <Menu.Item
+                                                                            value="delete"
+                                                                            onClick={() => notificationService.notify({
+                                                                                title: "Deleted",
+                                                                                message: ts.name,
+                                                                                level: "info",
+                                                                                displayDuration: 5000,
+                                                                            })}>
+                                                                            Delete</Menu.Item>
+                                                                        <Menu.Item
+                                                                            value="archive"
+                                                                            onClick={() => {
+                                                                                handleArchive(ts);
+                                                                                notificationService.notify({
+                                                                                    title: "Archived",
+                                                                                    message: ts.name,
+                                                                                    level: "info",
+                                                                                    displayDuration: 5000,
+                                                                                });
+                                                                            }}>Archive</Menu.Item>
                                                                     </Menu.Content>
                                                                 </Menu.Positioner>
                                                             </Portal>
@@ -140,6 +173,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                     <ScrollArea.Thumb />
                 </ScrollArea.Scrollbar>
                 <ScrollArea.Corner />
-            </ScrollArea.Root></>
+            </ScrollArea.Root>
+        </>
     );
 }
