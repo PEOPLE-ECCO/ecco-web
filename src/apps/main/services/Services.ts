@@ -34,7 +34,7 @@ export const useServices = () => {
     };
 
     const getTimeseries = async (id: string) => {
-        console.log("getTimeseries" + id);
+        console.log("getTimeseries " + id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/timeseries/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
@@ -46,8 +46,22 @@ export const useServices = () => {
         }
     };
 
+    const getProcesses = async (id: string) => {
+        console.log("getProcesses of scenario " + id);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/processes/";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+
+        if (responseData) {
+            return responseData;
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    };
+
+
     const createTimeseries = async (ts: Timeseries) => {
-        console.log("createTimeseries" + ts);
+        console.log("createTimeseries " + ts);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
         const response = await httpService.fetch(url, {
             "method": "POST",
@@ -115,7 +129,7 @@ export const useServices = () => {
     };
 
     const getJobCatalog = async (scenario_id: string, job: Job) => {
-        console.log("getJobCatalog" + scenario_id + "," + job.id);
+        console.log("getJobCatalog " + scenario_id + ", " + job.id);
 
         const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/catalog";
         const response = await httpService.fetch(url);
@@ -151,5 +165,5 @@ export const useServices = () => {
         }
     };
 
-    return { getUser, getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
+    return { getUser, getScenarios, getTimeseries, getProcesses, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
 };

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, useEffect, useState } from "react";
+import { FC, use, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { FiPlus } from "react-icons/fi";
 import {
@@ -19,7 +19,12 @@ import {
     CloseButton,
     Dialog,
     Portal,
-    IconButton
+    IconButton,
+    HStack,
+    Listbox,
+    createListCollection,
+    ListCollection,
+    CollectionItem
 } from "@chakra-ui/react";
 
 import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
@@ -30,13 +35,15 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
 import Draw, { createBox } from "ol/interaction/Draw.js";
 
-import { Extent, Timeseries } from "../../components/definitions";
+import { Extent, Process, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "../../components/Timeseries/ActionButton";
 
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
+import { EventEmitter } from "@open-pioneer/core";
+import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 
 // Extend
@@ -139,16 +146,53 @@ function ExtentSelection(props: ExtentSelectionProps) {
     );
 }
 
-export const CreateTimeseries: FC = () => {
+
+interface CreateTimeseriesProps {
+    eventListener: EventEmitter<Events>;
+}
+
+export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: CreateTimeseriesProps) => {
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [extent, setExtent] = useState<Extent>();
     const [step, setStep] = useState<number>(0);
-    const { createTimeseries } = useServices();
+    const { createTimeseries, getProcesses } = useServices();
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
+    const [value, setValue] = useState<string[]>([]);
+    const [processes, setProcesses] = useState<Process[]>([]);
+    const [processTable, setProcessTable] = useState<CollectionItem>([]);
+
     const notificationService = useService<NotificationService>("notifier.NotificationService");
+
+    useEffect(() => {
+        console.log("useeffect processes ", processes);
+        const listCollection = createListCollection({
+            items: processes!
+        });
+        setProcessTable(listCollection);
+        console.log("Listcollection: ", listCollection);
+        console.log("Processtable example: ", processTableContent);
+
+    }, [processes]);
+
+
+    const fetchProcesses = async () => {
+        console.log("fetchProcesses");
+        if (!id)
+            return;
+        try {
+            const data = await getProcesses(id);
+            console.log("data ", data);
+            setProcesses(data);
+            console.log("processes ", data);
+
+        } catch (error) {
+            console.error(error);
+        }
+
+    };
 
     const handleExitClick = () => {
         setName("");
@@ -164,6 +208,12 @@ export const CreateTimeseries: FC = () => {
         }
     }, [name, description]);
 
+    useEffect(() => {
+        if (value.length > 0) {
+            setNextButtonDisabled(false);
+        }
+    }, [value.length]);
+
     const create = async () => {
         const timeseries: Timeseries = {
             id: "",
@@ -176,18 +226,27 @@ export const CreateTimeseries: FC = () => {
 
         handleExitClick();
 
-            <Box
-                position="absolute"
-                bottom="20%"
-                left="25%"
-                transform="translateX(-50%)"
-                width="50%"
-                padding="4"
-                zIndex="10"
-                pointerEvents="auto">
-                <Text>Created Timeseries: {created}</Text>
-            </Box>;
+        <Box
+            position="absolute"
+            bottom="20%"
+            left="25%"
+            transform="translateX(-50%)"
+            width="50%"
+            padding="4"
+            zIndex="10"
+            pointerEvents="auto">
+            <Text>Created Timeseries: {created}</Text>
+        </Box>;
     };
+
+    const processTableContent = createListCollection({
+        items:
+            [
+                {description: "Calculates the basic NDVI", value: "1", name: "basic_ndvi", parameters: {bbox: {type: "array"},threshold: 0.7}},
+                {description: "Calculates the percentage of open water in ", value: "2", name: "open_water_surface", parameters: { bbox: { type: "array" }}}
+            ],
+    });
+
 
     const steps = [
         {
@@ -215,8 +274,52 @@ export const CreateTimeseries: FC = () => {
             </>,
         },
         {
+            title: "Process Selection",
+            description: <>
+                <HStack pt="8" gap="4" align="flex-start" maxW="md">
+                    <Box>
+                        <Listbox.Root
+                            collection={processTableContent}
+                            value={value}
+                            onValueChange={(details) => setValue(details.value)}
+                            width="full"
+                            gap="4"
+                            maxW="400px"
+                        >
+                            <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
+                            <Listbox.Content>
+                                {processTableContent.items.map((item) => (
+                                    <Listbox.Item
+                                        item={item}
+                                        key={item.value}
+                                        flexDirection="row"
+                                        alignItems="flex-start"
+                                        gap="1">
+                                        <HStack>
+                                            <Box flex="2">
+                                                <Listbox.ItemText>{item.name}</Listbox.ItemText>
+                                                <Text fontSize="xs" color="fg.muted" mt="1">
+                                                    {item.description}
+                                                </Text>
+                                            </Box>
+                                            <Box>
+                                                <Listbox.ItemIndicator />
+                                            </Box>
+                                        </HStack>
+                                    </Listbox.Item>
+                                ))}
+                            </Listbox.Content>
+                        </Listbox.Root>
+                    </Box>
+                    <Box>
+                        <Text>{value}</Text>
+                    </Box>
+                </HStack>
+            </>,
+        },
+        {
             title: "Extent Selection",
-            description: <ExtentSelection isVisible={step == 1} onBboxChange={(ext) => {
+            description: <ExtentSelection isVisible={step == 2} onBboxChange={(ext) => {
                 setExtent(ext);
                 setNextButtonDisabled(!ext);
             }} />,
@@ -267,7 +370,10 @@ export const CreateTimeseries: FC = () => {
                             color="white"
                             size="lg"
                             borderRadius="full"
-                            _hover={{ bg: "teal.700" }}>
+                            _hover={{ bg: "teal.700" }}
+                            onClick={() => {
+                                fetchProcesses(); setNextButtonDisabled(true);
+                            }}>
                             <FiPlus></FiPlus>
                         </IconButton>
                     </Flex>
@@ -318,13 +424,14 @@ export const CreateTimeseries: FC = () => {
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
-                                        {(step < 2) &&
+                                        {(step < 3) &&
                                             <Steps.NextTrigger asChild>
                                                 <Button
                                                     color="black"
                                                     border="1px solid #2C7D75"
                                                     _hover={{ bg: "teal.50" }}
-                                                    disabled={nextButtonDisabled}>
+                                                    disabled={nextButtonDisabled}
+                                                    onClick={() => setNextButtonDisabled(true)}>
                                                     Next
                                                 </Button>
                                             </Steps.NextTrigger>

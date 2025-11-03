@@ -77,3 +77,9 @@ export interface Item {
     level: number
     message: string
 }
+
+export interface Process {
+    description: string
+    id: number
+    name: string
+}
