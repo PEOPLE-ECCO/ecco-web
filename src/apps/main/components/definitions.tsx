@@ -3,7 +3,9 @@ export interface Timeseries {
     scenario_id: string;
     name: string;
     description: string;
-    jobs: Job[] | undefined
+    jobs?: Job[]
+    extent?: Extent
+    process?: Process
 }
 
 export interface Job {
@@ -82,4 +84,5 @@ export interface Process {
     description: string
     id: number
     name: string
+    parameters: object
 }

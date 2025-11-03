@@ -151,6 +151,10 @@ interface CreateTimeseriesProps {
     eventListener: EventEmitter<Events>;
 }
 
+interface ProcessWithValue extends Process {
+    value: string
+}
+
 export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: CreateTimeseriesProps) => {
     const { id } = useParams();
     const [name, setName] = useState<string>("");
@@ -159,45 +163,20 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     const [step, setStep] = useState<number>(0);
     const { createTimeseries, getProcesses } = useServices();
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
-
-    const [value, setValue] = useState<string[]>([]);
-    const [processes, setProcesses] = useState<Process[]>([]);
-    const [processTable, setProcessTable] = useState<CollectionItem>([]);
-
     const notificationService = useService<NotificationService>("notifier.NotificationService");
 
-    useEffect(() => {
-        console.log("useeffect processes ", processes);
-        const listCollection = createListCollection({
-            items: processes!
-        });
-        setProcessTable(listCollection);
-        console.log("Listcollection: ", listCollection);
-        console.log("Processtable example: ", processTableContent);
+    const [value, setValue] = useState<string[]>([]);
+    const [processes, setProcesses] = useState<ProcessWithValue[]>([]);
+    const [processTable, setProcessTable] = useState<ListCollection<ProcessWithValue>>();
+    const [selectedProcess, setSelectedProcess] = useState<Process>();
 
-    }, [processes]);
-
-
-    const fetchProcesses = async () => {
-        console.log("fetchProcesses");
-        if (!id)
-            return;
-        try {
-            const data = await getProcesses(id);
-            console.log("data ", data);
-            setProcesses(data);
-            console.log("processes ", data);
-
-        } catch (error) {
-            console.error(error);
-        }
-
-    };
-
-    const handleExitClick = () => {
-        setName("");
-        setDescription("");
-    };
+    const processTableContent = createListCollection({
+        items:
+            [
+                { description: "Calculates the basic NDVI", value: "1", name: "basic_ndvi", parameters: { bbox: { type: "array" }, threshold: 0.7 } },
+                { description: "Calculates the percentage of open water in ", value: "2", name: "open_water_surface", parameters: { bbox: { type: "array" } } }
+            ],
+    });
 
     useEffect(() => {
         if (name != "" && description != "") {
@@ -214,13 +193,53 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         }
     }, [value.length]);
 
+    useEffect(() => {
+        console.log(selectedProcess);
+    }, [value]);
+
+    useEffect(() => {
+        console.log("useeffect processes ", processes);
+        const listCollection = createListCollection({
+            items: processes!.map((p) => {
+                p.value = p.id.toString();
+                return p;
+            })
+        });
+        console.log("Listcollection: ", listCollection);
+        setProcessTable(listCollection);
+        console.log("processtable: ", processTable);
+        console.log("Processtable example: ", processTableContent);
+
+    }, [processes]);
+
+    const fetchProcesses = async () => {
+        console.log("fetchProcesses");
+        if (!id)
+            return;
+        try {
+            const data = await getProcesses(id);
+            console.log("data ", data);
+            setProcesses(data);
+            console.log("processes ", data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleExitClick = () => {
+        setName("");
+        setDescription("");
+    };
+
     const create = async () => {
         const timeseries: Timeseries = {
             id: "",
             scenario_id: id!.toString(),
             name: name,
             description: description,
-            jobs: undefined
+            jobs: undefined,
+            extent: extent,
+            process: selectedProcess
         };
         const created = await createTimeseries(timeseries);
 
@@ -238,15 +257,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             <Text>Created Timeseries: {created}</Text>
         </Box>;
     };
-
-    const processTableContent = createListCollection({
-        items:
-            [
-                {description: "Calculates the basic NDVI", value: "1", name: "basic_ndvi", parameters: {bbox: {type: "array"},threshold: 0.7}},
-                {description: "Calculates the percentage of open water in ", value: "2", name: "open_water_surface", parameters: { bbox: { type: "array" }}}
-            ],
-    });
-
 
     const steps = [
         {
@@ -276,45 +286,50 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         {
             title: "Process Selection",
             description: <>
-                <HStack pt="8" gap="4" align="flex-start" maxW="md">
-                    <Box>
-                        <Listbox.Root
-                            collection={processTableContent}
-                            value={value}
-                            onValueChange={(details) => setValue(details.value)}
-                            width="full"
-                            gap="4"
-                            maxW="400px"
-                        >
-                            <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
-                            <Listbox.Content>
-                                {processTableContent.items.map((item) => (
-                                    <Listbox.Item
-                                        item={item}
-                                        key={item.value}
-                                        flexDirection="row"
-                                        alignItems="flex-start"
-                                        gap="1">
-                                        <HStack>
-                                            <Box flex="2">
-                                                <Listbox.ItemText>{item.name}</Listbox.ItemText>
-                                                <Text fontSize="xs" color="fg.muted" mt="1">
-                                                    {item.description}
-                                                </Text>
-                                            </Box>
-                                            <Box>
-                                                <Listbox.ItemIndicator />
-                                            </Box>
-                                        </HStack>
-                                    </Listbox.Item>
-                                ))}
-                            </Listbox.Content>
-                        </Listbox.Root>
+                <Flex pt="8" direction="row" align="space-between">
+                    <Box width="300px">
+                        {processTable &&
+                            <Listbox.Root
+                                collection={processTable}
+                                value={value}
+                                onValueChange={(details) => { 
+                                    setValue(details.value); 
+                                    console.log("Details: ", details.items); 
+                                    setSelectedProcess(details.items[0]); 
+                                }}
+                                width="full"
+                                gap="4"
+                            >
+                                <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
+                                <Listbox.Content>
+                                    {processTable.items.map((item) => (
+                                        <Listbox.Item
+                                            item={item}
+                                            key={item.value}
+                                            flexDirection="row"
+                                            alignItems="flex-start"
+                                            gap="1">
+                                            <HStack align="space-between">
+                                                <Box>
+                                                    <Listbox.ItemText>{item.name}</Listbox.ItemText>
+                                                    <Text fontSize="xs" color="fg.muted" mt="1">
+                                                        {item.description}
+                                                    </Text>
+                                                </Box>
+                                                <Box>
+                                                    <Listbox.ItemIndicator />
+                                                </Box>
+                                            </HStack>
+                                        </Listbox.Item>
+                                    ))}
+                                </Listbox.Content>
+                            </Listbox.Root>
+                        }
                     </Box>
                     <Box>
-                        <Text>{value}</Text>
+                        <Text>Selected Process Number: {value}</Text>
                     </Box>
-                </HStack>
+                </Flex>
             </>,
         },
         {
