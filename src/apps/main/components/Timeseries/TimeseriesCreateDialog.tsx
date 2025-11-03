@@ -170,14 +170,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     const [processTable, setProcessTable] = useState<ListCollection<ProcessWithValue>>();
     const [selectedProcess, setSelectedProcess] = useState<Process>();
 
-    const processTableContent = createListCollection({
-        items:
-            [
-                { description: "Calculates the basic NDVI", value: "1", name: "basic_ndvi", parameters: { bbox: { type: "array" }, threshold: 0.7 } },
-                { description: "Calculates the percentage of open water in ", value: "2", name: "open_water_surface", parameters: { bbox: { type: "array" } } }
-            ],
-    });
-
     useEffect(() => {
         if (name != "" && description != "") {
             setNextButtonDisabled(false);
@@ -194,33 +186,21 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     }, [value.length]);
 
     useEffect(() => {
-        console.log(selectedProcess);
-    }, [value]);
-
-    useEffect(() => {
-        console.log("useeffect processes ", processes);
         const listCollection = createListCollection({
             items: processes!.map((p) => {
                 p.value = p.id.toString();
                 return p;
             })
         });
-        console.log("Listcollection: ", listCollection);
         setProcessTable(listCollection);
-        console.log("processtable: ", processTable);
-        console.log("Processtable example: ", processTableContent);
-
     }, [processes]);
 
     const fetchProcesses = async () => {
-        console.log("fetchProcesses");
         if (!id)
             return;
         try {
             const data = await getProcesses(id);
-            console.log("data ", data);
             setProcesses(data);
-            console.log("processes ", data);
         } catch (error) {
             console.error(error);
         }
@@ -292,10 +272,9 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                             <Listbox.Root
                                 collection={processTable}
                                 value={value}
-                                onValueChange={(details) => { 
-                                    setValue(details.value); 
-                                    console.log("Details: ", details.items); 
-                                    setSelectedProcess(details.items[0]); 
+                                onValueChange={(details) => {
+                                    setValue(details.value);
+                                    setSelectedProcess(details.items[0]);
                                 }}
                                 width="full"
                                 gap="4"
@@ -317,7 +296,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                     </Text>
                                                 </Box>
                                                 <Box>
-                                                    <Listbox.ItemIndicator />
+                                                    <Listbox.ItemIndicator
+                                                        position="absolute"
+                                                        right="4"
+                                                        top="40%"/>
                                                 </Box>
                                             </HStack>
                                         </Listbox.Item>
