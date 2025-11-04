@@ -13,7 +13,7 @@ import {
     CloseButton
 } from "@chakra-ui/react";
 import { useParams } from "react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, FC } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -25,10 +25,13 @@ import { useServices } from "../../services/Services";
 import { ActionButton } from "./ActionButton";
 
 import { setHeapSnapshotNearHeapLimit } from "v8";
+import { EventEmitter } from "@open-pioneer/core";
+import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 
 interface CreateJobProps {
     timeseries: Timeseries;
+    eventListener: EventEmitter<Events>;
 }
 
 interface SelectedDateMeta {
@@ -36,7 +39,7 @@ interface SelectedDateMeta {
     formattedDate: string;
 }
 
-export const CreateJob = (props: CreateJobProps) => {
+export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
     const { id } = useParams();
     const { createJob } = useServices();
 
@@ -80,10 +83,14 @@ export const CreateJob = (props: CreateJobProps) => {
     }, [startDate, endDate]);
 
     const create = async () => {
-
         const created = await createJob(id!, selectedTimeseries!.id, jobParams!);
-
         handleExitClick();
+        notificationService.notify({
+            title: "Job created",
+            message: created,
+            level: "info",
+            displayDuration: 5000,
+        });
     };
 
 
@@ -161,12 +168,6 @@ export const CreateJob = (props: CreateJobProps) => {
                                         tooltip="Expand timeseries"
                                         onClick={() => {
                                             create();
-                                            notificationService.notify({
-                                                title: "Job created",
-                                                //message: job.id,
-                                                level: "info",
-                                                displayDuration: 5000,
-                                            });
                                         }}
                                         w={"170px"}>
                                     </ActionButton>

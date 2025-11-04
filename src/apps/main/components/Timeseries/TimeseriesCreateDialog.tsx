@@ -195,6 +195,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         setProcessTable(listCollection);
     }, [processes]);
 
+
     const fetchProcesses = async () => {
         if (!id)
             return;
@@ -222,20 +223,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             process: selectedProcess
         };
         const created = await createTimeseries(timeseries);
-
         handleExitClick();
-
-        <Box
-            position="absolute"
-            bottom="20%"
-            left="25%"
-            transform="translateX(-50%)"
-            width="50%"
-            padding="4"
-            zIndex="10"
-            pointerEvents="auto">
-            <Text>Created Timeseries: {created}</Text>
-        </Box>;
+        notificationService.notify({
+            title: "Timeseries created:",
+            message: created,
+            level: "info",
+            displayDuration: 5000,
+        });
     };
 
     const steps = [
@@ -299,7 +293,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                     <Listbox.ItemIndicator
                                                         position="absolute"
                                                         right="4"
-                                                        top="40%"/>
+                                                        top="40%" />
                                                 </Box>
                                             </HStack>
                                         </Listbox.Item>
@@ -442,12 +436,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                 disabled={false}
                                                 onClick={() => {
                                                     create();
-                                                    notificationService.notify({
-                                                        title: "Timeseries created",
-                                                        //message: ts.name,
-                                                        level: "info",
-                                                        displayDuration: 5000,
-                                                    });
+
                                                 }}
                                                 w={"170px"}
                                             />
