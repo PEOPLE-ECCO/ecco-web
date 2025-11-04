@@ -56,25 +56,21 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
     };
 
     const timeseriesSelection = (ts: Timeseries) => {
+        setViewResultsButtonDisabled(true);
         eventListener.emit("selectedTimeseries", ts);
         setSelectedTimeseries(ts);
     };
-
+ 
+    const viewDetailsDisabling = (ts: Timeseries) => {
+        if (ts?.jobs?.length !== undefined) {
+            if (selectedTimeseries?.jobs?.length !== 0) {
+                setViewResultsButtonDisabled(false);
+            }
+        };
+    };
 
     useEffect(() => {
-        console.log("joblength", selectedTimeseries?.jobs?.length);
-
-        // if (selectedTimeseries) {
-        //     if (selectedTimeseries!.jobs!.length > 0) {
-        //         setViewResultsButtonDisabled(false);
-        //         console.log("diabled: ", viewResultsButtonDisabled);
-        //     }
-        
-        //     else {
-        //     setViewResultsButtonDisabled(true);
-        //     console.log("diabled: ", viewResultsButtonDisabled);
-        // }};
-        
+        viewDetailsDisabling(selectedTimeseries!);
     }, [selectedTimeseries?.jobs]);
 
     return (
@@ -166,7 +162,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                     </Flex>
                                                     <Collapsible.Content>
 
-                                                        <ViewJobDetails timeseries={ts} />
+                                                        <ViewJobDetails timeseries={ts} eventListener={eventListener}/>
 
                                                     </Collapsible.Content>
                                                 </Collapsible.Root>
