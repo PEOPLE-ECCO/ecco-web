@@ -7,13 +7,22 @@ import { useServices } from "../../../services/Services";
 
 import { MAP_ID } from "../../../services";
 import {
-    Box, Card, GridItem, Center, Flex,
-    Slider, SliderTrack, Icon, Grid,
+    Box,
+    Card,
+    GridItem,
+    Center,
+    Flex,
+    Slider,
+    SliderTrack,
+    Icon,
+    Grid,
     CardBody,
     Circle,
     Text
 } from "@chakra-ui/react";
+
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
+import { EventEmitter } from "@open-pioneer/core";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
@@ -27,6 +36,13 @@ import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls
 import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { Asset, AssetWrap, Catalog, Job, Timeseries } from "../../../components/definitions";
+
+
+export interface Events {
+    newTimeseries: Timeseries;
+    selectedTimeseries: Timeseries;
+    newJob: { ts: Timeseries };
+}
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
 const _proj32631 = new Projection({ code: "EPSG:32631" });
@@ -43,36 +59,45 @@ export function SiteDetails() {
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
+    const emitter = new EventEmitter<Events>();
+    emitter.on("selectedTimeseries", 
+        (value: Timeseries) => (setSelectedTimeseries(value))
+    );
+
+    const fetchTimeseries = async () => {
+        if (!id)
+            return;
+        try {
+            const data = await getTimeseries(id);
+            setTimeseries(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchJobs = async () => {
+        if (!selectedTimeseries) return;
+
+        try {
+            const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
+            selectedTimeseries.jobs = jobs;
+            setJobs(jobs);
+
+            await fetchCatalogs(jobs);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
-        const fetchTimeseries = async () => {
-            if (!id)
-                return;
-            try {
-                const data = await getTimeseries(id);
-                setTimeseries(data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
         fetchTimeseries();
-    }, []);
+        console.log("useeffect fetchTimeseries (TS List changed)");
+    }, []); // should react on Timeseries length change timeseries?.length
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            if (!selectedTimeseries) return;
-            try {
-                const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
-                selectedTimeseries.jobs = jobs;
-                setJobs(jobs);
-
-                await fetchCatalogs(jobs);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
         fetchJobs();
-    }, [selectedTimeseries]);
+        console.log("useeffect fetchJobs (selected TS jobs changed)");
+    }, [selectedTimeseries]); // should react on jobs length change selectedTimeseries?.jobs.length
 
     useEffect(() => {
         showSelectedAsset();
@@ -165,7 +190,7 @@ export function SiteDetails() {
     return (
         <Grid templateColumns="repeat(14, 1fr)">
             <GridItem colSpan={3} rowSpan={14} margin="2px" padding="2px">
-                <TimeseriesItem timeseries={timeseries} onSelect={setSelectedTimeseries} />
+                <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
             </GridItem>
             <GridItem colSpan={11} rowSpan={14} margin="2px" padding="2px">
                 <Box height="100%">
@@ -203,7 +228,7 @@ export function SiteDetails() {
                                                         defaultValue={[0]}
                                                         onValueChangeEnd={(val) => {
                                                             console.log("onChangeEnd" + val.value);
-                                                            setSelectedAsset(val.value[0]);
+                                                            setSelectedAsset(val.value[0]!);
                                                         }
                                                         }
                                                     >

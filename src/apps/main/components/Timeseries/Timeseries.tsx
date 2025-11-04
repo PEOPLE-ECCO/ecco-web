@@ -17,31 +17,35 @@ import {
 } from "@chakra-ui/react";
 
 import { LuChevronDown } from "react-icons/lu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
 
 import { EventEmitter } from "@open-pioneer/core";
-import { NotificationService, Notifier } from "@open-pioneer/notifier";
+import { NotificationService } from "@open-pioneer/notifier";
 import { useService } from "open-pioneer:react-hooks";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
 import { Timeseries } from "../definitions";
 import { ViewJobDetails } from "./TimeseriesViewJobDialogs";
+import { time } from "console";
+import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
+import { useServices } from "../../services/Services";
+import { useParams } from "react-router";
 
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
-    onSelect: (ts: Timeseries | undefined) => void;
+    eventListener: EventEmitter<Events>;
 }
 
-export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
+export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(false);
-    //const tsselectedemitter = new EventEmitter();
-    //const events = [];
-    //const handletsselection = tsselectedemitter.on("tsselected", (selectts: Timeseries) => observed.push(selectts));
-
+    const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const notificationService = useService<NotificationService>("notifier.NotificationService");
+
+    const observed: Events["selectedTimeseries"][] = [];
+    eventListener.on("selectedTimeseries", (event) => observed.push(event));
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -51,20 +55,27 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
         console.log("Archive:", ts);
     };
 
-    const checkJobCount = (ts: Timeseries) => {
-        console.log("Check Process start");
-        setViewResultsButtonDisabled(false);
-        console.log(ts.name);
-        onSelect(ts);
-        //handletsselection;
-        //tsselectedemitter.emit("tsselected", ts);
-
-        if (ts.jobs!.length < 1) {
-            console.log("count check");
-            setViewResultsButtonDisabled(true);
-        };
-        console.log("Check Done");
+    const timeseriesSelection = (ts: Timeseries) => {
+        eventListener.emit("selectedTimeseries", ts);
+        setSelectedTimeseries(ts);
     };
+
+
+    useEffect(() => {
+        console.log("joblength", selectedTimeseries?.jobs?.length);
+
+        // if (selectedTimeseries) {
+        //     if (selectedTimeseries!.jobs!.length > 0) {
+        //         setViewResultsButtonDisabled(false);
+        //         console.log("diabled: ", viewResultsButtonDisabled);
+        //     }
+        
+        //     else {
+        //     setViewResultsButtonDisabled(true);
+        //     console.log("diabled: ", viewResultsButtonDisabled);
+        // }};
+        
+    }, [selectedTimeseries?.jobs]);
 
     return (
         <>
@@ -79,8 +90,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                     collapsible
                                     onValueChange={(e) => {
                                         const ts: Timeseries = timeseries![e.value[0]!];
-                                        onSelect(undefined);
-                                        checkJobCount(ts);
+                                        timeseriesSelection(ts);
                                     }}>
                                     {timeseries?.map((ts, key) => (
                                         <Accordion.Item value={key} key={key}>
@@ -115,7 +125,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                             </Button>
                                                         </Collapsible.Trigger>
 
-                                                        <CreateJob timeseries={ts} />
+                                                        <CreateJob timeseries={ts} eventListener={eventListener} />
 
                                                         <Menu.Root>
                                                             <Menu.Trigger asChild>
@@ -128,12 +138,15 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                                                     <Menu.Content>
                                                                         <Menu.Item
                                                                             value="delete"
-                                                                            onClick={() => notificationService.notify({
-                                                                                title: "Deleted",
-                                                                                message: ts.name,
-                                                                                level: "info",
-                                                                                displayDuration: 5000,
-                                                                            })}>
+                                                                            onClick={() => {
+                                                                                handleDelete(ts);
+                                                                                notificationService.notify({
+                                                                                    title: "Deleted",
+                                                                                    message: ts.name,
+                                                                                    level: "info",
+                                                                                    displayDuration: 5000,
+                                                                                });
+                                                                            }}>
                                                                             Delete</Menu.Item>
                                                                         <Menu.Item
                                                                             value="archive"
@@ -162,7 +175,7 @@ export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
                                     ))}
                                 </Accordion.Root>
 
-                                <CreateTimeseries />
+                                <CreateTimeseries eventListener={eventListener} />
 
                             </Stack>
                         </Box>
