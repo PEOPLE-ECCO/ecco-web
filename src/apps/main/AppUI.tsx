@@ -15,6 +15,7 @@ import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
 import CreateTimeseries from "./views/CreateTimeseries/CreateTimeseries";
 import CreateJob from "./views/CreateJob/CreateJobUI";
+import { ForceAuth } from "@open-pioneer/authentication";
 
 const basePath = "/";
 
@@ -79,9 +80,11 @@ export function Layout() {
                     </Container>
                 </Flex>
 
-                <Box as="main" flex="1" pt={height} bg="#EFEAEA">
-                    <Outlet />
-                </Box>
+                <ForceAuth>
+                    <Box as="main" flex="1" pt={height} bg="#EFEAEA">
+                        <Outlet />
+                    </Box>
+                </ForceAuth>
 
                 <Footer />
             </Flex>
