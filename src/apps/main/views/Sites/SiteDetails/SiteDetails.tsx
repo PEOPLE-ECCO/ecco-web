@@ -60,9 +60,28 @@ export function SiteDetails() {
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
     const emitter = new EventEmitter<Events>();
-    emitter.on("selectedTimeseries", 
+    emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
+
+    useEffect(() => {
+        fetchTimeseries();
+        console.log("useeffect fetchTimeseries (TS List changed)");
+    }, []); // should react on Timeseries length change timeseries?.length
+
+    useEffect(() => {
+        fetchJobs();
+        console.log("useeffect fetchJobs first time");
+    }, [selectedTimeseries]);
+
+    useEffect(() => {
+        fetchJobs();
+        console.log("useeffect fetchJobs (selected TS jobs changed)");
+    }, [selectedTimeseries?.jobs?.length]); // should react on jobs length change selectedTimeseries?.jobs.length
+
+    useEffect(() => {
+        showSelectedAsset();
+    }, [selectedAsset]);
 
     const fetchTimeseries = async () => {
         if (!id)
@@ -88,20 +107,6 @@ export function SiteDetails() {
             console.error(error);
         }
     };
-
-    useEffect(() => {
-        fetchTimeseries();
-        console.log("useeffect fetchTimeseries (TS List changed)");
-    }, []); // should react on Timeseries length change timeseries?.length
-
-    useEffect(() => {
-        fetchJobs();
-        console.log("useeffect fetchJobs (selected TS jobs changed)");
-    }, [selectedTimeseries]); // should react on jobs length change selectedTimeseries?.jobs.length
-
-    useEffect(() => {
-        showSelectedAsset();
-    }, [selectedAsset]);
 
     async function fetchCatalogs(newjobs: Job[]) {
         if (!newjobs) return;
@@ -188,23 +193,22 @@ export function SiteDetails() {
     }
 
     return (
-        <Grid templateColumns="repeat(14, 1fr)">
-            <GridItem colSpan={3} rowSpan={14} margin="2px" padding="2px">
-                <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
-            </GridItem>
-            <GridItem colSpan={11} rowSpan={14} margin="2px" padding="2px">
-                <Box height="100%">
-                    <Flex flex="1" height="100%" direction="column" overflow="hidden" position="relative">
-                        <MapContainer
-                            mapId={MAP_ID}
-                            role="main"
-                            aria-label=""
-                        >
-                            <MapSidebarControls mapId={MAP_ID} />
-                            <MapInfoControls mapId={MAP_ID} />
-                            <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} />
-                            <MapZoomControls mapId={MAP_ID} />
+            <Flex>
+                <Box width="33rem" p="2">
+                    <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
+                </Box>
 
+                <Box height="86vh" width="100%" p="2">
+                    <MapContainer
+                        mapId={MAP_ID}
+                        role="main"
+                        aria-label=""
+                    >
+                        <MapSidebarControls mapId={MAP_ID} />
+                        <MapInfoControls mapId={MAP_ID} />
+                        <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} />
+                        <MapZoomControls mapId={MAP_ID} />
+                        <Box>
                             {selectedTimeseries &&
                                 <Box
                                     position="absolute"
@@ -267,10 +271,9 @@ export function SiteDetails() {
                                     />
                                 </Box>
                             }
-                        </MapContainer>
-                    </Flex>
+                        </Box>
+                    </MapContainer>
                 </Box>
-            </GridItem>
-        </Grid>
+            </Flex>
     );
 }
