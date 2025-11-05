@@ -29,9 +29,8 @@ export function MapSwitcherControls({
                     id="highlight-switch"
                     checked={isChecked}
                     onChange={(e) => onToggle(e.target.checked)}
-                    colorPalette={"teal"}
                 >
-                    <Switch.Control />
+                    <Switch.Control bgColor={"#2C7D75"}/>
                 </Switch.Root>
             </Field.Root>
         </MapAnchor>

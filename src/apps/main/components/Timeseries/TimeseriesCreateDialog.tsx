@@ -210,6 +210,8 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     const handleExitClick = () => {
         setName("");
         setDescription("");
+        //setSelectedProcess(undefined);
+        //setExtent(undefined);
     };
 
     const create = async () => {

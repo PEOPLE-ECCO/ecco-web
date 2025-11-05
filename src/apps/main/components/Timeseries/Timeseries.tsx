@@ -125,7 +125,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
 
                                                         <CreateJob timeseries={ts} eventListener={eventListener} />
 
-                                                        <Dialog.Root size="xl">
+                                                        <Dialog.Root size="sm">
                                                             <Menu.Root>
                                                                 <Menu.Trigger asChild>
                                                                     <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
@@ -169,7 +169,6 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                             </Menu.Item>
                                                                         </Menu.Content>
                                                                     </Menu.Positioner>
-
                                                                 </Portal>
                                                             </Menu.Root>
                                                             <Portal>
@@ -177,7 +176,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                 <Dialog.Positioner>
                                                                     <Dialog.Content>
                                                                         <Dialog.Header>
-                                                                            <Dialog.Title>View Jobs</Dialog.Title>
+                                                                            <Dialog.Title>View Job Information of {ts.name}</Dialog.Title>
                                                                             <Dialog.CloseTrigger asChild>
                                                                                 <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
                                                                             </Dialog.CloseTrigger>
