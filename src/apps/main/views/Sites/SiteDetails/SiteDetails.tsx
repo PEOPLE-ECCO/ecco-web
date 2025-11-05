@@ -9,13 +9,11 @@ import { MAP_ID } from "../../../services";
 import {
     Box,
     Card,
-    GridItem,
     Center,
     Flex,
     Slider,
     SliderTrack,
     Icon,
-    Grid,
     CardBody,
     Circle,
     Text
@@ -192,13 +190,13 @@ export function SiteDetails() {
         }
     }
 
-    return (
+    return (            
             <Flex>
-                <Box width="33rem" p="2">
+                <Box width="400px" p="2">
                     <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
                 </Box>
 
-                <Box height="86vh" width="100%" p="2">
+                <Box h="88vh" flexGrow="1" p="2">
                     <MapContainer
                         mapId={MAP_ID}
                         role="main"
