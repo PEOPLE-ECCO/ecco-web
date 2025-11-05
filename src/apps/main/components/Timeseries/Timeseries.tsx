@@ -13,7 +13,9 @@ import {
     Accordion,
     Portal,
     Collapsible,
-    ScrollArea
+    ScrollArea,
+    Dialog,
+    CloseButton
 } from "@chakra-ui/react";
 
 import { LuChevronDown } from "react-icons/lu";
@@ -60,7 +62,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
         eventListener.emit("selectedTimeseries", ts);
         setSelectedTimeseries(ts);
     };
- 
+
     const viewDetailsDisabling = (ts: Timeseries) => {
         if (ts?.jobs?.length !== undefined) {
             if (selectedTimeseries?.jobs?.length !== 0) {
@@ -123,47 +125,75 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
 
                                                         <CreateJob timeseries={ts} eventListener={eventListener} />
 
-                                                        <Menu.Root>
-                                                            <Menu.Trigger asChild>
-                                                                <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
-                                                                    <Ellipsis />
-                                                                </IconButton>
-                                                            </Menu.Trigger>
+                                                        <Dialog.Root size="xl">
+                                                            <Menu.Root>
+                                                                <Menu.Trigger asChild>
+                                                                    <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
+                                                                        <Ellipsis />
+                                                                    </IconButton>
+                                                                </Menu.Trigger>
+                                                                <Portal>
+                                                                    <Menu.Positioner>
+                                                                        <Menu.Content>
+                                                                            <Dialog.Trigger asChild>
+                                                                                <Menu.Item
+                                                                                    value="details">
+                                                                                    View Jobs
+                                                                                </Menu.Item>
+                                                                            </Dialog.Trigger>
+                                                                            <Menu.Item
+                                                                                value="delete"
+                                                                                onClick={() => {
+                                                                                    handleDelete(ts);
+                                                                                    notificationService.notify({
+                                                                                        title: "Deleted",
+                                                                                        message: ts.name,
+                                                                                        level: "info",
+                                                                                        displayDuration: 5000,
+                                                                                    });
+                                                                                }}>
+                                                                                Delete
+                                                                            </Menu.Item>
+                                                                            <Menu.Item
+                                                                                value="archive"
+                                                                                onClick={() => {
+                                                                                    handleArchive(ts);
+                                                                                    notificationService.notify({
+                                                                                        title: "Archived",
+                                                                                        message: ts.name,
+                                                                                        level: "info",
+                                                                                        displayDuration: 5000,
+                                                                                    });
+                                                                                }}>
+                                                                                Archive
+                                                                            </Menu.Item>
+                                                                        </Menu.Content>
+                                                                    </Menu.Positioner>
+
+                                                                </Portal>
+                                                            </Menu.Root>
                                                             <Portal>
-                                                                <Menu.Positioner>
-                                                                    <Menu.Content>
-                                                                        <Menu.Item
-                                                                            value="delete"
-                                                                            onClick={() => {
-                                                                                handleDelete(ts);
-                                                                                notificationService.notify({
-                                                                                    title: "Deleted",
-                                                                                    message: ts.name,
-                                                                                    level: "info",
-                                                                                    displayDuration: 5000,
-                                                                                });
-                                                                            }}>
-                                                                            Delete</Menu.Item>
-                                                                        <Menu.Item
-                                                                            value="archive"
-                                                                            onClick={() => {
-                                                                                handleArchive(ts);
-                                                                                notificationService.notify({
-                                                                                    title: "Archived",
-                                                                                    message: ts.name,
-                                                                                    level: "info",
-                                                                                    displayDuration: 5000,
-                                                                                });
-                                                                            }}>Archive</Menu.Item>
-                                                                    </Menu.Content>
-                                                                </Menu.Positioner>
+                                                                <Dialog.Backdrop />
+                                                                <Dialog.Positioner>
+                                                                    <Dialog.Content>
+                                                                        <Dialog.Header>
+                                                                            <Dialog.Title>View Jobs</Dialog.Title>
+                                                                            <Dialog.CloseTrigger asChild>
+                                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                            </Dialog.CloseTrigger>
+                                                                        </Dialog.Header>
+                                                                        <Dialog.Body>
+                                                                            <ViewJobDetails timeseries={ts} eventListener={eventListener} />
+                                                                        </Dialog.Body>
+                                                                    </Dialog.Content>
+                                                                </Dialog.Positioner>
                                                             </Portal>
-                                                        </Menu.Root>
+                                                        </Dialog.Root>
                                                     </Flex>
                                                     <Collapsible.Content>
-
-                                                        <ViewJobDetails timeseries={ts} eventListener={eventListener}/>
-
+                                                        <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                        <Text>Example Result File</Text>
+                                                        </Box>
                                                     </Collapsible.Content>
                                                 </Collapsible.Root>
                                             </Accordion.ItemContent>
@@ -182,7 +212,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                     <ScrollArea.Thumb />
                 </ScrollArea.Scrollbar>
                 <ScrollArea.Corner />
-            </ScrollArea.Root>
+            </ScrollArea.Root >
         </>
     );
 }

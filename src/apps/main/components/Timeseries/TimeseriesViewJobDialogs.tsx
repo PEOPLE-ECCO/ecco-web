@@ -20,17 +20,20 @@ import { useState, useEffect, ReactNode, Key } from "react";
 
 import { Item, Job, Timeseries } from "../definitions";
 import { useServices } from "../../services/Services";
+import { EventEmitter } from "@open-pioneer/core";
+import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 
 interface JobProps {
     timeseries: Timeseries;
+    eventListener: EventEmitter<Events>;
 }
 
 export const ViewJobDetails = (props: JobProps) => {
     const { getJobLog } = useServices();
-    const [ logViewContent, setLogViewContent ] = useState<ReactNode>();
-    const [ detailsContent, setDetailsContent ] = useState<ReactNode>();
-    const [ selectedLogs, setSelectedLogs ] = useState<Array<Item>>([]);
+    const [logViewContent, setLogViewContent] = useState<ReactNode>();
+    const [detailsContent, setDetailsContent] = useState<ReactNode>();
+    const [selectedLogs, setSelectedLogs] = useState<Array<Item>>([]);
 
     function logLevelcolor(item: Item) {
         if (item.level == 20) {
@@ -63,8 +66,8 @@ export const ViewJobDetails = (props: JobProps) => {
                 { label: "DEBUGS", value: debugs, bg: "green.100", color: "black", border: "1px solid black" },
                 { label: "WARNINGS", value: warnings, bg: "orange.100", color: "black", border: "1px solid black" },
                 { label: "ERRORS", value: errors, bg: "red.100", color: "black", border: "1px solid black" }
-                ],
-            }
+            ],
+        }
         );
 
         setLogViewContent(
@@ -91,7 +94,8 @@ export const ViewJobDetails = (props: JobProps) => {
                         collection={logTableContent}
                         orientation="horizontal"
                         maxW="150%"
-                        //selectionMode="multiple"
+                        defaultValue={[alllogs]}
+                    //selectionMode="multiple"
                     >
                         <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
                         <Listbox.Content>
@@ -131,7 +135,7 @@ export const ViewJobDetails = (props: JobProps) => {
         const content = (
             <>
                 <Table.Root size="md" variant="outline" scrollBehavior="inside">
-                    <Table.Header bg="teal.50">
+                    <Table.Header bg="gray.200">
                         <Table.Row>
                             <Table.ColumnHeader>Key</Table.ColumnHeader>
                             <Table.ColumnHeader>Value</Table.ColumnHeader>
@@ -162,7 +166,7 @@ export const ViewJobDetails = (props: JobProps) => {
                             <Table.Body>
                                 {props.timeseries.jobs.map((job) => (
                                     <Table.Row key={job.id}>
-                                        <Table.Cell><Box width="25px"></Box>{job.id}</Table.Cell>
+                                        <Table.Cell><Box width="25px"></Box>{""+job.id}</Table.Cell>
                                         <Table.Cell>
                                             <Dialog.Root size="xl" scrollBehavior="inside">
                                                 <Dialog.Trigger asChild>
@@ -181,24 +185,22 @@ export const ViewJobDetails = (props: JobProps) => {
                                                     <Dialog.Positioner>
                                                         <Dialog.Content>
                                                             <Dialog.Header>
-                                                                <Stack>
-                                                                    <Dialog.Title>View Details</Dialog.Title>
-                                                                </Stack>
+                                                                <Dialog.Title>View Details of Job {job.id}</Dialog.Title>
+                                                                <Dialog.CloseTrigger asChild>
+                                                                    <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                </Dialog.CloseTrigger>
                                                             </Dialog.Header>
                                                             <Dialog.Body>
                                                                 {detailsContent}
                                                             </Dialog.Body>
                                                             <Dialog.Footer></Dialog.Footer>
-                                                            <Dialog.CloseTrigger asChild>
-                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                                            </Dialog.CloseTrigger>
                                                         </Dialog.Content>
                                                     </Dialog.Positioner>
                                                 </Portal>
                                             </Dialog.Root>
                                         </Table.Cell>
                                         <Table.Cell>
-                                            <Dialog.Root size="cover" scrollBehavior="inside">
+                                            <Dialog.Root size="xl" scrollBehavior="inside">
                                                 <Dialog.Trigger asChild>
                                                     <Button
                                                         width="90px"
@@ -217,17 +219,19 @@ export const ViewJobDetails = (props: JobProps) => {
                                                             <Dialog.Header>
                                                                 <Stack>
                                                                     <Box pb="4">
-                                                                        <Dialog.Title>View Logs</Dialog.Title>
+                                                                        <Dialog.Title>View Logs of Job {job.id}</Dialog.Title>
                                                                     </Box>
                                                                     {logViewContent}
                                                                 </Stack>
+                                                                <Dialog.CloseTrigger asChild>
+                                                                    <CloseButton onClick={handleExitLogviewClick} height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                </Dialog.CloseTrigger>
                                                             </Dialog.Header>
                                                             <Dialog.Body>
                                                                 <Table.Root variant="outline">
-                                                                    <Table.Caption />
-                                                                    <Table.Header>
+                                                                    <Table.Header bg="gray.200">
                                                                         <Table.Row>
-                                                                            <Table.ColumnHeader fontWeight={16}>Time</Table.ColumnHeader>
+                                                                            <Table.ColumnHeader>Time</Table.ColumnHeader>
                                                                             <Table.ColumnHeader>Level</Table.ColumnHeader>
                                                                             <Table.ColumnHeader>Message</Table.ColumnHeader>
                                                                         </Table.Row>
@@ -244,9 +248,6 @@ export const ViewJobDetails = (props: JobProps) => {
                                                                 </Table.Root>
                                                             </Dialog.Body>
                                                             <Dialog.Footer></Dialog.Footer>
-                                                            <Dialog.CloseTrigger asChild>
-                                                                <CloseButton onClick={handleExitLogviewClick} height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                                            </Dialog.CloseTrigger>
                                                         </Dialog.Content>
                                                     </Dialog.Positioner>
                                                 </Portal>
