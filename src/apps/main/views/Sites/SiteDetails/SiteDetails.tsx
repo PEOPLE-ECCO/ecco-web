@@ -50,8 +50,9 @@ export function SiteDetails() {
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
-    const [assets, setAssets] = useState<JobResult[]>([]);
-    const [selectedAsset, setSelectedAsset] = useState<number>(-1);
+    const [jobResults, setJobResults] = useState<JobResult[]>([]);
+    const [selectedjobResult, setSelectedjobResult] = useState<number>(-1);
+    const [selectedJobResults, setSelectedJobResults] = useState<JobResult[]>([]);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
@@ -76,8 +77,8 @@ export function SiteDetails() {
     }, [selectedTimeseries?.jobs?.length]); // should react on jobs length change selectedTimeseries?.jobs.length
 
     useEffect(() => {
-        showSelectedAsset();
-    }, [selectedAsset]);
+        showSelectedJobResult();
+    }, [selectedjobResult]);
 
     const fetchTimeseries = async () => {
         if (!id)
@@ -112,7 +113,7 @@ export function SiteDetails() {
     async function fetchResult(newjobs: Job[]) {
         if (!newjobs) return;
         const fetchedJobs = [];
-        const fetchedAssets = [];
+        const fetchedJobResults = [];
         for (const job of newjobs!) {
             const cat = await getJobResult(job);
             if (cat) {
@@ -120,13 +121,13 @@ export function SiteDetails() {
                 job.result = cat;
                 fetchedJobs.push(job);
                 for (const result of cat) {
-                    fetchedAssets.push(result);
+                    fetchedJobResults.push(result);
                 }
             }
         }
-        setAssets(fetchedAssets);
+        setJobResults(fetchedJobResults);
         setJobs(fetchedJobs);
-        setSelectedAsset(0);
+        setSelectedjobResult(0);
     }
 
     async function remove_current_item() {
@@ -136,7 +137,7 @@ export function SiteDetails() {
     }
 
     function downloadCurrentResult() {
-        const href = assets[selectedAsset]?.href;
+        const href = jobResults[selectedjobResult]?.href;
         if (!href)
             return;
 
@@ -149,11 +150,11 @@ export function SiteDetails() {
     }
 
 
-    async function showSelectedAsset() {
-        if (assets.length == 0 || selectedAsset == undefined) {
+    async function showSelectedJobResult() {
+        if (jobResults.length == 0 || selectedjobResult == undefined) {
             return;
         }
-        const asset = assets[selectedAsset]!;
+        const jobResult = jobResults[selectedjobResult]!;
 
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
@@ -165,7 +166,7 @@ export function SiteDetails() {
         const image = new GeoTIFF({
             sources: [
                 {
-                    url: asset.href,
+                    url: jobResult.href,
                 },
             ],
         });
@@ -223,24 +224,24 @@ export function SiteDetails() {
                                     <Card.Root w="100%" padding={4}>
                                         <Card.Body>
                                             <Text>Info: {selectedTimeseries.name}</Text>
-                                            {jobs && assets.length > 0 && (
+                                            {jobs && jobResults.length > 0 && (
                                                 <Center w="100%">
                                                     <Slider.Root
                                                         w="75%"
                                                         step={1}
-                                                        max={assets.length - 1}
+                                                        max={jobResults.length - 1}
                                                         defaultValue={[0]}
                                                         onValueChangeEnd={(val) => {
                                                             console.log("onChangeEnd" + val.value);
-                                                            setSelectedAsset(val.value[0]!);
+                                                            setSelectedjobResult(val.value[0]!);
                                                         }
                                                         }
                                                     >
                                                         <Slider.Control>
-                                                            {assets.map((asset, index) => (
+                                                            {jobResults.map((jobResult, index) => (
                                                                 <>
                                                                     <Slider.Marker key={index} value={index} pt={3} ml="-50" w={"100%"}>
-                                                                        {asset.filename}
+                                                                        {jobResult.filename}
                                                                     </Slider.Marker>
                                                                     <Slider.Marker
                                                                         zIndex="98"
@@ -266,7 +267,7 @@ export function SiteDetails() {
                                         </Card.Body>
                                     </Card.Root>
                                     <TimeseriesControl
-                                        asset={assets[selectedAsset]!}
+                                        jobResult={jobResults[selectedjobResult]!}
                                         onDownloadCurrent={downloadCurrentResult}
                                     />
                                 </Box>

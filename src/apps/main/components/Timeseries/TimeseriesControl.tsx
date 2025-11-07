@@ -7,22 +7,22 @@ import { TimeseriesActions } from "./TimeseriesActions";
 import { JobResult } from "../definitions";
 
 interface TimeseriesControlProps {
-    asset: JobResult;
+    jobResult: JobResult;
     onDownloadCurrent: () => void;
 }
 
-export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesControlProps) {
+export function TimeseriesControl({ jobResult, onDownloadCurrent }: TimeseriesControlProps) {
     return (
         <Card.Root marginTop="2%" w="100%">
-            {asset &&
+            {jobResult &&
                 <>
                     <Card.Header paddingBottom="2" paddingX="5" paddingTop="2">
-                        {asset.filename}
+                        {jobResult.filename}
                     </Card.Header>
                     <Card.Body>
                         <HStack>
                             <Flex justify="space-between" align="center">
-                                Type: {asset.type}
+                                Type: {jobResult.type}
                                 <br></br>
                                 <TimeseriesIcons
                                     onDocumentClick={() => console.log("Document clicked")}
