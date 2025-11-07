@@ -15,12 +15,13 @@ import {
     Collapsible,
     ScrollArea,
     Dialog,
-    CloseButton
+    CloseButton,
+    Switch
 } from "@chakra-ui/react";
 
-import { LuChevronDown } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
+import { LuChevronDown, LuEye, LuEyeClosed } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -192,7 +193,19 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                     <Collapsible.Content>
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
                                                             {selectedTimeseries?.jobs?.map((job) =>
-                                                                <Text key={job.id}>{job.id} {job.created}</Text>
+                                                                <>
+                                                                    <Switch.Root colorPalette="teal" size="lg">
+                                                                        <Switch.HiddenInput />
+                                                                        <Switch.Control >
+                                                                            <Switch.Thumb />
+                                                                            <Switch.Indicator fallback={
+                                                                                <LuEyeClosed />}>
+                                                                                <LuEye />
+                                                                            </Switch.Indicator>
+                                                                        </Switch.Control>
+                                                                        <Switch.Label><Text key={job.id}>{job.id} {job.created}</Text></Switch.Label>
+                                                                    </Switch.Root>
+                                                                </>
                                                             )}
                                                         </Box>
                                                     </Collapsible.Content>
