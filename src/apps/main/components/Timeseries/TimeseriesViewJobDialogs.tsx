@@ -162,11 +162,21 @@ export const ViewJobDetails = (props: JobProps) => {
                 {props.timeseries.jobs &&
                     <>
                         <Table.Root>
-                            <Table.Header>Job-ID:</Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader textAlign="center">ID</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Start Date</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Start Time</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Status</Table.ColumnHeader>
+                                <Table.ColumnHeader />
+                                <Table.ColumnHeader />
+                            </Table.Row>
                             <Table.Body>
                                 {props.timeseries.jobs.map((job) => (
                                     <Table.Row key={job.id}>
-                                        <Table.Cell><Box width="25px"></Box>{job.start_time}</Table.Cell>
+                                        <Table.Cell textAlign="center">{job.id}</Table.Cell>
+                                        <Table.Cell textAlign="center">{new Date(job.start_time).toISOString().split("T")[0]}</Table.Cell>
+                                        <Table.Cell textAlign="center">{new Date(job.start_time).toISOString().split("T")[1]!.split(".")[0]}</Table.Cell>
+                                        <Table.Cell textAlign="center">{job.state_name}</Table.Cell>
                                         <Table.Cell>
                                             <Dialog.Root size="xl" scrollBehavior="inside">
                                                 <Dialog.Trigger asChild>

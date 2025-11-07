@@ -125,7 +125,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
 
                                                         <CreateJob timeseries={ts} eventListener={eventListener} />
 
-                                                        <Dialog.Root size="sm" placement="center">
+                                                        <Dialog.Root size="lg" placement="center">
                                                             <Menu.Root>
                                                                 <Menu.Trigger asChild>
                                                                     <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
