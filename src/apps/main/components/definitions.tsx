@@ -9,10 +9,18 @@ export interface Timeseries {
 }
 
 export interface Job {
-    executionTimeEnd: string
-    executionTimeStart: string
     id: number
     timeseries_id: number
+    created: string
+    start_time: string
+    end_time: string
+    total_run_time: number
+    state_name: string
+    
+    /*
+    // fictional job properties
+    executionTimeEnd: string
+    executionTimeStart: string
     log: object | undefined
     scheduleTime: string
     status: string
@@ -20,6 +28,7 @@ export interface Job {
     progress: number
     credits: number | undefined
     usage: Usage | undefined
+    */ 
 }
 
 export interface UnitValue {

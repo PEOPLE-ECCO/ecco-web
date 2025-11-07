@@ -148,7 +148,7 @@ export const useServices = () => {
         }
     };
 
-    const getJobLog = async (scenario_id: string, job: Job) => {
+    const getJobLog = async (job: Job) => {
         const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/log/";
         const response = await httpService.fetch(url);
 

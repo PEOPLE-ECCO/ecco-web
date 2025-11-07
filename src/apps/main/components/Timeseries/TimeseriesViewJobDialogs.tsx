@@ -53,7 +53,7 @@ export const ViewJobDetails = (props: JobProps) => {
 
 
     const viewLog = async (job: Job) => {
-        const alllogs = await getJobLog(props.timeseries.scenario_id, job);
+        const alllogs = await getJobLog(job);
         const debugs = alllogs.filter((e: { level: number; }) => e.level <= 20);
         const warnings = alllogs.filter((e: { level: number; }) => e.level <= 40 && e.level > 20);
         const errors = alllogs.filter((e: { level: number; }) => e.level > 40);
@@ -166,7 +166,7 @@ export const ViewJobDetails = (props: JobProps) => {
                             <Table.Body>
                                 {props.timeseries.jobs.map((job) => (
                                     <Table.Row key={job.id}>
-                                        <Table.Cell><Box width="25px"></Box>{""+job.id}</Table.Cell>
+                                        <Table.Cell><Box width="25px"></Box>{job.start_time}</Table.Cell>
                                         <Table.Cell>
                                             <Dialog.Root size="xl" scrollBehavior="inside">
                                                 <Dialog.Trigger asChild>
