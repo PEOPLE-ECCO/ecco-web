@@ -12,9 +12,7 @@ import {
     Center,
     Flex,
     Slider,
-    SliderTrack,
     Icon,
-    CardBody,
     Circle,
     Text
 } from "@chakra-ui/react";
@@ -24,7 +22,6 @@ import { EventEmitter } from "@open-pioneer/core";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
-import STAC from "ol-stac";
 import { useService } from "open-pioneer:react-hooks";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
@@ -33,7 +30,9 @@ import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
 import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { Asset, AssetWrap, Catalog, Job, Timeseries } from "../../../components/definitions";
+import { Job, JobResult, Timeseries } from "../../../components/definitions";
+import { GeoTIFF } from "ol/source";
+import TileLayer from "ol/layer/WebGLTile.js";
 
 
 export interface Events {
@@ -47,12 +46,11 @@ const _proj32631 = new Projection({ code: "EPSG:32631" });
 
 export function SiteDetails() {
     const { id } = useParams();
-    const { getTimeseries, getJobsByTimeseriesId, getJobCatalog } = useServices();
+    const { getTimeseries, getJobsByTimeseriesId, getJobResult } = useServices();
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
-    const [catalogs, setCatalogs] = useState<Catalog[]>();
-    const [assets, setAssets] = useState<Asset[]>([]);
+    const [assets, setAssets] = useState<JobResult[]>([]);
     const [selectedAsset, setSelectedAsset] = useState<number>(-1);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
@@ -94,34 +92,36 @@ export function SiteDetails() {
 
     const fetchJobs = async () => {
         if (!selectedTimeseries) return;
-
         try {
             const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
             selectedTimeseries.jobs = jobs;
+        
+            for (const ts of timeseries!) {
+                if (ts.id === selectedTimeseries.id) {
+                    ts.jobs = jobs;
+                }
+            }
             setJobs(jobs);
 
-            await fetchCatalogs(jobs);
+            await fetchResult(jobs);
         } catch (error) {
             console.error(error);
         }
     };
 
-    async function fetchCatalogs(newjobs: Job[]) {
+    async function fetchResult(newjobs: Job[]) {
         if (!newjobs) return;
-        setCatalogs([]);
         const fetchedJobs = [];
         const fetchedAssets = [];
         for (const job of newjobs!) {
-            const cat = await getJobCatalog(id!, job);
+            const cat = await getJobResult(job);
             if (cat) {
                 // Catalog might not be ready yet (e.g. because processing is still ongoing)
-                catalogs?.push(cat);
-                for (const a of Object.values(cat.assets)) {
-                    a.job = job;
-                    fetchedAssets.push(a);
-                }
-                job.catalog = cat;
+                job.result = cat;
                 fetchedJobs.push(job);
+                for (const result of cat) {
+                    fetchedAssets.push(result);
+                }
             }
         }
         setAssets(fetchedAssets);
@@ -154,31 +154,34 @@ export function SiteDetails() {
             return;
         }
         const asset = assets[selectedAsset]!;
-        const job = asset.job;;
 
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
 
         const google = new Projection({ code: "EPSG:3857" });
-        const stacproj = new Projection({ code: "EPSG:" + asset["proj:epsg"] });
+        const stacproj = new Projection({ code: "EPSG:32631"});
         // const stacproj = new Projection({ code: "EPSG:4326" });
 
-        const staclayer = new STAC({
-            data: job.catalog,
-            displayGeoTiffByDefault: true,
-            bands: [1]
+        const image = new GeoTIFF({
+            sources: [
+                {
+                    url: asset.href,
+                },
+            ],
         });
+
         const layer = new SimpleLayer({
             id: "current_item",
-            title: asset.title,
-            olLayer: staclayer
+            title: "current",
+            olLayer: new TileLayer({
+                source: image,
+            }),
         });
         map.layers.addLayer(layer);
 
-
         // const bbox = catalog.bbox;
         if (shouldHighlightAndZoom) {
-            const bbox = asset["proj:bbox"];
+            const bbox = (await image.getView()).extent;
             map.highlightAndZoom(
                 [
                     new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
@@ -186,7 +189,6 @@ export function SiteDetails() {
                 ],
                 { maxZoom: 11 }
             );
-
         }
     }
 
@@ -238,13 +240,13 @@ export function SiteDetails() {
                                                             {assets.map((asset, index) => (
                                                                 <>
                                                                     <Slider.Marker key={index} value={index} pt={3} ml="-50" w={"100%"}>
-                                                                        {asset.title.substring(7, asset.title.length - 5)}
+                                                                        {asset.filename}
                                                                     </Slider.Marker>
                                                                     <Slider.Marker
                                                                         zIndex="98"
                                                                         ml="-0.5em"
                                                                         mt="-0.9em"
-                                                                        key={asset.title + index}
+                                                                        key={index}
                                                                         value={index}
                                                                     >
                                                                         <Icon viewBox="0 0 200 200">

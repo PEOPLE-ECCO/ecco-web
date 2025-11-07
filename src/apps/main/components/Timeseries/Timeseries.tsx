@@ -46,8 +46,8 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const notificationService = useService<NotificationService>("notifier.NotificationService");
 
-    const observed: Events["selectedTimeseries"][] = [];
-    eventListener.on("selectedTimeseries", (event) => observed.push(event));
+    //const observed: Events["selectedTimeseries"][] = [];
+    //eventListener.on("selectedTimeseries", (event) => observed.push(event));
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -191,7 +191,9 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                     </Flex>
                                                     <Collapsible.Content>
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                        <Text>Example Result File</Text>
+                                                            {selectedTimeseries?.jobs?.map((job) =>
+                                                                <Text key={job.id}>{job.id} {job.created}</Text>
+                                                            )}
                                                         </Box>
                                                     </Collapsible.Content>
                                                 </Collapsible.Root>

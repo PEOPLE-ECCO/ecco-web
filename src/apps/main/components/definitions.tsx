@@ -16,6 +16,7 @@ export interface Job {
     end_time: string
     total_run_time: number
     state_name: string
+    result?: JobResult  // needs to be fetched first
     
     /*
     // fictional job properties
@@ -24,7 +25,7 @@ export interface Job {
     log: object | undefined
     scheduleTime: string
     status: string
-    catalog: Catalog | undefined
+    result?: JobResult
     progress: number
     credits: number | undefined
     usage: Usage | undefined
@@ -43,17 +44,11 @@ export interface Usage {
     sentinelhub: UnitValue
 }
 
-export interface Asset {
-    title: string
-    type: string
+export interface JobResult {
+    filename: string
     href: string
-    "proj:bbox": number[]
-    "proj:epsg": number
-    job: Job
-}
-
-export interface AssetWrap {
-    [key: string]: Asset;
+    job: string
+    type: string
 }
 
 export interface STACProperties {
@@ -71,12 +66,6 @@ export interface TemporalExtent {
 export interface Extent {
     spatial: SpatialExtent
     temporal: TemporalExtent
-}
-
-export interface Catalog {
-    assets: AssetWrap;
-    id: string
-    extent: Extent
 }
 
 export interface JobParameters {

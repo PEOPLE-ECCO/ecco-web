@@ -72,7 +72,7 @@ export const useServices = () => {
                 {
                     "name": ts.name,
                     "description": ts.description,
-                    "process": 1
+                    "process": ts.process?.id
                 }
             )
         });
@@ -128,10 +128,10 @@ export const useServices = () => {
         }
     };
 
-    const getJobCatalog = async (scenario_id: string, job: Job) => {
-        console.log("getJobCatalog " + scenario_id + ", " + job.id);
+    const getJobResult = async (job: Job) => {
+        console.log("getJobResult for job: " + job.id);
 
-        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/catalog";
+        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/results/";
         const response = await httpService.fetch(url);
 
         if (response.status != 200) {
@@ -140,7 +140,7 @@ export const useServices = () => {
         } else {
             const responseData = await response.json();
             if (responseData) {
-                job.catalog = responseData;
+                job.result = responseData;
                 return responseData;
             } else {
                 throw new Error("Unexpected response: " + JSON.stringify(responseData));
@@ -165,5 +165,5 @@ export const useServices = () => {
         }
     };
 
-    return { getUser, getScenarios, getTimeseries, getProcesses, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
+    return { getUser, getScenarios, getTimeseries, getProcesses, getJobsByTimeseriesId, getJobResult, getJobLog, createTimeseries, createJob };
 };

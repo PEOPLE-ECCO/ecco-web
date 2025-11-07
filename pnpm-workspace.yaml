@@ -127,14 +127,16 @@ overrides:
 auditConfig:
   ignoreCves:
 
-allowUnusedPatches: true
+allowUnusedPatches: false
 ignorePatchFailures: false
 patchedDependencies:
   # Ensure valids ids for aria-activedescendant and fix touch events in shadow DOM (see https://github.com/JedWatson/react-select/issues/5824)
-  "react-select": "patches/react-select.patch"
+  # "react-select": "patches/react-select.patch"
 
   # - Ensure all portals are mounted under `.pioneer-root` div
   "@ark-ui/react@*": "patches/@ark-ui__react.patch"
+
+  "geotiff": "patches/geotiff.patch"
 
 peerDependencyRules:
 
