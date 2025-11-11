@@ -2,30 +2,29 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ReactElement } from "react";
-import { IconButton, Tooltip } from "@chakra-ui/react";
+import { IconButton } from "@chakra-ui/react";
+import { Tooltip } from "../../components/tooltip";
 
 interface IconActionButtonProps {
     icon: ReactElement;
     label: string;
-    tooltip: string;
+    tooltip?: string;
     onClick?: () => void;
 }
 
 export function IconActionButton({ icon, label, tooltip, onClick }: IconActionButtonProps) {
     return (
-        <Tooltip.Root aria-label={`${label} tooltip`}>
-            <Tooltip.Content>
+            <Tooltip content={tooltip}>
                 <IconButton
                     aria-label={label}
                     variant="ghost"
-                    backgroundColor="black"
+                    backgroundColor="#2C7D75"
                     color="white"
-                    _hover={{ backgroundColor: "gray.500" }}
+                    _hover={{ backgroundColor: "teal.700" }}
                     onClick={onClick}
                 >
                     {icon}
                 </IconButton>
-            </Tooltip.Content>
-        </Tooltip.Root>
+            </Tooltip>
     );
 }
