@@ -33,11 +33,13 @@ import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { Job, JobResult, Timeseries } from "../../../components/definitions";
 import { GeoTIFF } from "ol/source";
 import TileLayer from "ol/layer/WebGLTile.js";
+import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
 
 
 export interface Events {
     newTimeseries: Timeseries;
     selectedTimeseries: Timeseries;
+    selectedJobResult: JobResult;
     newJob: { ts: Timeseries };
 }
 
@@ -51,15 +53,17 @@ export function SiteDetails() {
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
     const [jobResults, setJobResults] = useState<JobResult[]>([]);
-    const [selectedjobResult, setSelectedjobResult] = useState<number>(-1);
+    const [selectedJobResult, setSelectedJobResult] = useState<number>(-1);
     const [selectedJobResults, setSelectedJobResults] = useState<JobResult[]>([]);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
+
 
     const emitter = new EventEmitter<Events>();
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
+
 
     useEffect(() => {
         fetchTimeseries();
@@ -78,7 +82,12 @@ export function SiteDetails() {
 
     useEffect(() => {
         showSelectedJobResult();
-    }, [selectedjobResult]);
+    }, [selectedJobResult]);
+
+    useEffect(() => {
+        setJobResults(jobResults);
+    }, [jobResults]);
+
 
     const fetchTimeseries = async () => {
         if (!id)
@@ -96,7 +105,7 @@ export function SiteDetails() {
         try {
             const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
             selectedTimeseries.jobs = jobs;
-        
+
             for (const ts of timeseries!) {
                 if (ts.id === selectedTimeseries.id) {
                     ts.jobs = jobs;
@@ -127,7 +136,7 @@ export function SiteDetails() {
         }
         setJobResults(fetchedJobResults);
         setJobs(fetchedJobs);
-        setSelectedjobResult(0);
+        setSelectedJobResult(0);
     }
 
     async function remove_current_item() {
@@ -137,7 +146,7 @@ export function SiteDetails() {
     }
 
     function downloadCurrentResult() {
-        const href = jobResults[selectedjobResult]?.href;
+        const href = jobResults[selectedJobResult]?.href;
         if (!href)
             return;
 
@@ -149,18 +158,37 @@ export function SiteDetails() {
         document.body.removeChild(link);
     }
 
+    function downloadAllResults() {
+        for (let i=0 ; i < jobResults.length; i++) {
+            const href = jobResults[i]?.href;
+            console.log(href);
+            if (!href)
+                return;
+
+            // download each or zip download?
+
+            // const link = document.createElement("a");
+            // link.href = href;
+            // link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
+            // document.body.appendChild(link);
+            // link.click();
+            // document.body.removeChild(link);
+            
+        }
+    }
+
 
     async function showSelectedJobResult() {
-        if (jobResults.length == 0 || selectedjobResult == undefined) {
+        if (jobResults.length == 0 || selectedJobResult == undefined) {
             return;
         }
-        const jobResult = jobResults[selectedjobResult]!;
+        const jobResult = jobResults[selectedJobResult]!;
 
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
 
         const google = new Projection({ code: "EPSG:3857" });
-        const stacproj = new Projection({ code: "EPSG:32631"});
+        const stacproj = new Projection({ code: "EPSG:32631" });
         // const stacproj = new Projection({ code: "EPSG:4326" });
 
         const image = new GeoTIFF({
@@ -193,88 +221,88 @@ export function SiteDetails() {
         }
     }
 
-    return (            
-            <Flex>
-                <Box width="400px" p="2">
-                    <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
-                </Box>
+    return (
+        <Flex>
+            <Box width="400px" p="2">
+                <TimeseriesItem timeseries={timeseries} eventListener={emitter} onDownloadAll={downloadAllResults} onDownloadCurrent={downloadCurrentResult} />
+            </Box>
 
-                <Box h="88vh" flexGrow="1" p="2">
-                    <MapContainer
-                        mapId={MAP_ID}
-                        role="main"
-                        aria-label=""
-                    >
-                        <MapSidebarControls mapId={MAP_ID} />
-                        <MapInfoControls mapId={MAP_ID} />
-                        <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} />
-                        <MapZoomControls mapId={MAP_ID} />
-                        <Box>
-                            {selectedTimeseries &&
-                                <Box
-                                    position="absolute"
-                                    bottom="2%"
-                                    left="25%"
-                                    transform="translateX(-50%)"
-                                    width="50%"
-                                    padding="4"
-                                    zIndex="10"
-                                    pointerEvents="auto"
-                                >
-                                    <Card.Root w="100%" padding={4}>
-                                        <Card.Body>
-                                            <Text>Info: {selectedTimeseries.name}</Text>
-                                            {jobs && jobResults.length > 0 && (
-                                                <Center w="100%">
-                                                    <Slider.Root
-                                                        w="75%"
-                                                        step={1}
-                                                        max={jobResults.length - 1}
-                                                        defaultValue={[0]}
-                                                        onValueChangeEnd={(val) => {
-                                                            console.log("onChangeEnd" + val.value);
-                                                            setSelectedjobResult(val.value[0]!);
-                                                        }
-                                                        }
-                                                    >
-                                                        <Slider.Control>
-                                                            {jobResults.map((jobResult, index) => (
-                                                                <>
-                                                                    <Slider.Marker key={index} value={index} pt={3} ml="-50" w={"100%"}>
-                                                                        {jobResult.filename}
-                                                                    </Slider.Marker>
-                                                                    <Slider.Marker
-                                                                        zIndex="98"
-                                                                        ml="-0.5em"
-                                                                        mt="-0.9em"
-                                                                        key={index}
-                                                                        value={index}
-                                                                    >
-                                                                        <Icon viewBox="0 0 200 200">
-                                                                            <Circle cx="100" cy="100" r="75" fill="black" />
-                                                                        </Icon>
-                                                                    </Slider.Marker>
-                                                                </>
-                                                            ))}
-                                                            <Slider.Track>
-                                                                <Slider.Range />
-                                                            </Slider.Track>
-                                                            <SliderCircle />
-                                                        </Slider.Control>
-                                                    </Slider.Root>
-                                                </Center>
-                                            )}
-                                        </Card.Body>
-                                    </Card.Root>
-                                    <TimeseriesControl
-                                        jobResult={jobResults[selectedjobResult]!}
-                                        onDownloadCurrent={downloadCurrentResult}
-                                    />
-                                </Box>
-                            }
-                        </Box>
-                    </MapContainer>
-                </Box>
-            </Flex>
+            <Box h="88vh" flexGrow="1" p="2">
+                <MapContainer
+                    mapId={MAP_ID}
+                    role="main"
+                    aria-label=""
+                >
+                    <MapSidebarControls mapId={MAP_ID} />
+                    <MapInfoControls mapId={MAP_ID} />
+                    <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} />
+                    <MapZoomControls mapId={MAP_ID} />
+                    <Box>
+                        {selectedTimeseries &&
+                            <Box
+                                position="absolute"
+                                bottom="2%"
+                                left="25%"
+                                transform="translateX(-50%)"
+                                width="50%"
+                                padding="4"
+                                zIndex="10"
+                                pointerEvents="auto"
+                            >
+                                <Card.Root w="100%" padding={4}>
+                                    <Card.Body>
+                                        {jobs && jobResults.length > 0 && (
+                                            <Center w="100%">
+                                                <Slider.Root
+                                                    colorPalette={"teal"}
+                                                    w="75%"
+                                                    step={1}
+                                                    max={jobResults.length - 1}
+                                                    defaultValue={[0]}
+                                                    onValueChangeEnd={(val) => {
+                                                        console.log("onChangeEnd" + val.value);
+                                                        setSelectedJobResult(val.value[0]!);
+                                                    }
+                                                    }
+                                                >
+                                                    <Slider.Control>
+                                                        {jobResults.map((jobResult, index) => (
+                                                            <>
+                                                                <Slider.Marker key={index} value={index} pt={12} ml="-50" w={"100%"}>
+                                                                    {jobResult.filename}
+                                                                </Slider.Marker>
+                                                                <Slider.Marker
+                                                                    zIndex="98"
+                                                                    ml="-0.5em"
+                                                                    mt="-0.9em"
+                                                                    key={index}
+                                                                    value={index}
+                                                                >
+                                                                    <Icon viewBox="0 0 200 200">
+                                                                        <Circle cx="100" cy="100" r="75" fill="black" />
+                                                                    </Icon>
+                                                                </Slider.Marker>
+                                                            </>
+                                                        ))}
+                                                        <Slider.Track >
+                                                            <Slider.Range />
+                                                        </Slider.Track>
+                                                        <SliderCircle />
+                                                    </Slider.Control>
+                                                </Slider.Root>
+                                            </Center>
+                                        )}
+                                    </Card.Body>
+                                </Card.Root>
+                                <TimeseriesControl
+                                    Timeseries={selectedTimeseries!}
+                                />
+
+                            </Box>
+                        }
+                    </Box>
+                </MapContainer>
+            </Box>
+        </Flex>
     );
 }

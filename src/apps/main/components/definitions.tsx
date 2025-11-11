@@ -16,6 +16,7 @@ export interface Job {
     end_time: string
     total_run_time: number
     state_name: string
+    visible: boolean
     result?: JobResult  // needs to be fetched first
     
     /*

@@ -16,12 +16,13 @@ import {
     ScrollArea,
     Dialog,
     CloseButton,
-    Switch
+    Switch,
 } from "@chakra-ui/react";
+import { Tooltip } from "../../components/tooltip";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuChevronDown, LuEye, LuEyeClosed } from "react-icons/lu";
+import { LuChevronDown, LuDownload, LuEye, LuEyeClosed, LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -29,20 +30,25 @@ import { useService } from "open-pioneer:react-hooks";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
-import { Timeseries } from "../definitions";
+import { Job, Timeseries } from "../definitions";
 import { ViewJobDetails } from "./TimeseriesViewJobDialogs";
 import { time } from "console";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { useServices } from "../../services/Services";
 import { useParams } from "react-router";
+import { TimeseriesControl } from "./TimeseriesControl";
+import { ActionButton } from "./ActionButton";
+import { DownloadAllButton } from "./TimeseriesActions";
 
 
 interface TimeseriesProps {
     timeseries?: Timeseries[];
     eventListener: EventEmitter<Events>;
+    onDownloadAll: () => void;
+    onDownloadCurrent: () => void;
 }
 
-export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
+export function TimeseriesItem({ timeseries, eventListener, onDownloadAll, onDownloadCurrent }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(false);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const notificationService = useService<NotificationService>("notifier.NotificationService");
@@ -70,6 +76,20 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                 setViewResultsButtonDisabled(false);
             }
         };
+    };
+
+    const setJobCheck = (job: Job) => {
+        if (job.visible == false || job.visible == undefined) {
+            job.visible = true;
+            // set Image visible
+        }
+        else
+            job.visible = false;
+        // set Image invisible
+
+        console.log(job.id, job.visible);
+
+        return job.visible;
     };
 
     useEffect(() => {
@@ -177,7 +197,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                 <Dialog.Positioner>
                                                                     <Dialog.Content>
                                                                         <Dialog.Header>
-                                                                            <Dialog.Title>View Job Information of {ts.name}</Dialog.Title>
+                                                                            <Dialog.Title>View Job Information of Timeseries &quot;{ts.name}&quot;</Dialog.Title>
                                                                             <Dialog.CloseTrigger asChild>
                                                                                 <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
                                                                             </Dialog.CloseTrigger>
@@ -194,20 +214,47 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
                                                             {selectedTimeseries?.jobs?.map((job) =>
                                                                 <>
-                                                                    <Switch.Root colorPalette="teal" size="lg">
+
+                                                                    <Switch.Root colorPalette="teal" size="lg" pr="4" checked={job.visible}
+                                                                        onCheckedChange={() => { setJobCheck(job); }}>
                                                                         <Switch.HiddenInput />
-                                                                        <Switch.Control >
-                                                                            <Switch.Thumb />
-                                                                            <Switch.Indicator fallback={
-                                                                                <LuEyeClosed />}>
-                                                                                <LuEye />
-                                                                            </Switch.Indicator>
-                                                                        </Switch.Control>
-                                                                        <Switch.Label><Text key={job.id}>{job.id} {job.created}</Text></Switch.Label>
+                                                                        <Switch.Label pr="4">
+                                                                            <Text key={job.id}>
+                                                                                Job {job.id}
+                                                                                : {new Date(job.start_time).toISOString().split("T")[0]}
+                                                                                &nbsp;- {new Date(job.start_time).toISOString().split("T")[1]!.split(".")[0]}
+                                                                            </Text>
+                                                                        </Switch.Label>
+                                                                        <Tooltip content="Show Image on Map">
+                                                                            <Switch.Control>
+                                                                                <Switch.Thumb>
+                                                                                    <Switch.ThumbIndicator fallback={<LuMap />}>
+                                                                                        <LuMap />
+                                                                                    </Switch.ThumbIndicator>
+                                                                                </Switch.Thumb>
+                                                                            </Switch.Control>
+                                                                        </Tooltip>
                                                                     </Switch.Root>
+
+                                                                    <Tooltip content="Download current Result">
+                                                                        <Button
+                                                                            color="black"
+                                                                            _hover={{ bg: "teal.50" }}
+                                                                            size="xs"
+                                                                            variant="ghost"
+                                                                            onClick={onDownloadCurrent}>
+                                                                            <LuDownload />
+                                                                        </Button>
+                                                                    </Tooltip>
                                                                 </>
                                                             )}
+                                                            <Box mt="4" padding="2">
+
+                                                                <DownloadAllButton onDownloadAll={onDownloadAll}></DownloadAllButton>
+
+                                                            </Box>
                                                         </Box>
+
                                                     </Collapsible.Content>
                                                 </Collapsible.Root>
                                             </Accordion.ItemContent>

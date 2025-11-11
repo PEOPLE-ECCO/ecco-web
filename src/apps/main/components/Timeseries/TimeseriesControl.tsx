@@ -4,25 +4,23 @@
 import { Card, Flex, HStack } from "@chakra-ui/react";
 import { TimeseriesIcons } from "./TimeseriesIcons";
 import { TimeseriesActions } from "./TimeseriesActions";
-import { JobResult } from "../definitions";
+import { Timeseries } from "../definitions";
 
 interface TimeseriesControlProps {
-    jobResult: JobResult;
-    onDownloadCurrent: () => void;
+    Timeseries: Timeseries;
 }
 
-export function TimeseriesControl({ jobResult, onDownloadCurrent }: TimeseriesControlProps) {
+export function TimeseriesControl({ Timeseries }: TimeseriesControlProps) {
     return (
         <Card.Root marginTop="2%" w="100%">
-            {jobResult &&
+            {Timeseries &&
                 <>
                     <Card.Header paddingBottom="2" paddingX="5" paddingTop="2">
-                        {jobResult.filename}
+                        Timeseries Info
                     </Card.Header>
                     <Card.Body>
                         <HStack>
                             <Flex justify="space-between" align="center">
-                                Type: {jobResult.type}
                                 <br></br>
                                 <TimeseriesIcons
                                     onDocumentClick={() => console.log("Document clicked")}
@@ -30,11 +28,6 @@ export function TimeseriesControl({ jobResult, onDownloadCurrent }: TimeseriesCo
                                     onLocateClick={() => console.log("Locate clicked")}
                                 />
                             </Flex>
-                            <TimeseriesActions
-                                onDownloadAll={() => console.log("Downloading all")}
-                                onDownloadCurrent={onDownloadCurrent}
-                                onExecute={() => console.log("Executing")}
-                            />
                         </HStack>
                     </Card.Body>
                 </>

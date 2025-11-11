@@ -436,10 +436,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                 label="Create"
                                                 tooltip="Create timeseries"
                                                 disabled={false}
-                                                onClick={() => {
-                                                    create();
-
-                                                }}
+                                                onClick={() => { create(); }}
                                                 w={"170px"}
                                             />
                                         </Dialog.CloseTrigger>
