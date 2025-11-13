@@ -126,6 +126,7 @@ export const useServices = () => {
             for (const job of responseData) {
                 job.visible = true;
                 job.id = ""+job.id;
+                job.children = [];
             }
             return responseData;
         } else {
@@ -147,7 +148,6 @@ export const useServices = () => {
             if (responseData) {
                 job.result = responseData;
                 job.children = responseData;
-                console.log("jobwithresults", job);
                 for (const res of responseData) {
                     res.id = res.job;
                     res.name = res.filename;

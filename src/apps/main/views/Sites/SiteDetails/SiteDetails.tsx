@@ -3,9 +3,6 @@
 
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { useServices } from "../../../services/Services";
-
-import { MAP_ID } from "../../../services";
 import {
     Box,
     Card,
@@ -19,28 +16,31 @@ import {
 
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
+import { useService } from "open-pioneer:react-hooks";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
-import { useService } from "open-pioneer:react-hooks";
+import { GeoTIFF } from "ol/source";
+import TileLayer from "ol/layer/WebGLTile.js";
+
+import { useServices } from "../../../services/Services";
+import { MAP_ID } from "../../../services";
+
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
-import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { Job, JobResult, Timeseries } from "../../../components/definitions";
-import { GeoTIFF } from "ol/source";
-import TileLayer from "ol/layer/WebGLTile.js";
+import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
+import { TimeseriesSlider } from "../../../components/Timeseries/TimeseriesSlider";
 
 
 export interface Events {
-    newTimeseries: Timeseries;
     selectedTimeseries: Timeseries;
-    selectedJobResult: JobResult;
-    newJob: { ts: Timeseries };
+    selectedJobResult: number;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -64,29 +64,27 @@ export function SiteDetails() {
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
 
-
     useEffect(() => {
         fetchTimeseries();
-        console.log("useeffect fetchTimeseries (TS List changed)");
     }, []); // should react on Timeseries length change timeseries?.length
 
     useEffect(() => {
         fetchJobs();
-        console.log("useeffect fetchJobs first time");
     }, [selectedTimeseries]);
 
     useEffect(() => {
         fetchJobs();
-        console.log("useeffect fetchJobs (selected TS jobs changed)");
     }, [selectedTimeseries?.jobs?.length]); // should react on jobs length change selectedTimeseries?.jobs.length
+
+    useEffect(() => {
+        setJobResults(jobResults);
+        console.log("jobResults", jobResults);
+        showSelectedJobResult();
+    }, [jobResults]);
 
     useEffect(() => {
         showSelectedJobResult();
     }, [selectedJobResult]);
-
-    useEffect(() => {
-        setJobResults(jobResults);
-    }, [jobResults]);
 
 
     const fetchTimeseries = async () => {
@@ -105,6 +103,7 @@ export function SiteDetails() {
         try {
             const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
             selectedTimeseries.jobs = jobs;
+            selectedTimeseries.children = selectedTimeseries.jobs;
 
             for (const ts of timeseries!) {
                 if (ts.id === selectedTimeseries.id) {
@@ -112,7 +111,6 @@ export function SiteDetails() {
                 }
             }
             setJobs(jobs);
-
             await fetchResult(jobs);
         } catch (error) {
             console.error(error);
@@ -159,9 +157,10 @@ export function SiteDetails() {
     }
 
     function downloadAllResults() {
-        for (let i=0 ; i < jobResults.length; i++) {
+        for (let i = 0; i < jobResults.length; i++) {
             const href = jobResults[i]?.href;
-            console.log(href);
+            //console.log(href);
+            //console.log(jobResults[i]);
             if (!href)
                 return;
 
@@ -173,7 +172,7 @@ export function SiteDetails() {
             // document.body.appendChild(link);
             // link.click();
             // document.body.removeChild(link);
-            
+
         }
     }
 
@@ -224,7 +223,7 @@ export function SiteDetails() {
     return (
         <Flex>
             <Box width="400px" p="2">
-                <TimeseriesItem timeseries={timeseries} eventListener={emitter} onDownloadAll={downloadAllResults} onDownloadCurrent={downloadCurrentResult} />
+                <TimeseriesItem timeseries={timeseries} eventListener={emitter} jobResults={jobResults} selectedJobResult={selectedJobResult} onDownloadAll={downloadAllResults} onDownloadCurrent={downloadCurrentResult} />
             </Box>
 
             <Box h="88vh" flexGrow="1" p="2">
@@ -241,10 +240,10 @@ export function SiteDetails() {
                         {selectedTimeseries &&
                             <Box
                                 position="absolute"
-                                bottom="2%"
-                                left="25%"
+                                bottom="0%"
+                                left="40%"
                                 transform="translateX(-50%)"
-                                width="50%"
+                                width="80%"
                                 padding="4"
                                 zIndex="10"
                                 pointerEvents="auto"
@@ -260,7 +259,7 @@ export function SiteDetails() {
                                                     max={jobResults.length - 1}
                                                     defaultValue={[0]}
                                                     onValueChangeEnd={(val) => {
-                                                        console.log("onChangeEnd" + val.value);
+                                                        console.log("onChangeEnd " + val.value);
                                                         setSelectedJobResult(val.value[0]!);
                                                     }
                                                     }
@@ -294,10 +293,9 @@ export function SiteDetails() {
                                         )}
                                     </Card.Body>
                                 </Card.Root>
-                                <TimeseriesControl
+                                {/* <TimeseriesControl
                                     Timeseries={selectedTimeseries!}
-                                />
-
+                                /> */}
                             </Box>
                         }
                     </Box>
