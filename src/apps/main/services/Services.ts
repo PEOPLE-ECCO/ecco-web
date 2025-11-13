@@ -4,7 +4,8 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job, JobParameters, Timeseries } from "../components/definitions";
+import { Job, JobParameters, JobResult, Timeseries } from "../components/definitions";
+import { useState } from "react";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
@@ -116,19 +117,23 @@ export const useServices = () => {
         }
     };
 
-    const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string) => {
+    const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string): Promise<Job[]> => {
         const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + timeseries_id + "/jobs/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
-
+    
         if (responseData) {
+            for (const job of responseData) {
+                job.visible = true;
+                job.id = ""+job.id;
+            }
             return responseData;
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
 
-    const getJobResult = async (job: Job) => {
+    const getJobResult = async (job: Job): Promise<JobResult[]> => {
         console.log("getJobResult for job: " + job.id);
 
         const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/results/";
@@ -136,11 +141,17 @@ export const useServices = () => {
 
         if (response.status != 200) {
             console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
-            return null;
+            return [];
         } else {
             const responseData = await response.json();
             if (responseData) {
                 job.result = responseData;
+                job.children = responseData;
+                console.log("jobwithresults", job);
+                for (const res of responseData) {
+                    res.id = res.job;
+                    res.name = res.filename;
+                }
                 return responseData;
             } else {
                 throw new Error("Unexpected response: " + JSON.stringify(responseData));

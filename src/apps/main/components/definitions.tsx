@@ -4,12 +4,14 @@ export interface Timeseries {
     name: string;
     description: string;
     jobs?: Job[]
+    children?: Job[]
     extent?: Extent
     process?: Process
 }
 
 export interface Job {
     id: number
+    name: string
     timeseries_id: number
     created: string
     start_time: string
@@ -18,7 +20,8 @@ export interface Job {
     state_name: string
     visible: boolean
     result?: JobResult  // needs to be fetched first
-    
+    children?: JobResult
+
     /*
     // fictional job properties
     executionTimeEnd: string
