@@ -265,6 +265,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
 
         setJobResultCollection(collection);
         
+        console.log(jobResultCollection);
         if (!jobResultCollection?.rootNode.children) {
             return;
         }
@@ -476,7 +477,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                             ) : (
                                                                                 <TreeView.Item>
                                                                                     <LuFile />
-                                                                                    <TreeView.ItemText>{node.name.split("/")[3]}
+                                                                                    <TreeView.ItemText>{node.name.split("/").pop()}
                                                                                         <Tooltip content="Download current result">
                                                                                             <Button
                                                                                                 color="black"
