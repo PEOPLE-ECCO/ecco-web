@@ -22,12 +22,16 @@ import {
     TreeCollection,
     Checkmark,
     useTreeViewNodeContext,
+    Status,
+    Listbox,
+    Table,
+    createListCollection,
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
-import { useEffect, useState } from "react";
+import { Children, Key, ReactNode, useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuChevronDown, LuDownload, LuFile, LuFolder, LuMap } from "react-icons/lu";
+import { LuChevronDown, LuCode, LuCodepen, LuCodesandbox, LuDownload, LuEye, LuFile, LuFolder, LuInfo, LuLogs, LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -35,10 +39,11 @@ import { useService } from "open-pioneer:react-hooks";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
-import { Job, JobResult, Timeseries } from "../definitions";
+import { Item, Job, JobResult, Timeseries } from "../definitions";
 import { ViewJobDetails } from "./TimeseriesViewJobDialogs";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { DownloadAllButton } from "./TimeseriesActions";
+import { useServices } from "../../services/Services";
 
 
 interface TimeseriesProps {
@@ -53,6 +58,136 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [jobResultCollection, setJobResultCollection] = useState<TreeCollection<Node> | undefined>();
     const [activeJobs, setActiveJobs] = useState<string[]>([]);
+
+    const { getJobLog } = useServices();
+    const [logViewContent, setLogViewContent] = useState<ReactNode>();
+    const [detailsContent, setDetailsContent] = useState<ReactNode>();
+    const [selectedLogs, setSelectedLogs] = useState<Array<Item>>([]);
+
+    function logLevelcolor(item: Item) {
+        if (item.level == 20) {
+            return "green.100";
+        }
+        else if (item.level == 40) {
+            return "orange.100";
+        }
+        else {
+            return "red.100";
+        }
+    };
+
+    const handleExitLogviewClick = () => {
+        setLogViewContent([]);
+    };
+
+
+    const viewLog = async (job: Job) => {
+        const alllogs = await getJobLog(job);
+        const debugs = alllogs.filter((e: { level: number; }) => e.level <= 20);
+        const warnings = alllogs.filter((e: { level: number; }) => e.level <= 40 && e.level > 20);
+        const errors = alllogs.filter((e: { level: number; }) => e.level > 40);
+
+        setSelectedLogs(alllogs);
+
+        const logTableContent = createListCollection({
+            items: [
+                { label: "ALL", value: alllogs, bg: "blue.100", color: "black", border: "1px solid black" },
+                { label: "DEBUGS", value: debugs, bg: "green.100", color: "black", border: "1px solid black" },
+                { label: "WARNINGS", value: warnings, bg: "orange.100", color: "black", border: "1px solid black" },
+                { label: "ERRORS", value: errors, bg: "red.100", color: "black", border: "1px solid black" }
+            ],
+        }
+        );
+
+        setLogViewContent(
+            <>
+                <Box>
+                    <HStack pb="4" gap="6">
+                        <Text fontSize="md">Backgound coloring: </Text>
+                        <Status.Root size="lg">
+                            <Status.Indicator border="1px solid black" bg="green.200" />
+                            Debug
+                        </Status.Root>
+                        <Status.Root size="lg">
+                            <Status.Indicator border="1px solid black" bg="orange.200" />
+                            Warning
+                        </Status.Root>
+                        <Status.Root size="lg">
+                            <Status.Indicator border="1px solid black" bg="red.200" />
+                            Error
+                        </Status.Root>
+                    </HStack>
+                </Box>
+                <Box>
+                    <Listbox.Root
+                        collection={logTableContent}
+                        orientation="horizontal"
+                        maxW="150%"
+                        defaultValue={[alllogs]}
+                    //selectionMode="multiple"
+                    >
+                        <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
+                        <Listbox.Content>
+                            {logTableContent.items.map((item) => (
+                                <Listbox.Item
+                                    item={item}
+                                    key={item.value}
+                                    flexDirection="row"
+                                    alignItems="flex-start"
+                                    gap="1">
+                                    <Button
+                                        bg={item.bg}
+                                        width="120px"
+                                        color={item.color}
+                                        onClick={() => { setSelectedLogs(item.value); }}>
+                                        <HStack>
+                                            <Box width="70px">{item.label}</Box>
+                                            <Box width="30px"><Listbox.ItemIndicator /></Box>
+                                        </HStack>
+                                    </Button>
+                                    <Listbox.ItemText></Listbox.ItemText>
+                                </Listbox.Item>
+                            ))}
+                        </Listbox.Content>
+                    </Listbox.Root>
+                </Box>
+            </>
+        );
+    };
+
+    const viewDetails = async (job: Job) => {
+        const tabledata = Object.entries(job).map(([key, value]) => ({
+            key: key,
+            value: value
+        }));
+
+        const content = (
+            <>
+                <Table.Root size="md" variant="outline" scrollBehavior="inside">
+                    <Table.Header bg="gray.200">
+                        <Table.Row>
+                            <Table.ColumnHeader>Key</Table.ColumnHeader>
+                            <Table.ColumnHeader>Value</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {tabledata.map((item) => (
+                            <Table.Row key={item.key}>
+                                <Table.Cell>{item.key}</Table.Cell>
+                                <Table.Cell>{String(item.value)}</Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
+            </>
+        );
+
+        setDetailsContent([content]);
+    };
+
+
+
+
 
     const timeseriesSelection = (ts: Timeseries) => {
         setViewResultsButtonDisabled(true);
@@ -111,6 +246,12 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
     }
 
     const JobsTreeCollection = (jobs: Job[]) => {
+
+        console.log(jobs);
+        
+        for (const job of jobs) {
+            console.log(job.id, job.children);
+        }
         const collection = createTreeCollection<Node>({
             nodeToValue: (node) => node.id,
             nodeToString: (node) => node.name,
@@ -121,17 +262,19 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                     jobs
             },
         });
+
         setJobResultCollection(collection);
+        
         if (!jobResultCollection?.rootNode.children) {
             return;
         }
         for (const job of jobResultCollection!.rootNode!.children!) {
-            activeJobs.push(""+job.id);
+            activeJobs.push("" + job.id);
         }
         console.log("initial active jobs list: ", activeJobs);
     };
 
-    const TreeNodeCheckbox = (props: TreeView.NodeCheckboxProps) => {
+    const TreeNodeSwitcher = (props: TreeView.NodeCheckboxProps) => {
         const nodeState = useTreeViewNodeContext();
 
         const checkActiveJobs = (jobid: string, checked: string | boolean) => {
@@ -148,10 +291,10 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
         };
 
         return (
-            <TreeView.NodeCheckbox aria-label="check node" {...props}>
-                <Switch.Root colorPalette="teal" size="lg" pr="4" 
-                    checked={nodeState.checked === false} 
-                    onCheckedChange={() => {checkActiveJobs(nodeState.value, nodeState.checked); }}>
+            <TreeView.NodeCheckbox pl="2" aria-label="check node" {...props}>
+                <Switch.Root colorPalette="teal" size="md" pr="4"
+                    checked={nodeState.checked === false}
+                    onCheckedChange={() => { checkActiveJobs(nodeState.value, nodeState.checked); }}>
                     <Switch.HiddenInput />
                     <Switch.Label />
                     <Switch.Control>
@@ -166,7 +309,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
         );
     };
 
-    
+
     useEffect(() => {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
@@ -232,7 +375,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                     <Collapsible.Content>
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
                                                             <TreeView.Root collection={jobResultCollection!} maxW="md" defaultCheckedValue={[]}>
-                                                                <TreeView.Label>Job Results Tree View</TreeView.Label>
                                                                 <TreeView.Tree>
                                                                     <TreeView.Node
                                                                         indentGuide={<TreeView.BranchIndentGuide />}
@@ -244,13 +386,98 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                         : {new Date(node.start_time).toISOString().split("T")[0]}
                                                                                         &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]}
                                                                                     </TreeView.BranchText>
-                                                                                    <TreeNodeCheckbox />
+
+                                                                                    <TreeView.Item>
+                                                                                        <Dialog.Root size="xl" scrollBehavior="inside">
+                                                                                            <Dialog.Trigger asChild>
+                                                                                                <Button
+                                                                                                    color="black"
+                                                                                                    _hover={{ bg: "teal.50" }}
+                                                                                                    size="xs"
+                                                                                                    variant="ghost"
+                                                                                                    onClick={() => viewDetails(node)}>
+                                                                                                    <LuInfo />
+                                                                                                </Button>
+                                                                                            </Dialog.Trigger>
+                                                                                            <Portal>
+                                                                                                <Dialog.Backdrop />
+                                                                                                <Dialog.Positioner>
+                                                                                                    <Dialog.Content>
+                                                                                                        <Dialog.Header>
+                                                                                                            <Dialog.Title>View Details of Job {node.id}</Dialog.Title>
+                                                                                                            <Dialog.CloseTrigger asChild>
+                                                                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                                                            </Dialog.CloseTrigger>
+                                                                                                        </Dialog.Header>
+                                                                                                        <Dialog.Body>
+                                                                                                            {detailsContent}
+                                                                                                        </Dialog.Body>
+                                                                                                        <Dialog.Footer></Dialog.Footer>
+                                                                                                    </Dialog.Content>
+                                                                                                </Dialog.Positioner>
+                                                                                            </Portal>
+                                                                                        </Dialog.Root>
+
+                                                                                        <Dialog.Root size="xl" scrollBehavior="inside">
+                                                                                            <Dialog.Trigger asChild>
+                                                                                                <Button
+                                                                                                    color="black"
+                                                                                                    _hover={{ bg: "teal.50" }}
+                                                                                                    size="xs"
+                                                                                                    variant="ghost"
+                                                                                                    onClick={() => viewLog(node)}>
+                                                                                                    <LuLogs />
+                                                                                                </Button>
+                                                                                            </Dialog.Trigger>
+                                                                                            <Portal>
+                                                                                                <Dialog.Backdrop />
+                                                                                                <Dialog.Positioner>
+                                                                                                    <Dialog.Content>
+                                                                                                        <Dialog.Header>
+                                                                                                            <Stack>
+                                                                                                                <Box pb="4">
+                                                                                                                    <Dialog.Title>View Logs of Job {node.id}</Dialog.Title>
+                                                                                                                </Box>
+                                                                                                                {logViewContent}
+                                                                                                            </Stack>
+                                                                                                            <Dialog.CloseTrigger asChild>
+                                                                                                                <CloseButton onClick={handleExitLogviewClick} height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                                                            </Dialog.CloseTrigger>
+                                                                                                        </Dialog.Header>
+                                                                                                        <Dialog.Body>
+                                                                                                            <Table.Root variant="outline">
+                                                                                                                <Table.Header bg="gray.200">
+                                                                                                                    <Table.Row>
+                                                                                                                        <Table.ColumnHeader>Time</Table.ColumnHeader>
+                                                                                                                        <Table.ColumnHeader>Level</Table.ColumnHeader>
+                                                                                                                        <Table.ColumnHeader>Message</Table.ColumnHeader>
+                                                                                                                    </Table.Row>
+                                                                                                                </Table.Header>
+                                                                                                                <Table.Body>
+                                                                                                                    {selectedLogs.map((item: Item, key: Key) => (
+                                                                                                                        <Table.Row key={key} bg={logLevelcolor(item)}>
+                                                                                                                            <Table.Cell>{item.timestamp}</Table.Cell>
+                                                                                                                            <Table.Cell>{item.level}</Table.Cell>
+                                                                                                                            <Table.Cell>{item.message}</Table.Cell>
+                                                                                                                        </Table.Row>
+                                                                                                                    ))}
+                                                                                                                </Table.Body>
+                                                                                                            </Table.Root>
+                                                                                                        </Dialog.Body>
+                                                                                                        <Dialog.Footer />
+                                                                                                    </Dialog.Content>
+                                                                                                </Dialog.Positioner>
+                                                                                            </Portal>
+                                                                                        </Dialog.Root>
+
+                                                                                    </TreeView.Item>
+                                                                                    <TreeNodeSwitcher />
                                                                                 </TreeView.BranchControl>
                                                                             ) : (
                                                                                 <TreeView.Item>
                                                                                     <LuFile />
                                                                                     <TreeView.ItemText>{node.name.split("/")[3]}
-                                                                                        <Tooltip content="Download current Result">
+                                                                                        <Tooltip content="Download current result">
                                                                                             <Button
                                                                                                 color="black"
                                                                                                 _hover={{ bg: "teal.50" }}
@@ -258,6 +485,16 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                                 variant="ghost"
                                                                                                 onClick={downloadCurrentResult}>
                                                                                                 <LuDownload />
+                                                                                            </Button>
+                                                                                        </Tooltip>
+                                                                                        <Tooltip content="View current result file">
+                                                                                            <Button
+                                                                                                color="black"
+                                                                                                _hover={{ bg: "teal.50" }}
+                                                                                                size="xs"
+                                                                                                variant="ghost"
+                                                                                                onClick={() => console.log("view")}>
+                                                                                                <LuEye />
                                                                                             </Button>
                                                                                         </Tooltip>
                                                                                     </TreeView.ItemText>
@@ -370,7 +607,7 @@ function MenuContent({ ts, el }: MenuContentProps) {
                                 </Dialog.CloseTrigger>
                             </Dialog.Header>
                             <Dialog.Body>
-                                <ViewJobDetails timeseries={ts} eventListener={el} />
+                                <ViewJobDetails timeseries={ts} />
                             </Dialog.Body>
                         </Dialog.Content>
                     </Dialog.Positioner>

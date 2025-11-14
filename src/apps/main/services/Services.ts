@@ -146,7 +146,7 @@ export const useServices = () => {
             const responseData = await response.json();
             if (responseData) {
                 job.result = responseData;
-                job.children = responseData;
+                job.children = job.result;
                 for (const res of responseData) {
                     res.id = res.job;
                     res.name = res.filename;

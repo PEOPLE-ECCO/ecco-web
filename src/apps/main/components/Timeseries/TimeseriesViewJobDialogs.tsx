@@ -26,7 +26,6 @@ import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 interface JobProps {
     timeseries: Timeseries;
-    eventListener: EventEmitter<Events>;
 }
 
 export const ViewJobDetails = (props: JobProps) => {
