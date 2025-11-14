@@ -124,7 +124,6 @@ export const useServices = () => {
     
         if (responseData) {
             for (const job of responseData) {
-                job.visible = true;
                 job.id = ""+job.id;
                 job.children = [];
             }

@@ -20,6 +20,8 @@ import {
     createTreeCollection,
     TreeView,
     TreeCollection,
+    Checkmark,
+    useTreeViewNodeContext,
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
@@ -50,6 +52,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(false);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [jobResultCollection, setJobResultCollection] = useState<TreeCollection<Node> | undefined>();
+    const [activeJobs, setActiveJobs] = useState<string[]>([]);
 
     const timeseriesSelection = (ts: Timeseries) => {
         setViewResultsButtonDisabled(true);
@@ -63,20 +66,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                 setViewResultsButtonDisabled(false);
             }
         };
-    };
-
-    const setJobCheck = (job: Job) => {
-        if (job.visible == false || job.visible == undefined) {
-            job.visible = true;
-            // set Image visible
-        }
-        else
-            job.visible = false;
-        // set Image invisible
-
-        console.log(job.id, job.visible);
-
-        return job.visible;
     };
 
     function downloadCurrentResult() {
@@ -122,13 +111,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
     }
 
     const JobsTreeCollection = (jobs: Job[]) => {
-        console.log("jobs: ", jobs,
-            selectedTimeseries
-        );
-        for (const job of jobs) {
-            console.log("singlejobresult: ", job.result);
-        }
-
         const collection = createTreeCollection<Node>({
             nodeToValue: (node) => node.id,
             nodeToString: (node) => node.name,
@@ -140,9 +122,51 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
             },
         });
         setJobResultCollection(collection);
+        if (!jobResultCollection?.rootNode.children) {
+            return;
+        }
+        for (const job of jobResultCollection!.rootNode!.children!) {
+            activeJobs.push(""+job.id);
+        }
+        console.log("initial active jobs list: ", activeJobs);
     };
 
+    const TreeNodeCheckbox = (props: TreeView.NodeCheckboxProps) => {
+        const nodeState = useTreeViewNodeContext();
 
+        const checkActiveJobs = (jobid: string, checked: string | boolean) => {
+            if (checked == false) {
+                activeJobs.push(jobid);
+            }
+            else {
+                const jobindex = activeJobs.indexOf(jobid);
+                if (jobindex !== -1) {
+                    activeJobs.splice(jobindex, 1);
+                }
+            }
+            console.log(activeJobs);
+        };
+
+        return (
+            <TreeView.NodeCheckbox aria-label="check node" {...props}>
+                <Switch.Root colorPalette="teal" size="lg" pr="4" 
+                    checked={nodeState.checked === false} 
+                    onCheckedChange={() => {checkActiveJobs(nodeState.value, nodeState.checked); }}>
+                    <Switch.HiddenInput />
+                    <Switch.Label />
+                    <Switch.Control>
+                        <Switch.Thumb >
+                            <Switch.ThumbIndicator fallback={<LuMap />}>
+                                <LuMap />
+                            </Switch.ThumbIndicator>
+                        </Switch.Thumb>
+                    </Switch.Control>
+                </Switch.Root>
+            </TreeView.NodeCheckbox>
+        );
+    };
+
+    
     useEffect(() => {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
@@ -204,58 +228,24 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                         <MenuContent ts={ts} el={eventListener} />
 
                                                     </Flex>
-                                                    
+
                                                     <Collapsible.Content>
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                            {/* {selectedTimeseries?.jobs?.map((job) =>
-                                                                <>
-                                                                    <Switch.Root colorPalette="teal" size="lg" pr="4" checked={job.visible}
-                                                                        onCheckedChange={() => { setJobCheck(job); }}>
-                                                                        <Switch.HiddenInput />
-                                                                        <Switch.Label pr="4">
-                                                                            <Text key={job.id}>
-                                                                                Job {job.id}
-                                                                                : {new Date(job.start_time).toISOString().split("T")[0]}
-                                                                                &nbsp;- {new Date(job.start_time).toISOString().split("T")[1]!.split(".")[0]}
-                                                                            </Text>
-                                                                        </Switch.Label>
-                                                                        <Switch.Control>
-                                                                            <Switch.Thumb>
-                                                                                <Switch.ThumbIndicator fallback={<LuMap />}>
-                                                                                    <LuMap />
-                                                                                </Switch.ThumbIndicator>
-                                                                            </Switch.Thumb>
-                                                                        </Switch.Control>
-                                                                    </Switch.Root>
-                                                                </>
-                                                            )} */}
-                                                            <TreeView.Root collection={jobResultCollection!} maxW="sm">
+                                                            <TreeView.Root collection={jobResultCollection!} maxW="md" defaultCheckedValue={[]}>
                                                                 <TreeView.Label>Job Results Tree View</TreeView.Label>
                                                                 <TreeView.Tree>
                                                                     <TreeView.Node
                                                                         indentGuide={<TreeView.BranchIndentGuide />}
                                                                         render={({ node, nodeState }) =>
                                                                             nodeState.isBranch ? (
-
-                                                                                <Switch.Root colorPalette="teal" size="lg" pr="4">
-                                                                                    <Switch.HiddenInput />
-                                                                                    
-                                                                                    <Switch.Label>
-                                                                                        <TreeView.BranchControl>
-                                                                                            <LuFolder />
-                                                                                            <TreeView.BranchText>Job {node.id}
-                                                                                                : {new Date(node.start_time).toISOString().split("T")[0]}
-                                                                                                &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]}</TreeView.BranchText>
-                                                                                        </TreeView.BranchControl>
-                                                                                    </Switch.Label>
-                                                                                    <Switch.Control>
-                                                                                        <Switch.Thumb >
-                                                                                            <Switch.ThumbIndicator fallback={<LuMap />}>
-                                                                                                <LuMap />
-                                                                                            </Switch.ThumbIndicator>
-                                                                                        </Switch.Thumb>
-                                                                                    </Switch.Control>
-                                                                                </Switch.Root>
+                                                                                <TreeView.BranchControl>
+                                                                                    <LuFolder />
+                                                                                    <TreeView.BranchText>Job {node.id}
+                                                                                        : {new Date(node.start_time).toISOString().split("T")[0]}
+                                                                                        &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]}
+                                                                                    </TreeView.BranchText>
+                                                                                    <TreeNodeCheckbox />
+                                                                                </TreeView.BranchControl>
                                                                             ) : (
                                                                                 <TreeView.Item>
                                                                                     <LuFile />
