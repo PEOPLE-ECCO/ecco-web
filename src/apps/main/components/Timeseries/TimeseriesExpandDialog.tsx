@@ -106,6 +106,7 @@ export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
+
                             <Dialog.Header>
                                 <Dialog.Title>
                                     <Flex gap="4">
@@ -116,49 +117,52 @@ export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
                                 </Dialog.Title>
                             </Dialog.Header>
                             <Dialog.Body>
-                                <Text pb="2" textStyle="lg">Please select Timespan:</Text>
-                                <Stack pt="4" direction="row" maxW="md">
-                                    <Field.Root>
-                                        <Field.Label>Start Date</Field.Label>
-                                        <Box
-                                            borderWidth={"1px"}
-                                            css={{ "--focus-color": "#2C7D75" }}>
-                                            <DatePicker
-                                                showIcon
-                                                isClearable
-                                                selected={startDate}
-                                                onChange={(date: Date | null) => setStartDate(date)}
-                                                startDate={startDate}
-                                                placeholderText="mm/dd/yyy"
-                                                onChangeRaw={(
-                                                    event:
-                                                        | React.MouseEvent<HTMLElement>
-                                                        | React.KeyboardEvent<HTMLElement>
-                                                        | React.ChangeEvent<HTMLInputElement>,
-                                                    selectedDateMeta?: SelectedDateMeta | null,
-                                                ) => {
-                                                    if (event.target instanceof HTMLInputElement) {
-                                                        handleChangeRaw(event.target.value, selectedDateMeta);
-                                                    }
-                                                }} />
-                                        </Box>
-                                    </Field.Root>
-                                    <Field.Root>
-                                        <Field.Label>End Date</Field.Label>
-                                        <Box
-                                            borderWidth={"1px"}>
-                                            <DatePicker
-                                                showIcon
-                                                isClearable
-                                                selected={endDate}
-                                                onChange={(date: Date | null) => setEndDate(date)}
-                                                endDate={endDate}
-                                                startDate={startDate}
-                                                minDate={startDate}
-                                                placeholderText="mm/dd/yyy" />
-                                        </Box>
-                                    </Field.Root>
-                                </Stack>
+                                <Box h="55vh">
+                                    <Text pb="2" textStyle="lg">Please select Timespan:</Text>
+                                    <Stack pt="4" direction="row" maxW="md">
+                                        <Field.Root>
+                                            <Field.Label>Start Date</Field.Label>
+                                            <Box
+                                                borderWidth={"1px"}
+                                                css={{ "--focus-color": "#2C7D75" }}>
+                                                <DatePicker
+                                                    showIcon
+                                                    isClearable
+                                                    selected={startDate}
+                                                    onChange={(date: Date | null) => setStartDate(date)}
+                                                    startDate={startDate}
+                                                    placeholderText="mm/dd/yyy"
+                                                    onChangeRaw={(
+                                                        event:
+                                                            | React.MouseEvent<HTMLElement>
+                                                            | React.KeyboardEvent<HTMLElement>
+                                                            | React.ChangeEvent<HTMLInputElement>,
+                                                        selectedDateMeta?: SelectedDateMeta | null,
+                                                    ) => {
+                                                        if (event.target instanceof HTMLInputElement) {
+                                                            handleChangeRaw(event.target.value, selectedDateMeta);
+                                                        }
+                                                    }} />
+                                            </Box>
+                                        </Field.Root>
+                                        <Field.Root>
+                                            <Field.Label>End Date</Field.Label>
+                                            <Box
+                                                borderWidth={"1px"}>
+                                                <DatePicker
+                                                    showIcon
+                                                    isClearable
+                                                    selected={endDate}
+                                                    onChange={(date: Date | null) => setEndDate(date)}
+                                                    endDate={endDate}
+                                                    startDate={startDate}
+                                                    minDate={startDate}
+                                                    placeholderText="mm/dd/yyy" />
+                                            </Box>
+                                        </Field.Root>
+                                    </Stack>
+
+                                </Box>
                             </Dialog.Body>
                             <Dialog.Footer>
                                 <Dialog.CloseTrigger asChild>
@@ -179,7 +183,7 @@ export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
                         </Dialog.Content>
                     </Dialog.Positioner>
                 </Portal>
-            </Dialog.Root>
+            </Dialog.Root >
         </>
     );
 };

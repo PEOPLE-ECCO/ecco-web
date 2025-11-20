@@ -72,13 +72,14 @@ export function SiteDetails() {
         fetchJobs();
     }, [selectedTimeseries]);
 
-    useEffect(() => {
-        fetchJobs();
-    }, [selectedTimeseries?.jobs?.length]); // should react on jobs length change selectedTimeseries?.jobs.length
+    // useEffect(() => {
+    //     fetchJobs();
+    // }, [selectedTimeseries?.jobs?.length]); // should react on jobs length change selectedTimeseries?.jobs.length
 
     useEffect(() => {
-        setJobResults(jobResults);
-        console.log("jobResults", jobResults);
+        if (jobResults.length == 0) {
+            return;
+        };
         showSelectedJobResult();
     }, [jobResults]);
 
@@ -126,6 +127,7 @@ export function SiteDetails() {
             if (cat) {
                 // Catalog might not be ready yet (e.g. because processing is still ongoing)
                 job.result = cat;
+                job.children = cat;
                 fetchedJobs.push(job);
                 for (const result of cat) {
                     fetchedJobResults.push(result);
@@ -223,7 +225,7 @@ export function SiteDetails() {
     return (
         <Flex>
             <Box width="400px" p="2">
-                <TimeseriesItem timeseries={timeseries} eventListener={emitter} jobResults={jobResults} selectedJobResult={selectedJobResult} onDownloadAll={downloadAllResults} onDownloadCurrent={downloadCurrentResult} />
+                <TimeseriesItem timeseries={timeseries} eventListener={emitter} jobResults={jobResults} selectedJobResult={selectedJobResult}/>
             </Box>
 
             <Box h="88vh" flexGrow="1" p="2">
@@ -265,7 +267,7 @@ export function SiteDetails() {
                                                     }
                                                 >
                                                     <Slider.Control>
-                                                        {jobResults.map((jobResult, index) => (
+                                                        {jobResults.map((jobResult, index) => ( // jobResults must be "selectedJobResults" later
                                                             <>
                                                                 <Slider.Marker key={index} value={index} pt={12} ml="-50" w={"100%"}>
                                                                     {jobResult.filename}
