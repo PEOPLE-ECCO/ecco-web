@@ -18,8 +18,8 @@ export interface Job {
     end_time: string
     total_run_time: number
     state_name: string
-    result?: JobResult  // needs to be fetched first
-    children?: JobResult
+    result?: JobResult[]  // needs to be fetched first
+    children?: JobResult[]
 
     /*
     // fictional job properties
@@ -48,6 +48,7 @@ export interface Usage {
 }
 
 export interface JobResult {
+    name: string
     filename: string
     href: string
     job: string
@@ -87,3 +88,9 @@ export interface Process {
     name: string
     parameters: object
 }
+
+export interface Node {
+        id: string
+        name: string
+        children?: Job[]
+    }

@@ -121,11 +121,10 @@ export const useServices = () => {
         const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + timeseries_id + "/jobs/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
-    
+
         if (responseData) {
             for (const job of responseData) {
-                job.id = ""+job.id;
-                job.children = [];
+                job.id = "" + job.id;
             }
             return responseData;
         } else {
@@ -145,13 +144,12 @@ export const useServices = () => {
         } else {
             const responseData = await response.json();
             if (responseData) {
-                job.result = responseData;
-                job.children = job.result;
                 for (const res of responseData) {
                     res.id = res.job;
                     res.name = res.filename;
                 }
                 return responseData;
+
             } else {
                 throw new Error("Unexpected response: " + JSON.stringify(responseData));
             }

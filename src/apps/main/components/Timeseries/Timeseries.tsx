@@ -20,7 +20,6 @@ import {
     createTreeCollection,
     TreeView,
     TreeCollection,
-    Checkmark,
     useTreeViewNodeContext,
     Status,
     Listbox,
@@ -29,9 +28,9 @@ import {
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
-import { Children, Key, ReactNode, useEffect, useState } from "react";
+import { Key, ReactNode, useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuChevronDown, LuCode, LuCodepen, LuCodesandbox, LuDownload, LuEye, LuFile, LuFolder, LuInfo, LuLogs, LuMap } from "react-icons/lu";
+import { LuChevronDown, LuDownload, LuEye, LuFile, LuFolder, LuInfo, LuLogs, LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -39,8 +38,7 @@ import { useService } from "open-pioneer:react-hooks";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
-import { Item, Job, JobResult, Timeseries } from "../definitions";
-import { ViewJobDetails } from "./TimeseriesViewJobDialogs";
+import { Item, Job, JobResult, Timeseries, Node } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { DownloadAllButton } from "./TimeseriesActions";
 import { useServices } from "../../services/Services";
@@ -186,9 +184,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
     };
 
 
-
-
-
     const timeseriesSelection = (ts: Timeseries) => {
         setViewResultsButtonDisabled(true);
         eventListener.emit("selectedTimeseries", ts);
@@ -239,19 +234,19 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
         }
     }
 
-    interface Node {
-        id: string
-        name: string
-        children?: Job[]
-    }
-
     const JobsTreeCollection = (jobs: Job[]) => {
-
-        console.log(jobs);
-        
         for (const job of jobs) {
-            console.log(job.id, job.children);
+            if (job.state_name == "Failed") {
+                job.children = [{
+                    name: "no results available",
+                    filename: "",
+                    href: "",
+                    job: "",
+                    type: "invalid"
+                }];
+            }
         }
+
         const collection = createTreeCollection<Node>({
             nodeToValue: (node) => node.id,
             nodeToString: (node) => node.name,
@@ -265,11 +260,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
 
         setJobResultCollection(collection);
         
-        console.log(jobResultCollection);
-        if (!jobResultCollection?.rootNode.children) {
-            return;
-        }
-        for (const job of jobResultCollection!.rootNode!.children!) {
+        for (const job of collection!.rootNode!.children!) {
             activeJobs.push("" + job.id);
         }
         console.log("initial active jobs list: ", activeJobs);
@@ -316,7 +307,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
             return;
         }
         viewDetailsDisabling(selectedTimeseries!);
-        JobsTreeCollection(selectedTimeseries.jobs);
     }, [selectedTimeseries?.jobs]);
 
 
@@ -357,6 +347,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                 width="100%"
                                                                 bg="#2C7D75"
                                                                 _hover={{ bg: "teal.700" }}
+                                                                onClick={() => JobsTreeCollection(ts.jobs!)}
                                                                 disabled={viewResultsButtonDisabled}>
                                                                 View Results
                                                                 <Collapsible.Indicator
@@ -383,7 +374,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                             nodeState.isBranch ? (
                                                                                 <TreeView.BranchControl>
                                                                                     <LuFolder />
-                                                                                    <TreeView.BranchText>Job {node.id}
+                                                                                    <TreeView.BranchText>{node.state_names} Job {node.id}
                                                                                         : {new Date(node.start_time).toISOString().split("T")[0]}
                                                                                         &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]}
                                                                                     </TreeView.BranchText>
@@ -419,7 +410,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                             </Portal>
                                                                                         </Dialog.Root>
 
-                                                                                        <Dialog.Root size="xl" scrollBehavior="inside">
+                                                                                        <Dialog.Root size="cover" scrollBehavior="inside">
                                                                                             <Dialog.Trigger asChild>
                                                                                                 <Button
                                                                                                     color="black"
@@ -478,26 +469,30 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                 <TreeView.Item>
                                                                                     <LuFile />
                                                                                     <TreeView.ItemText>{node.name.split("/").pop()}
-                                                                                        <Tooltip content="Download current result">
-                                                                                            <Button
-                                                                                                color="black"
-                                                                                                _hover={{ bg: "teal.50" }}
-                                                                                                size="xs"
-                                                                                                variant="ghost"
-                                                                                                onClick={downloadCurrentResult}>
-                                                                                                <LuDownload />
-                                                                                            </Button>
-                                                                                        </Tooltip>
-                                                                                        <Tooltip content="View current result file">
-                                                                                            <Button
-                                                                                                color="black"
-                                                                                                _hover={{ bg: "teal.50" }}
-                                                                                                size="xs"
-                                                                                                variant="ghost"
-                                                                                                onClick={() => console.log("view")}>
-                                                                                                <LuEye />
-                                                                                            </Button>
-                                                                                        </Tooltip>
+                                                                                        {node.type != "invalid" &&
+                                                                                            <>
+                                                                                                <Tooltip content="Download current result">
+                                                                                                    <Button
+                                                                                                        color="black"
+                                                                                                        _hover={{ bg: "teal.50" }}
+                                                                                                        size="xs"
+                                                                                                        variant="ghost"
+                                                                                                        onClick={downloadCurrentResult}>
+                                                                                                        <LuDownload />
+                                                                                                    </Button>
+                                                                                                </Tooltip>
+                                                                                                <Tooltip content="View current result file">
+                                                                                                    <Button
+                                                                                                        color="black"
+                                                                                                        _hover={{ bg: "teal.50" }}
+                                                                                                        size="xs"
+                                                                                                        variant="ghost"
+                                                                                                        onClick={() => console.log("view")}>
+                                                                                                        <LuEye />
+                                                                                                    </Button>
+                                                                                                </Tooltip>
+                                                                                            </>
+                                                                                        }
                                                                                     </TreeView.ItemText>
                                                                                 </TreeView.Item>
                                                                             )
@@ -508,7 +503,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                             <Box mt="4" >
                                                                 <DownloadAllButton onDownloadAll={downloadAllResults}></DownloadAllButton>
                                                             </Box>
-
                                                         </Box>
 
                                                     </Collapsible.Content>
@@ -517,6 +511,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                         </Accordion.Item>
                                     ))}
                                 </Accordion.Root>
+
                                 <CreateTimeseries eventListener={eventListener} />
                             </Stack>
                         </Box>
@@ -550,70 +545,46 @@ function MenuContent({ ts, el }: MenuContentProps) {
 
     return (
         <>
-            <Dialog.Root size="lg" placement="center">
-                <Menu.Root>
-                    <Menu.Trigger asChild>
-                        <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
-                            <Ellipsis />
-                        </IconButton>
-                    </Menu.Trigger>
-                    <Portal>
-                        <Menu.Positioner>
-                            <Menu.Content>
-                                <Dialog.Trigger asChild>
-                                    <Menu.Item
-                                        value="details">
-                                        View Jobs
-                                    </Menu.Item>
-                                </Dialog.Trigger>
-                                <Menu.Item
-                                    value="delete"
-                                    onClick={() => {
-                                        handleDelete(ts);
-                                        notificationService.notify({
-                                            title: "Deleted",
-                                            message: ts.name,
-                                            level: "info",
-                                            displayDuration: 5000,
-                                        });
-                                    }}>
-                                    Delete
-                                </Menu.Item>
-                                <Menu.Item
-                                    value="archive"
-                                    onClick={() => {
-                                        handleArchive(ts);
-                                        notificationService.notify({
-                                            title: "Archived",
-                                            message: ts.name,
-                                            level: "info",
-                                            displayDuration: 5000,
-                                        });
-                                    }}>
-                                    Archive
-                                </Menu.Item>
-                            </Menu.Content>
-                        </Menu.Positioner>
-                    </Portal>
-                </Menu.Root>
-
+            <Menu.Root>
+                <Menu.Trigger asChild>
+                    <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
+                        <Ellipsis />
+                    </IconButton>
+                </Menu.Trigger>
                 <Portal>
-                    <Dialog.Backdrop />
-                    <Dialog.Positioner>
-                        <Dialog.Content>
-                            <Dialog.Header>
-                                <Dialog.Title>View Job Information of Timeseries &quot;{ts.name}&quot;</Dialog.Title>
-                                <Dialog.CloseTrigger asChild>
-                                    <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                </Dialog.CloseTrigger>
-                            </Dialog.Header>
-                            <Dialog.Body>
-                                <ViewJobDetails timeseries={ts} />
-                            </Dialog.Body>
-                        </Dialog.Content>
-                    </Dialog.Positioner>
+                    <Menu.Positioner>
+                        <Menu.Content>
+
+                            <Menu.Item
+                                value="delete"
+                                onClick={() => {
+                                    handleDelete(ts);
+                                    notificationService.notify({
+                                        title: "Deleted",
+                                        message: ts.name,
+                                        level: "info",
+                                        displayDuration: 5000,
+                                    });
+                                }}>
+                                Delete
+                            </Menu.Item>
+                            <Menu.Item
+                                value="archive"
+                                onClick={() => {
+                                    handleArchive(ts);
+                                    notificationService.notify({
+                                        title: "Archived",
+                                        message: ts.name,
+                                        level: "info",
+                                        displayDuration: 5000,
+                                    });
+                                }}>
+                                Archive
+                            </Menu.Item>
+                        </Menu.Content>
+                    </Menu.Positioner>
                 </Portal>
-            </Dialog.Root>
+            </Menu.Root>
         </>
     );
 }
