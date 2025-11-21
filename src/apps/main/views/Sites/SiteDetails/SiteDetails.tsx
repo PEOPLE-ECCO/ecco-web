@@ -40,7 +40,7 @@ import { TimeseriesSlider } from "../../../components/Timeseries/TimeseriesSlide
 
 export interface Events {
     selectedTimeseries: Timeseries;
-    selectedJobResult: number;
+    toggleJobWithId: string;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -53,20 +53,37 @@ export function SiteDetails() {
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
     const [jobResults, setJobResults] = useState<JobResult[]>([]);
-    const [selectedJobResult, setSelectedJobResult] = useState<number>(-1);
-    const [selectedJobResults, setSelectedJobResults] = useState<JobResult[]>([]);
+    const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
+    const [activeSliderResult, setActiveSliderResult] = useState<number>(-1);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
-
     const emitter = new EventEmitter<Events>();
+
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
+    );
+    emitter.on("toggleJobWithId",
+        (value: string) => {
+            const currentSliderResults = [];
+            for (const jobResult of jobResults!) {
+                if (jobResult.job == value) {
+                    jobResult.visible = !jobResult.visible;
+                    console.log(jobResult.job, jobResult.visible);
+                }
+                if (jobResult.visible == true) {
+                    currentSliderResults.push(jobResult);
+                    console.log("visible: ", currentSliderResults);
+                }
+            }
+            console.log(" toggled, after state: ", viewableJobResults, currentSliderResults);
+            setViewableJobResults(currentSliderResults);
+        }
     );
 
     useEffect(() => {
         fetchTimeseries();
-    }, []); // should react on Timeseries length change timeseries?.length
+    }, []);
 
     useEffect(() => {
         fetchJobs();
@@ -80,12 +97,11 @@ export function SiteDetails() {
         if (jobResults.length == 0) {
             return;
         };
-        showSelectedJobResult();
     }, [jobResults]);
 
     useEffect(() => {
-        showSelectedJobResult();
-    }, [selectedJobResult]);
+        showSelectedJobResult(viewableJobResults![activeSliderResult]!, activeSliderResult.toString());
+    }, [activeSliderResult]);
 
 
     const fetchTimeseries = async () => {
@@ -112,6 +128,7 @@ export function SiteDetails() {
                 }
             }
             setJobs(jobs);
+            console.log(jobs);
             await fetchResult(jobs);
         } catch (error) {
             console.error(error);
@@ -134,59 +151,26 @@ export function SiteDetails() {
                 }
             }
         }
+        setViewableJobResults(fetchedJobResults);
         setJobResults(fetchedJobResults);
         setJobs(fetchedJobs);
-        setSelectedJobResult(0);
+        setActiveSliderResult(0);
     }
 
-    async function remove_current_item() {
+    async function remove_current_item(id: string) {
         const map = await mapService.expectMapModel(MAP_ID);
-        map.layers.removeLayerById("current_item");
+        map.layers.removeLayerById(id);
         map.removeHighlights();
     }
 
-    function downloadCurrentResult() {
-        const href = jobResults[selectedJobResult]?.href;
-        if (!href)
-            return;
-
-        const link = document.createElement("a");
-        link.href = href;
-        link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function downloadAllResults() {
-        for (let i = 0; i < jobResults.length; i++) {
-            const href = jobResults[i]?.href;
-            //console.log(href);
-            //console.log(jobResults[i]);
-            if (!href)
-                return;
-
-            // download each or zip download?
-
-            // const link = document.createElement("a");
-            // link.href = href;
-            // link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
-            // document.body.appendChild(link);
-            // link.click();
-            // document.body.removeChild(link);
-
-        }
-    }
-
-
-    async function showSelectedJobResult() {
-        if (jobResults.length == 0 || selectedJobResult == undefined) {
+    async function showSelectedJobResult(jobResult: JobResult, id: string) {
+        if (jobResults.length == 0 || viewableJobResults == undefined) {
             return;
         }
-        const jobResult = jobResults[selectedJobResult]!;
+        //const jobResult = jobResults[viewableJobResults]!;
 
         const map = await mapService.expectMapModel(MAP_ID);
-        await remove_current_item();
+        remove_current_item(id.toString());
 
         const google = new Projection({ code: "EPSG:3857" });
         const stacproj = new Projection({ code: "EPSG:32631" });
@@ -201,7 +185,7 @@ export function SiteDetails() {
         });
 
         const layer = new SimpleLayer({
-            id: "current_item",
+            id: id,
             title: "current",
             olLayer: new TileLayer({
                 source: image,
@@ -224,8 +208,8 @@ export function SiteDetails() {
 
     return (
         <Flex>
-            <Box width="400px" p="2">
-                <TimeseriesItem timeseries={timeseries} eventListener={emitter} jobResults={jobResults} selectedJobResult={selectedJobResult}/>
+            <Box width="450px" p="2">
+                <TimeseriesItem timeseries={timeseries} eventListener={emitter} jobResults={jobResults} />
             </Box>
 
             <Box h="88vh" flexGrow="1" p="2">
@@ -252,37 +236,28 @@ export function SiteDetails() {
                             >
                                 <Card.Root w="100%" padding={4}>
                                     <Card.Body>
-                                        {jobs && jobResults.length > 0 && (
+                                        {jobs && viewableJobResults.length > 0 && (
                                             <Center w="100%">
                                                 <Slider.Root
                                                     colorPalette={"teal"}
                                                     w="75%"
                                                     step={1}
-                                                    max={jobResults.length - 1}
+                                                    max={viewableJobResults.length - 1}
                                                     defaultValue={[0]}
                                                     onValueChangeEnd={(val) => {
                                                         console.log("onChangeEnd " + val.value);
-                                                        setSelectedJobResult(val.value[0]!);
+                                                        setActiveSliderResult(val.value[0]!);
+                                                        console.log("selected result on slider: ", viewableJobResults[val.value[0]!]?.job);
                                                     }
                                                     }
                                                 >
                                                     <Slider.Control>
-                                                        {jobResults.map((jobResult, index) => ( // jobResults must be "selectedJobResults" later
+                                                        {viewableJobResults.map((jobResult, index) => ( // jobResults must be "selectedJobResults" later
                                                             <>
                                                                 <Slider.Marker key={index} value={index} pt={12} ml="-50" w={"100%"}>
-                                                                    {jobResult.filename}
+                                                                    {jobResult.job}
                                                                 </Slider.Marker>
-                                                                <Slider.Marker
-                                                                    zIndex="98"
-                                                                    ml="-0.5em"
-                                                                    mt="-0.9em"
-                                                                    key={index}
-                                                                    value={index}
-                                                                >
-                                                                    <Icon viewBox="0 0 200 200">
-                                                                        <Circle cx="100" cy="100" r="75" fill="black" />
-                                                                    </Icon>
-                                                                </Slider.Marker>
+
                                                             </>
                                                         ))}
                                                         <Slider.Track >

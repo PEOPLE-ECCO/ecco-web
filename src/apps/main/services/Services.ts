@@ -147,6 +147,7 @@ export const useServices = () => {
                 for (const res of responseData) {
                     res.id = res.job;
                     res.name = res.filename;
+                    res.visible = true;
                 }
                 return responseData;
 

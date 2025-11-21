@@ -48,14 +48,12 @@ interface TimeseriesProps {
     timeseries?: Timeseries[]
     eventListener: EventEmitter<Events>
     jobResults: JobResult[]
-    selectedJobResult: number
 }
 
-export function TimeseriesItem({ timeseries, eventListener, jobResults, selectedJobResult }: TimeseriesProps) {
+export function TimeseriesItem({ timeseries, eventListener, jobResults }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(false);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [jobResultCollection, setJobResultCollection] = useState<TreeCollection<Node> | undefined>();
-    const [activeJobs, setActiveJobs] = useState<string[]>([]);
 
     const { getJobLog } = useServices();
     const [logViewContent, setLogViewContent] = useState<ReactNode>();
@@ -198,20 +196,20 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
         };
     };
 
-    function downloadCurrentResult() {
+    // function downloadCurrentResult() {
 
-        const href = jobResults[selectedJobResult]?.href;
-        console.log(href);
-        if (!href)
-            return;
+    //     const href = jobResults[selectedJobResult]?.href;
+    //     console.log(href);
+    //     if (!href)
+    //         return;
 
-        const link = document.createElement("a");
-        link.href = href;
-        link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+    //     const link = document.createElement("a");
+    //     link.href = href;
+    //     link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    // }
 
     function downloadAllResults() {
 
@@ -238,11 +236,12 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
         for (const job of jobs) {
             if (job.state_name == "Failed") {
                 job.children = [{
-                    name: "no results available",
+                    name: "Job failed: no results available",
                     filename: "",
                     href: "",
                     job: "",
-                    type: "invalid"
+                    type: "invalid",
+                    visible: false
                 }];
             }
         }
@@ -257,20 +256,14 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                     jobs
             },
         });
-
         setJobResultCollection(collection);
-        
-        for (const job of collection!.rootNode!.children!) {
-            activeJobs.push("" + job.id);
-        }
-        console.log("initial active jobs list: ", activeJobs);
     };
 
     const TreeNodeSwitcher = (props: TreeView.NodeCheckboxProps) => {
         const nodeState = useTreeViewNodeContext();
 
-        const checkActiveJobs = (jobid: string, checked: string | boolean) => {
-            if (checked == false) {
+        const checkActiveJobs = (resultname: string) => {
+            /*if (checked == false) {
                 activeJobs.push(jobid);
             }
             else {
@@ -280,13 +273,15 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                 }
             }
             console.log(activeJobs);
+            */
+            eventListener.emit("toggleJobWithId", resultname);
         };
 
         return (
             <TreeView.NodeCheckbox pl="2" aria-label="check node" {...props}>
                 <Switch.Root colorPalette="teal" size="md" pr="4"
                     checked={nodeState.checked === false}
-                    onCheckedChange={() => { checkActiveJobs(nodeState.value, nodeState.checked); }}>
+                    onCheckedChange={() => { checkActiveJobs(nodeState.value); }}>
                     <Switch.HiddenInput />
                     <Switch.Label />
                     <Switch.Control>
@@ -306,13 +301,18 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
         }
+
         viewDetailsDisabling(selectedTimeseries!);
     }, [selectedTimeseries?.jobs]);
+
+    useEffect(() => {
+        console.log("tsselectionchange");
+    }, [selectedTimeseries]);
 
 
     return (
         <>
-            <ScrollArea.Root maxW="sm" height="47rem" variant="always">
+            <ScrollArea.Root maxW="md" height="47rem" variant="always">
                 <ScrollArea.Viewport>
                     <ScrollArea.Content spaceY="4">
                         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
@@ -374,9 +374,11 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                             nodeState.isBranch ? (
                                                                                 <TreeView.BranchControl>
                                                                                     <LuFolder />
-                                                                                    <TreeView.BranchText>{node.state_names} Job {node.id}
-                                                                                        : {new Date(node.start_time).toISOString().split("T")[0]}
-                                                                                        &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]}
+                                                                                    <TreeView.BranchText fontWeight="bold">
+                                                                                        {node.state_names} Job {node.id}
+                                                                                        : {node.name} 
+                                                                                        {/* {new Date(node.start_time).toISOString().split("T")[0]} */}
+                                                                                        {/* &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]} */}
                                                                                     </TreeView.BranchText>
 
                                                                                     <TreeView.Item>
@@ -461,9 +463,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                                 </Dialog.Positioner>
                                                                                             </Portal>
                                                                                         </Dialog.Root>
-
                                                                                     </TreeView.Item>
-                                                                                    <TreeNodeSwitcher />
                                                                                 </TreeView.BranchControl>
                                                                             ) : (
                                                                                 <TreeView.Item>
@@ -477,7 +477,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                                         _hover={{ bg: "teal.50" }}
                                                                                                         size="xs"
                                                                                                         variant="ghost"
-                                                                                                        onClick={downloadCurrentResult}>
+                                                                                                        onClick={() => console.log("TODO!!!")}>
                                                                                                         <LuDownload />
                                                                                                     </Button>
                                                                                                 </Tooltip>
@@ -491,6 +491,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults, selected
                                                                                                         <LuEye />
                                                                                                     </Button>
                                                                                                 </Tooltip>
+                                                                                                <TreeNodeSwitcher />
                                                                                             </>
                                                                                         }
                                                                                     </TreeView.ItemText>

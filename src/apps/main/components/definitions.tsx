@@ -53,6 +53,7 @@ export interface JobResult {
     href: string
     job: string
     type: string
+    visible: boolean
 }
 
 export interface STACProperties {
