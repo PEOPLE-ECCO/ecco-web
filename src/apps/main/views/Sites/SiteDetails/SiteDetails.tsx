@@ -54,7 +54,8 @@ export function SiteDetails() {
     const [jobs, setJobs] = useState<Job[]>();
     const [jobResults, setJobResults] = useState<JobResult[]>([]);
     const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
-    const [activeSliderResult, setActiveSliderResult] = useState<number>(-1);
+    const [viewableJobResultsSteps, setViewableJobResultsSteps] = useState<number[]>([]);
+    const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
 
@@ -63,20 +64,18 @@ export function SiteDetails() {
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
+
     emitter.on("toggleJobWithId",
         (value: string) => {
             const currentSliderResults = [];
             for (const jobResult of jobResults!) {
                 if (jobResult.job == value) {
                     jobResult.visible = !jobResult.visible;
-                    console.log(jobResult.job, jobResult.visible);
                 }
                 if (jobResult.visible == true) {
                     currentSliderResults.push(jobResult);
-                    console.log("visible: ", currentSliderResults);
                 }
             }
-            console.log(" toggled, after state: ", viewableJobResults, currentSliderResults);
             setViewableJobResults(currentSliderResults);
         }
     );
@@ -87,6 +86,7 @@ export function SiteDetails() {
 
     useEffect(() => {
         fetchJobs();
+        setActiveSliderResult(0);
     }, [selectedTimeseries]);
 
     // useEffect(() => {
@@ -100,8 +100,13 @@ export function SiteDetails() {
     }, [jobResults]);
 
     useEffect(() => {
-        showSelectedJobResult(viewableJobResults![activeSliderResult]!, activeSliderResult.toString());
-    }, [activeSliderResult]);
+        showSelectedJobResult(0);
+        const arr = [];
+        for (let i = 0; i in viewableJobResults; i++) {
+            arr.push(i);
+        }
+        setViewableJobResultsSteps(arr);
+    }, [viewableJobResults]);
 
 
     const fetchTimeseries = async () => {
@@ -154,7 +159,6 @@ export function SiteDetails() {
         setViewableJobResults(fetchedJobResults);
         setJobResults(fetchedJobResults);
         setJobs(fetchedJobs);
-        setActiveSliderResult(0);
     }
 
     async function remove_current_item(id: string) {
@@ -163,14 +167,15 @@ export function SiteDetails() {
         map.removeHighlights();
     }
 
-    async function showSelectedJobResult(jobResult: JobResult, id: string) {
+    async function showSelectedJobResult(id: number) {
         if (jobResults.length == 0 || viewableJobResults == undefined) {
             return;
         }
-        //const jobResult = jobResults[viewableJobResults]!;
+        const jobResult = viewableJobResults[id]!;
 
         const map = await mapService.expectMapModel(MAP_ID);
-        remove_current_item(id.toString());
+
+        remove_current_item(activeSliderResult.toString());
 
         const google = new Projection({ code: "EPSG:3857" });
         const stacproj = new Projection({ code: "EPSG:32631" });
@@ -185,7 +190,7 @@ export function SiteDetails() {
         });
 
         const layer = new SimpleLayer({
-            id: id,
+            id: id.toString(),
             title: "current",
             olLayer: new TileLayer({
                 source: image,
@@ -234,11 +239,12 @@ export function SiteDetails() {
                                 zIndex="10"
                                 pointerEvents="auto"
                             >
-                                <Card.Root w="100%" padding={4}>
-                                    <Card.Body>
-                                        {jobs && viewableJobResults.length > 0 && (
+                                {jobs && viewableJobResults.length > 0 && (
+                                    <Card.Root w="100%" padding={4}>
+                                        <Card.Body>
                                             <Center w="100%">
                                                 <Slider.Root
+                                                    size="lg"
                                                     colorPalette={"teal"}
                                                     w="75%"
                                                     step={1}
@@ -246,18 +252,17 @@ export function SiteDetails() {
                                                     defaultValue={[0]}
                                                     onValueChangeEnd={(val) => {
                                                         console.log("onChangeEnd " + val.value);
+                                                        showSelectedJobResult(val.value[0]!);
                                                         setActiveSliderResult(val.value[0]!);
-                                                        console.log("selected result on slider: ", viewableJobResults[val.value[0]!]?.job);
-                                                    }
-                                                    }
+                                                    }}
                                                 >
                                                     <Slider.Control>
-                                                        {viewableJobResults.map((jobResult, index) => ( // jobResults must be "selectedJobResults" later
+                                                        {viewableJobResults.map((jobResult, index) => (
                                                             <>
                                                                 <Slider.Marker key={index} value={index} pt={12} ml="-50" w={"100%"}>
                                                                     {jobResult.job}
                                                                 </Slider.Marker>
-
+                                                                <Slider.Marks marks={viewableJobResultsSteps}  pt="-10"/>
                                                             </>
                                                         ))}
                                                         <Slider.Track >
@@ -267,9 +272,9 @@ export function SiteDetails() {
                                                     </Slider.Control>
                                                 </Slider.Root>
                                             </Center>
-                                        )}
-                                    </Card.Body>
-                                </Card.Root>
+                                        </Card.Body>
+                                    </Card.Root>
+                                )}
                                 {/* <TimeseriesControl
                                     Timeseries={selectedTimeseries!}
                                 /> */}
