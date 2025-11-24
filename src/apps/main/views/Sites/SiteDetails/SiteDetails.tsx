@@ -101,11 +101,11 @@ export function SiteDetails() {
 
     useEffect(() => {
         showSelectedJobResult(0);
-        const arr = [];
+        const currentSliderMarks = [];
         for (let i = 0; i in viewableJobResults; i++) {
-            arr.push(i);
+            currentSliderMarks.push(i);
         }
-        setViewableJobResultsSteps(arr);
+        setViewableJobResultsSteps(currentSliderMarks);
     }, [viewableJobResults]);
 
 
@@ -211,6 +211,7 @@ export function SiteDetails() {
         }
     }
 
+
     return (
         <Flex>
             <Box width="450px" p="2">
@@ -260,9 +261,9 @@ export function SiteDetails() {
                                                         {viewableJobResults.map((jobResult, index) => (
                                                             <>
                                                                 <Slider.Marker key={index} value={index} pt={12} ml="-50" w={"100%"}>
-                                                                    {jobResult.job}
+                                                                    {jobResult.name.split("/")[2]}
                                                                 </Slider.Marker>
-                                                                <Slider.Marks marks={viewableJobResultsSteps}  pt="-10"/>
+                                                                <Slider.Marks marks={viewableJobResultsSteps} pt="-10" />
                                                             </>
                                                         ))}
                                                         <Slider.Track >

@@ -20,11 +20,12 @@ import {
     createTreeCollection,
     TreeView,
     TreeCollection,
-    useTreeViewNodeContext,
     Status,
     Listbox,
     Table,
     createListCollection,
+    Spinner,
+    Checkbox
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
@@ -42,6 +43,7 @@ import { Item, Job, JobResult, Timeseries, Node } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { DownloadAllButton } from "./TimeseriesActions";
 import { useServices } from "../../services/Services";
+import { ViewJobDetails } from "./TimeseriesViewJobDialogs";
 
 
 interface TimeseriesProps {
@@ -196,41 +198,33 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
         };
     };
 
-    // function downloadCurrentResult() {
+    function downloadCurrentResult(href: string) {
+        if (!href)
+            return;
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
-    //     const href = jobResults[selectedJobResult]?.href;
-    //     console.log(href);
-    //     if (!href)
-    //         return;
-
-    //     const link = document.createElement("a");
-    //     link.href = href;
-    //     link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
-    //     document.body.appendChild(link);
-    //     link.click();
-    //     document.body.removeChild(link);
-    // }
 
     function downloadAllResults() {
-
-        for (let i = 0; i < jobResults.length; i++) {
-            const href = jobResults[i]?.href;
-            //console.log(href);
-            //console.log(jobResults[i]);
-            if (!href)
+        const downloadLinks = [];
+        for (const result of jobResults) {
+            if (!result.href)
                 return;
-
-            // download each or zip download?
-
-            // const link = document.createElement("a");
-            // link.href = href;
-            // link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
-            // document.body.appendChild(link);
-            // link.click();
-            // document.body.removeChild(link);
-
+            const href = result.href;
+            // Add link to List
+            downloadLinks.push(href);
         }
+        console.log(downloadLinks);
+
+        // zip the list
+        // download zip
     }
+
 
     const JobsTreeCollection = (jobs: Job[]) => {
         for (const job of jobs) {
@@ -259,44 +253,11 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
         setJobResultCollection(collection);
     };
 
-    const TreeNodeSwitcher = (props: TreeView.NodeCheckboxProps) => {
-        const nodeState = useTreeViewNodeContext();
-
-        const checkActiveJobs = (resultname: string) => {
-            /*if (checked == false) {
-                activeJobs.push(jobid);
-            }
-            else {
-                const jobindex = activeJobs.indexOf(jobid);
-                if (jobindex !== -1) {
-                    activeJobs.splice(jobindex, 1);
-                }
-            }
-            console.log(activeJobs);
-            */
-            eventListener.emit("toggleJobWithId", resultname);
-        };
-
-        return (
-            <TreeView.NodeCheckbox pl="2" aria-label="check node" {...props}>
-                <Switch.Root colorPalette="teal" size="md" pr="4"
-                    checked={nodeState.checked === false}
-                    onCheckedChange={() => { checkActiveJobs(nodeState.value); }}>
-                    <Switch.HiddenInput />
-                    <Switch.Label />
-                    <Switch.Control>
-                        <Switch.Thumb >
-                            <Switch.ThumbIndicator fallback={<LuMap />}>
-                                <LuMap />
-                            </Switch.ThumbIndicator>
-                        </Switch.Thumb>
-                    </Switch.Control>
-                </Switch.Root>
-            </TreeView.NodeCheckbox>
-        );
+    const checkActiveJobs = (resultname: string) => {
+        eventListener.emit("toggleJobWithId", resultname);
     };
 
-
+    
     useEffect(() => {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
@@ -312,7 +273,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
 
     return (
         <>
-            <ScrollArea.Root maxW="md" height="47rem" variant="always">
+            <ScrollArea.Root maxW="md" h="86vh" variant="always">
                 <ScrollArea.Viewport>
                     <ScrollArea.Content spaceY="4">
                         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
@@ -366,6 +327,13 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
 
                                                     <Collapsible.Content>
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                            <Box>
+                                                                <Checkbox.Root disabled>
+                                                                    <Checkbox.HiddenInput />
+                                                                    <Checkbox.Control />
+                                                                    <Checkbox.Label>Show all results on slider</Checkbox.Label>
+                                                                </Checkbox.Root>
+                                                            </Box>
                                                             <TreeView.Root collection={jobResultCollection!} maxW="md" defaultCheckedValue={[]}>
                                                                 <TreeView.Tree>
                                                                     <TreeView.Node
@@ -373,128 +341,156 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                         render={({ node, nodeState }) =>
                                                                             nodeState.isBranch ? (
                                                                                 <TreeView.BranchControl>
-                                                                                    <LuFolder />
-                                                                                    <TreeView.BranchText fontWeight="bold">
-                                                                                        {node.state_names} Job {node.id}
-                                                                                        : {node.name} 
-                                                                                        {/* {new Date(node.start_time).toISOString().split("T")[0]} */}
-                                                                                        {/* &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]} */}
-                                                                                    </TreeView.BranchText>
+                                                                                    {node.state_name != "Running" &&
+                                                                                        <>
+                                                                                            <LuFolder />
+                                                                                            <TreeView.BranchText fontWeight="bold">
+                                                                                                Job {node.id}
+                                                                                                : {node.name}
+                                                                                                {/* {new Date(node.start_time).toISOString().split("T")[0]} */}
+                                                                                                {/* &nbsp;- {new Date(node.start_time).toISOString().split("T")[1]!.split(".")[0]} */}
+                                                                                            </TreeView.BranchText>
 
-                                                                                    <TreeView.Item>
-                                                                                        <Dialog.Root size="xl" scrollBehavior="inside">
-                                                                                            <Dialog.Trigger asChild>
-                                                                                                <Button
-                                                                                                    color="black"
-                                                                                                    _hover={{ bg: "teal.50" }}
-                                                                                                    size="xs"
-                                                                                                    variant="ghost"
-                                                                                                    onClick={() => viewDetails(node)}>
-                                                                                                    <LuInfo />
-                                                                                                </Button>
-                                                                                            </Dialog.Trigger>
-                                                                                            <Portal>
-                                                                                                <Dialog.Backdrop />
-                                                                                                <Dialog.Positioner>
-                                                                                                    <Dialog.Content>
-                                                                                                        <Dialog.Header>
-                                                                                                            <Dialog.Title>View Details of Job {node.id}</Dialog.Title>
-                                                                                                            <Dialog.CloseTrigger asChild>
-                                                                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                                                                                            </Dialog.CloseTrigger>
-                                                                                                        </Dialog.Header>
-                                                                                                        <Dialog.Body>
-                                                                                                            {detailsContent}
-                                                                                                        </Dialog.Body>
-                                                                                                        <Dialog.Footer></Dialog.Footer>
-                                                                                                    </Dialog.Content>
-                                                                                                </Dialog.Positioner>
-                                                                                            </Portal>
-                                                                                        </Dialog.Root>
+                                                                                            <TreeView.Item>
+                                                                                                <Dialog.Root size="xl" scrollBehavior="inside">
+                                                                                                    <Dialog.Trigger asChild>
+                                                                                                        <Button
+                                                                                                            color="black"
+                                                                                                            _hover={{ bg: "teal.50" }}
+                                                                                                            size="xs"
+                                                                                                            variant="ghost"
+                                                                                                            onClick={() => viewDetails(node)}>
+                                                                                                            <LuInfo />
+                                                                                                        </Button>
+                                                                                                    </Dialog.Trigger>
+                                                                                                    <Portal>
+                                                                                                        <Dialog.Backdrop />
+                                                                                                        <Dialog.Positioner>
+                                                                                                            <Dialog.Content>
+                                                                                                                <Dialog.Header>
+                                                                                                                    <Dialog.Title>View Details of Job {node.id}</Dialog.Title>
+                                                                                                                    <Dialog.CloseTrigger asChild>
+                                                                                                                        <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                                                                    </Dialog.CloseTrigger>
+                                                                                                                </Dialog.Header>
+                                                                                                                <Dialog.Body>
+                                                                                                                    {detailsContent}
+                                                                                                                </Dialog.Body>
+                                                                                                                <Dialog.Footer></Dialog.Footer>
+                                                                                                            </Dialog.Content>
+                                                                                                        </Dialog.Positioner>
+                                                                                                    </Portal>
+                                                                                                </Dialog.Root>
 
-                                                                                        <Dialog.Root size="cover" scrollBehavior="inside">
-                                                                                            <Dialog.Trigger asChild>
-                                                                                                <Button
-                                                                                                    color="black"
-                                                                                                    _hover={{ bg: "teal.50" }}
-                                                                                                    size="xs"
-                                                                                                    variant="ghost"
-                                                                                                    onClick={() => viewLog(node)}>
-                                                                                                    <LuLogs />
-                                                                                                </Button>
-                                                                                            </Dialog.Trigger>
-                                                                                            <Portal>
-                                                                                                <Dialog.Backdrop />
-                                                                                                <Dialog.Positioner>
-                                                                                                    <Dialog.Content>
-                                                                                                        <Dialog.Header>
-                                                                                                            <Stack>
-                                                                                                                <Box pb="4">
-                                                                                                                    <Dialog.Title>View Logs of Job {node.id}</Dialog.Title>
-                                                                                                                </Box>
-                                                                                                                {logViewContent}
-                                                                                                            </Stack>
-                                                                                                            <Dialog.CloseTrigger asChild>
-                                                                                                                <CloseButton onClick={handleExitLogviewClick} height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                                                                                            </Dialog.CloseTrigger>
-                                                                                                        </Dialog.Header>
-                                                                                                        <Dialog.Body>
-                                                                                                            <Table.Root variant="outline">
-                                                                                                                <Table.Header bg="gray.200">
-                                                                                                                    <Table.Row>
-                                                                                                                        <Table.ColumnHeader>Time</Table.ColumnHeader>
-                                                                                                                        <Table.ColumnHeader>Level</Table.ColumnHeader>
-                                                                                                                        <Table.ColumnHeader>Message</Table.ColumnHeader>
-                                                                                                                    </Table.Row>
-                                                                                                                </Table.Header>
-                                                                                                                <Table.Body>
-                                                                                                                    {selectedLogs.map((item: Item, key: Key) => (
-                                                                                                                        <Table.Row key={key} bg={logLevelcolor(item)}>
-                                                                                                                            <Table.Cell>{item.timestamp}</Table.Cell>
-                                                                                                                            <Table.Cell>{item.level}</Table.Cell>
-                                                                                                                            <Table.Cell>{item.message}</Table.Cell>
-                                                                                                                        </Table.Row>
-                                                                                                                    ))}
-                                                                                                                </Table.Body>
-                                                                                                            </Table.Root>
-                                                                                                        </Dialog.Body>
-                                                                                                        <Dialog.Footer />
-                                                                                                    </Dialog.Content>
-                                                                                                </Dialog.Positioner>
-                                                                                            </Portal>
-                                                                                        </Dialog.Root>
-                                                                                    </TreeView.Item>
+                                                                                                <Dialog.Root size="cover" scrollBehavior="inside">
+                                                                                                    <Dialog.Trigger asChild>
+                                                                                                        <Button
+                                                                                                            color="black"
+                                                                                                            _hover={{ bg: "teal.50" }}
+                                                                                                            size="xs"
+                                                                                                            variant="ghost"
+                                                                                                            onClick={() => viewLog(node)}>
+                                                                                                            <LuLogs />
+                                                                                                        </Button>
+                                                                                                    </Dialog.Trigger>
+                                                                                                    <Portal>
+                                                                                                        <Dialog.Backdrop />
+                                                                                                        <Dialog.Positioner>
+                                                                                                            <Dialog.Content>
+                                                                                                                <Dialog.Header>
+                                                                                                                    <Stack>
+                                                                                                                        <Box pb="4">
+                                                                                                                            <Dialog.Title>View Logs of Job {node.id}</Dialog.Title>
+                                                                                                                        </Box>
+                                                                                                                        {logViewContent}
+                                                                                                                    </Stack>
+                                                                                                                    <Dialog.CloseTrigger asChild>
+                                                                                                                        <CloseButton onClick={handleExitLogviewClick} height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                                                                    </Dialog.CloseTrigger>
+                                                                                                                </Dialog.Header>
+                                                                                                                <Dialog.Body>
+                                                                                                                    <Table.Root variant="outline">
+                                                                                                                        <Table.Header bg="gray.200">
+                                                                                                                            <Table.Row>
+                                                                                                                                <Table.ColumnHeader>Time</Table.ColumnHeader>
+                                                                                                                                <Table.ColumnHeader>Level</Table.ColumnHeader>
+                                                                                                                                <Table.ColumnHeader>Message</Table.ColumnHeader>
+                                                                                                                            </Table.Row>
+                                                                                                                        </Table.Header>
+                                                                                                                        <Table.Body>
+                                                                                                                            {selectedLogs.map((item: Item, key: Key) => (
+                                                                                                                                <Table.Row key={key} bg={logLevelcolor(item)}>
+                                                                                                                                    <Table.Cell>{item.timestamp}</Table.Cell>
+                                                                                                                                    <Table.Cell>{item.level}</Table.Cell>
+                                                                                                                                    <Table.Cell>{item.message}</Table.Cell>
+                                                                                                                                </Table.Row>
+                                                                                                                            ))}
+                                                                                                                        </Table.Body>
+                                                                                                                    </Table.Root>
+                                                                                                                </Dialog.Body>
+                                                                                                                <Dialog.Footer />
+                                                                                                            </Dialog.Content>
+                                                                                                        </Dialog.Positioner>
+                                                                                                    </Portal>
+                                                                                                </Dialog.Root>
+                                                                                            </TreeView.Item>
+                                                                                        </>
+                                                                                    }
                                                                                 </TreeView.BranchControl>
                                                                             ) : (
                                                                                 <TreeView.Item>
-                                                                                    <LuFile />
-                                                                                    <TreeView.ItemText>{node.name.split("/").pop()}
-                                                                                        {node.type != "invalid" &&
-                                                                                            <>
-                                                                                                <Tooltip content="Download current result">
-                                                                                                    <Button
-                                                                                                        color="black"
-                                                                                                        _hover={{ bg: "teal.50" }}
-                                                                                                        size="xs"
-                                                                                                        variant="ghost"
-                                                                                                        onClick={() => console.log("TODO!!!")}>
-                                                                                                        <LuDownload />
-                                                                                                    </Button>
-                                                                                                </Tooltip>
-                                                                                                <Tooltip content="View current result file">
-                                                                                                    <Button
-                                                                                                        color="black"
-                                                                                                        _hover={{ bg: "teal.50" }}
-                                                                                                        size="xs"
-                                                                                                        variant="ghost"
-                                                                                                        onClick={() => console.log("view")}>
-                                                                                                        <LuEye />
-                                                                                                    </Button>
-                                                                                                </Tooltip>
-                                                                                                <TreeNodeSwitcher />
-                                                                                            </>
-                                                                                        }
-                                                                                    </TreeView.ItemText>
+                                                                                    {node.state_name == "Running" &&
+                                                                                        <>
+                                                                                            <HStack>
+                                                                                                <Spinner size="sm" />
+                                                                                                <Text>New Job Loading...</Text>
+                                                                                            </HStack>
+                                                                                        </>}
+                                                                                    {node.state_name != "Running" &&
+                                                                                        <>
+                                                                                            <LuFile />
+                                                                                            <TreeView.ItemText>{node.name.split("/")[2]}
+                                                                                                {node.type != "invalid" &&
+                                                                                                    <>
+                                                                                                        <Tooltip content="Download current result">
+                                                                                                            <Button
+                                                                                                                color="black"
+                                                                                                                _hover={{ bg: "teal.50" }}
+                                                                                                                size="xs"
+                                                                                                                variant="ghost"
+                                                                                                                onClick={() => { console.log(node.name); downloadCurrentResult(node.name); }}>
+                                                                                                                <LuDownload />
+                                                                                                            </Button>
+                                                                                                        </Tooltip>
+                                                                                                        <Tooltip content="View current result file">
+                                                                                                            <Button
+                                                                                                                color="black"
+                                                                                                                _hover={{ bg: "teal.50" }}
+                                                                                                                size="xs"
+                                                                                                                variant="ghost"
+                                                                                                                onClick={() => { console.log(node); console.log("view"); }}>
+                                                                                                                <LuEye />
+                                                                                                            </Button>
+                                                                                                        </Tooltip>
+                                                                                                        <TreeView.NodeCheckbox pl="2" aria-label="check node">
+                                                                                                            <Switch.Root colorPalette="teal" size="md" pr="4"
+                                                                                                                checked={nodeState.checked === false}
+                                                                                                                onCheckedChange={() => { console.log(node.filename); checkActiveJobs(node.filename); }}>
+                                                                                                                <Switch.HiddenInput />
+                                                                                                                <Switch.Label />
+                                                                                                                <Switch.Control>
+                                                                                                                    <Switch.Thumb >
+                                                                                                                        <Switch.ThumbIndicator fallback={<LuMap />}>
+                                                                                                                            <LuMap />
+                                                                                                                        </Switch.ThumbIndicator>
+                                                                                                                    </Switch.Thumb>
+                                                                                                                </Switch.Control>
+                                                                                                            </Switch.Root>
+                                                                                                        </TreeView.NodeCheckbox>
+                                                                                                    </>
+                                                                                                }
+                                                                                            </TreeView.ItemText>
+                                                                                        </>}
                                                                                 </TreeView.Item>
                                                                             )
                                                                         }
@@ -555,7 +551,6 @@ function MenuContent({ ts, el }: MenuContentProps) {
                 <Portal>
                     <Menu.Positioner>
                         <Menu.Content>
-
                             <Menu.Item
                                 value="delete"
                                 onClick={() => {
@@ -585,7 +580,7 @@ function MenuContent({ ts, el }: MenuContentProps) {
                         </Menu.Content>
                     </Menu.Positioner>
                 </Portal>
-            </Menu.Root>
+            </Menu.Root >
         </>
     );
 }
