@@ -35,7 +35,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
 import Draw, { createBox } from "ol/interaction/Draw.js";
 
-import { Extent, Process, Timeseries } from "../../components/definitions";
+import { Extent, Process, SpatialExtent, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "../../components/Timeseries/ActionButton";
@@ -46,13 +46,17 @@ import { EventEmitter } from "@open-pioneer/core";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 
-// Extend
+// Extent
 interface ExtentSelectionProps {
-    onBboxChange: (extent?: Extent) => void;
+    onBboxChange: (extent?: SpatialExtent) => void;
     isVisible: boolean
+    dialogClosed: boolean;
 }
 
 function ExtentSelection(props: ExtentSelectionProps) {
+    const mapService = useService<MapRegistry>("map.MapRegistry");
+    const [extent, setExtent] = useState<SpatialExtent | undefined>();
+
     const source = new VectorSource();
     const vector = new VectorLayer({
         source: source,
@@ -64,8 +68,6 @@ function ExtentSelection(props: ExtentSelectionProps) {
             "circle-fill-color": "#2C7D75",
         },
     });
-    const mapService = useService<MapRegistry>("map.MapRegistry");
-    const [extent, setExtent] = useState<Extent>();
 
     const drawInteraction = new Draw({
         source: source,
@@ -79,7 +81,38 @@ function ExtentSelection(props: ExtentSelectionProps) {
         }
     });
 
-    vector.getSource()?.clear();
+    async function drawBox() {
+        vector.getSource()?.clear();
+        drawInteraction.removeLastPoint();
+        const map = await mapService.expectMapModel(MAP_BOX);
+
+        map.olMap.addInteraction(drawInteraction);
+        map.layers.addLayer(new SimpleLayer({ olLayer: vector, title: "temp" }));
+
+        const drawStart = drawInteraction.on("drawstart", () => {
+            vector.getSource()?.clear();
+            console.log("drawstart");
+        });
+
+        const drawEnd = drawInteraction.on("drawend", (e) => {
+            const feature = e.feature;
+            const geom = feature.getGeometry()!.getExtent();
+            const newExtent = {
+                bbox:
+                    [
+                        geom[0]!,
+                        geom[1]!,
+                        geom[2]!,
+                        geom[3]!
+                    ]
+            } as SpatialExtent;
+            setExtent(newExtent);
+            drawInteraction.abortDrawing();
+            props.onBboxChange(newExtent);
+            console.log("drawend");
+        });
+    }
+
 
     useEffect(() => {
         if (props.isVisible) {
@@ -88,38 +121,16 @@ function ExtentSelection(props: ExtentSelectionProps) {
         }
     }, [props.isVisible]);
 
-    async function drawBox() {
-        const map = await mapService.expectMapModel(MAP_BOX);
+    useEffect(() => {
+        console.log("useEffect extent: ", !extent);
+    }, [extent]);
 
-        map.olMap.addInteraction(drawInteraction);
-        map.layers.addLayer(new SimpleLayer({ olLayer: vector, title: "temp" }));
-
-        const drawStart = drawInteraction.on("drawstart", () => {
-            vector.getSource()?.clear();
-        });
-
-        const drawEnd = drawInteraction.on("drawend", (e) => {
-            const feature = e.feature;
-            const geom = feature.getGeometry()!.getExtent();
-            const newExtent = {
-                temporal: {
-                    interval: []
-                },
-                spatial: {
-                    bbox:
-                        [
-                            geom[0]!,
-                            geom[1]!,
-                            geom[2]!,
-                            geom[3]!
-                        ]
-                }
-            } as Extent;
-            setExtent(newExtent);
-            drawInteraction.abortDrawing();
-            props.onBboxChange(newExtent);
-        });
-    }
+    useEffect(() => {
+        if (props.dialogClosed) {
+            console.log("dialog was closed before");
+            drawBox();
+        }
+    }, [props.dialogClosed]);
 
     return (
         <>
@@ -133,11 +144,11 @@ function ExtentSelection(props: ExtentSelectionProps) {
                         <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
                             <Text>
                                 Extent Cordinates: <br />
-                                x1: {extent?.spatial.bbox[0]}, x2: {extent?.spatial.bbox[1]} <br />
-                                x2: {extent?.spatial.bbox[2]}, y2: {extent?.spatial.bbox[3]}
+                                x1: {extent?.bbox[0]}, x2: {extent?.bbox[1]} <br />
+                                x2: {extent?.bbox[2]}, y2: {extent?.bbox[3]}
                             </Text>
                         </Box>
-                        <MapInfoControls mapId={MAP_BOX}></MapInfoControls>
+                        <MapInfoControls mapId={MAP_BOX} />
                         <MapZoomControls mapId={MAP_BOX} />
                     </MapContainer>
                 </Flex>
@@ -159,42 +170,17 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
-    const [extent, setExtent] = useState<Extent>();
+    const [extent, setExtent] = useState<SpatialExtent | undefined>();
     const [step, setStep] = useState<number>(0);
     const { createTimeseries, getProcesses } = useServices();
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
+    const [expandDialogClosed, setExpandDialogClosed] = useState<boolean>(false);
     const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     const [value, setValue] = useState<string[]>([]);
     const [processes, setProcesses] = useState<ProcessWithValue[]>([]);
     const [processTable, setProcessTable] = useState<ListCollection<ProcessWithValue>>();
-    const [selectedProcess, setSelectedProcess] = useState<Process>();
-
-    useEffect(() => {
-        if (name != "" && description != "") {
-            setNextButtonDisabled(false);
-        }
-        else {
-            setNextButtonDisabled(true);
-        }
-    }, [name, description]);
-
-    useEffect(() => {
-        if (value.length > 0) {
-            setNextButtonDisabled(false);
-        }
-    }, [value.length]);
-
-    useEffect(() => {
-        const listCollection = createListCollection({
-            items: processes!.map((p) => {
-                p.value = p.id.toString();
-                return p;
-            })
-        });
-        setProcessTable(listCollection);
-    }, [processes]);
-
+    const [selectedProcess, setSelectedProcess] = useState<Process | undefined>();
 
     const fetchProcesses = async () => {
         if (!id)
@@ -206,12 +192,14 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             console.error(error);
         }
     };
-
+    
     const handleExitClick = () => {
+        setStep(0);
         setName("");
         setDescription("");
-        //setSelectedProcess(undefined);
-        //setExtent(undefined);
+        setValue([]);
+        setExtent(undefined);
+        setExpandDialogClosed(true);
     };
 
     const create = async () => {
@@ -233,6 +221,41 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             displayDuration: 5000,
         });
     };
+
+    const checkValue = () => {
+        if (step == 0 && value.length > 0) {
+            setNextButtonDisabled(false);
+        }
+    };
+
+
+    useEffect(() => {
+        if (name != "" && description != "") {
+            setNextButtonDisabled(false);
+        }
+        else {
+            setNextButtonDisabled(true);
+        }
+    }, [name, description]);
+
+    useEffect(() => {
+        console.log("value useeffect: ", value);
+        if (value.length > 0) {
+            setNextButtonDisabled(false);
+        }
+        else { setNextButtonDisabled(true); }
+    }, [value]);
+
+    useEffect(() => {
+        const listCollection = createListCollection({
+            items: processes!.map((p) => {
+                p.value = p.id.toString();
+                return p;
+            })
+        });
+        setProcessTable(listCollection);
+    }, [processes]);
+
 
     const steps = [
         {
@@ -266,11 +289,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                     <Box width="300px">
                         {processTable &&
                             <Listbox.Root
+                                deselectable
                                 collection={processTable}
                                 value={value}
                                 onValueChange={(details) => {
                                     setValue(details.value);
-                                    setSelectedProcess(details.items[0]);
+                                    setSelectedProcess(details.items[0]!);
                                 }}
                                 width="full"
                                 gap="4"
@@ -312,10 +336,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         },
         {
             title: "Extent Selection",
-            description: <ExtentSelection isVisible={step == 2} onBboxChange={(ext) => {
-                setExtent(ext);
-                setNextButtonDisabled(!ext);
-            }} />,
+            description: <ExtentSelection
+                isVisible={step == 2}
+                dialogClosed={expandDialogClosed}
+                onBboxChange={(ext) => {
+                    //setExtent(ext);
+                    setNextButtonDisabled(!ext);
+                }} />,
         },
         {
             title: "Check Data",
@@ -344,7 +371,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         },
     ];
 
-
     /*
                  - Name
             - Description
@@ -365,7 +391,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                             borderRadius="full"
                             _hover={{ bg: "teal.700" }}
                             onClick={() => {
-                                fetchProcesses(); setNextButtonDisabled(true);
+                                fetchProcesses();
                             }}>
                             <FiPlus></FiPlus>
                         </IconButton>
@@ -413,7 +439,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                 color="black"
                                                 border="1px solid #2C7D75"
                                                 _hover={{ bg: "teal.50" }}
-                                                onClick={() => { setNextButtonDisabled(false); }}>
+                                                onClick={() => { setNextButtonDisabled(false); console.log(step);}}>
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
@@ -424,7 +450,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                     border="1px solid #2C7D75"
                                                     _hover={{ bg: "teal.50" }}
                                                     disabled={nextButtonDisabled}
-                                                    onClick={() => setNextButtonDisabled(true)}>
+                                                    onClick={() => { setNextButtonDisabled(true); checkValue(); console.log(step);}}>
                                                     Next
                                                 </Button>
                                             </Steps.NextTrigger>

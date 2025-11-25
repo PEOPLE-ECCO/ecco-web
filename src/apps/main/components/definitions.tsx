@@ -5,7 +5,7 @@ export interface Timeseries {
     description: string;
     jobs?: Job[]
     children?: Job[]
-    extent?: Extent
+    extent?: SpatialExtent
     process?: Process
 }
 
