@@ -44,6 +44,7 @@ import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { DownloadAllButton } from "./TimeseriesActions";
 import { useServices } from "../../services/Services";
 import { ViewJobDetails } from "./TimeseriesViewJobDialogs";
+import { GeoTIFF } from "ol/source";
 
 
 interface TimeseriesProps {
@@ -61,6 +62,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
     const [logViewContent, setLogViewContent] = useState<ReactNode>();
     const [detailsContent, setDetailsContent] = useState<ReactNode>();
     const [selectedLogs, setSelectedLogs] = useState<Array<Item>>([]);
+    const [resultViewContent, setResultViewContent] = useState<ReactNode>();
 
     function logLevelcolor(item: Item) {
         if (item.level == 20) {
@@ -183,6 +185,25 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
         setDetailsContent([content]);
     };
 
+    const viewResults = async (result: JobResult) => {
+        const image = new GeoTIFF({
+            sources: [
+                {
+                    url: result.href,
+                },
+            ],
+        });
+
+
+        setDetailsContent(
+            <>
+                <Box>
+                    
+                </Box>
+            </>
+        );
+    };
+
 
     const timeseriesSelection = (ts: Timeseries) => {
         setViewResultsButtonDisabled(true);
@@ -257,7 +278,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
         eventListener.emit("toggleJobWithId", resultname);
     };
 
-    
+
     useEffect(() => {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
@@ -273,7 +294,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
 
     return (
         <>
-            <ScrollArea.Root maxW="md" h="86vh" variant="always">
+            <ScrollArea.Root maxW="md" h="86vh" variant="hover">
                 <ScrollArea.Viewport>
                     <ScrollArea.Content spaceY="4">
                         <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
@@ -376,7 +397,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                                                                 <Dialog.Body>
                                                                                                                     {detailsContent}
                                                                                                                 </Dialog.Body>
-                                                                                                                <Dialog.Footer></Dialog.Footer>
+                                                                                                                <Dialog.Footer />
                                                                                                             </Dialog.Content>
                                                                                                         </Dialog.Positioner>
                                                                                                     </Portal>
@@ -448,7 +469,21 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                                         </>}
                                                                                     {node.state_name != "Running" &&
                                                                                         <>
-                                                                                            <LuFile />
+                                                                                            <TreeView.NodeCheckbox pl="2" aria-label="check node">
+                                                                                                <Switch.Root colorPalette="teal" size="md" pr="4"
+                                                                                                    checked={nodeState.checked === false}
+                                                                                                    onCheckedChange={() => { console.log(node); checkActiveJobs(node.filename); }}>
+                                                                                                    <Switch.HiddenInput />
+                                                                                                    <Switch.Label />
+                                                                                                    <Switch.Control>
+                                                                                                        <Switch.Thumb >
+                                                                                                            <Switch.ThumbIndicator fallback={<LuMap />}>
+                                                                                                                <LuMap />
+                                                                                                            </Switch.ThumbIndicator>
+                                                                                                        </Switch.Thumb>
+                                                                                                    </Switch.Control>
+                                                                                                </Switch.Root>
+                                                                                            </TreeView.NodeCheckbox>
                                                                                             <TreeView.ItemText>{node.name.split("/")[2]}
                                                                                                 {node.type != "invalid" &&
                                                                                                     <>
@@ -458,35 +493,43 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                                                                 _hover={{ bg: "teal.50" }}
                                                                                                                 size="xs"
                                                                                                                 variant="ghost"
-                                                                                                                onClick={() => { console.log(node.name); downloadCurrentResult(node.name); }}>
+                                                                                                                onClick={() => { console.log("download: ", node.name); downloadCurrentResult(node.name); }}>
                                                                                                                 <LuDownload />
                                                                                                             </Button>
                                                                                                         </Tooltip>
                                                                                                         <Tooltip content="View current result file">
-                                                                                                            <Button
+                                                                                                            
+                                                                                                        </Tooltip>
+                                                                                                        <Dialog.Root size="xl" scrollBehavior="inside">
+                                                                                                            <Dialog.Trigger asChild>
+                                                                                                                <Button
                                                                                                                 color="black"
                                                                                                                 _hover={{ bg: "teal.50" }}
                                                                                                                 size="xs"
                                                                                                                 variant="ghost"
-                                                                                                                onClick={() => { console.log(node); console.log("view"); }}>
+                                                                                                                onClick={() => { console.log("view"); }}>
                                                                                                                 <LuEye />
                                                                                                             </Button>
-                                                                                                        </Tooltip>
-                                                                                                        <TreeView.NodeCheckbox pl="2" aria-label="check node">
-                                                                                                            <Switch.Root colorPalette="teal" size="md" pr="4"
-                                                                                                                checked={nodeState.checked === false}
-                                                                                                                onCheckedChange={() => { console.log(node.filename); checkActiveJobs(node.filename); }}>
-                                                                                                                <Switch.HiddenInput />
-                                                                                                                <Switch.Label />
-                                                                                                                <Switch.Control>
-                                                                                                                    <Switch.Thumb >
-                                                                                                                        <Switch.ThumbIndicator fallback={<LuMap />}>
-                                                                                                                            <LuMap />
-                                                                                                                        </Switch.ThumbIndicator>
-                                                                                                                    </Switch.Thumb>
-                                                                                                                </Switch.Control>
-                                                                                                            </Switch.Root>
-                                                                                                        </TreeView.NodeCheckbox>
+                                                                                                            </Dialog.Trigger>
+                                                                                                            <Portal>
+                                                                                                                <Dialog.Backdrop />
+                                                                                                                <Dialog.Positioner>
+                                                                                                                    <Dialog.Content>
+                                                                                                                        <Dialog.Header>
+                                                                                                                            <Dialog.Title>View Result {node.filename}</Dialog.Title>
+                                                                                                                            <Dialog.CloseTrigger asChild>
+                                                                                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                                                                            </Dialog.CloseTrigger>
+                                                                                                                        </Dialog.Header>
+                                                                                                                        <Dialog.Body>
+                                                                                                                            {node.name}
+                                                                                                                        </Dialog.Body>
+                                                                                                                        <Dialog.Footer />
+                                                                                                                    </Dialog.Content>
+                                                                                                                </Dialog.Positioner>
+                                                                                                            </Portal>
+                                                                                                        </Dialog.Root>
+
                                                                                                     </>
                                                                                                 }
                                                                                             </TreeView.ItemText>
