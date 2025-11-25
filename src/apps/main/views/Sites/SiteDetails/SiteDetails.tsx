@@ -226,16 +226,16 @@ export function SiteDetails() {
                 >
                     <MapSidebarControls mapId={MAP_ID} />
                     <MapInfoControls mapId={MAP_ID} />
-                    <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} />
+                    {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
                     <MapZoomControls mapId={MAP_ID} />
                     <Box>
                         {selectedTimeseries &&
                             <Box
                                 position="absolute"
-                                bottom="0%"
-                                left="40%"
+                                bottom="3%"
+                                left="45%"
                                 transform="translateX(-50%)"
-                                width="80%"
+                                width="90%"
                                 padding="4"
                                 zIndex="10"
                                 pointerEvents="auto"
@@ -247,7 +247,7 @@ export function SiteDetails() {
                                                 <Slider.Root
                                                     size="lg"
                                                     colorPalette={"teal"}
-                                                    w="75%"
+                                                    w="90%"
                                                     step={1}
                                                     max={viewableJobResults.length - 1}
                                                     defaultValue={[0]}
@@ -260,7 +260,7 @@ export function SiteDetails() {
                                                     <Slider.Control>
                                                         {viewableJobResults.map((jobResult, index) => (
                                                             <>
-                                                                <Slider.Marker key={index} value={index} pt={12} ml="-50" w={"100%"}>
+                                                                <Slider.Marker key={index} value={index} pt={12} w={"100%"}>
                                                                     {jobResult.name.split("/")[2]}
                                                                 </Slider.Marker>
                                                                 <Slider.Marks marks={viewableJobResultsSteps} pt="-10" />

@@ -39,7 +39,7 @@ interface SelectedDateMeta {
     formattedDate: string;
 }
 
-export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
+export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
     const { id } = useParams();
     const { createJob } = useServices();
 
@@ -47,7 +47,7 @@ export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
     const [startDate, setStartDate] = useState<Date | null>();
     const [endDate, setEndDate] = useState<Date | null>();
     const [jobParams, setJobParams] = useState<JobParameters>();
-    const [selectedTimeseries, _] = useState<Timeseries>(props.timeseries);
+    const [selectedTimeseries, _] = useState<Timeseries>(timeseries);
 
     const notificationService = useService<NotificationService>("notifier.NotificationService");
 
@@ -85,6 +85,7 @@ export const CreateJob: FC<CreateJobProps> = (props: CreateJobProps) => {
     const create = async () => {
         const created = await createJob(id!, selectedTimeseries!.id, jobParams!);
         handleExitClick();
+        eventListener.emit("selectedTimeseries", selectedTimeseries);
         notificationService.notify({
             title: "Job created",
             message: created,

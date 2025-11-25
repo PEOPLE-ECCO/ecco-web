@@ -11,9 +11,10 @@ interface MapZoomControlsProps {
 
 export const MapZoomControls = ({ mapId }: MapZoomControlsProps) => {
     return (
-        <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={30}>
+        <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={40}>
             <Flex
                 role="bottom-right"
+                bottom="3%"
                 aria-label="Zoom controls"
                 direction="column"
                 gap={1}

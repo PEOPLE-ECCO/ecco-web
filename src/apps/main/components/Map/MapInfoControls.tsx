@@ -12,9 +12,9 @@ interface MapInfoControlsProps {
 
 export const MapInfoControls = ({ mapId }: MapInfoControlsProps) => {
     return (
-        <MapAnchor position="top-left" horizontalGap={0} verticalGap={0}>
+        <MapAnchor position="bottom-left" horizontalGap={15} verticalGap={0}>
             <Flex
-                role="top-left"
+                role="bottom-left"
                 aria-label="Map info controls"
                 direction="column"
                 gap={1}
