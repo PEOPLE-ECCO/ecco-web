@@ -25,7 +25,10 @@ import {
     Table,
     createListCollection,
     Spinner,
-    Checkbox
+    Checkbox,
+    Image,
+    TreeViewItem,
+    TreeViewItemText
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
@@ -79,7 +82,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
     const handleExitLogviewClick = () => {
         setLogViewContent([]);
     };
-
 
     const viewLog = async (job: Job) => {
         const alllogs = await getJobLog(job);
@@ -198,7 +200,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
         setDetailsContent(
             <>
                 <Box>
-                    
+
                 </Box>
             </>
         );
@@ -274,11 +276,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
         setJobResultCollection(collection);
     };
 
-    const checkActiveJobs = (resultname: string) => {
-        eventListener.emit("toggleJobWithId", resultname);
-    };
-
-
     useEffect(() => {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
@@ -286,10 +283,6 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
 
         viewDetailsDisabling(selectedTimeseries!);
     }, [selectedTimeseries?.jobs]);
-
-    useEffect(() => {
-        console.log("tsselectionchange");
-    }, [selectedTimeseries]);
 
 
     return (
@@ -467,12 +460,17 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                                                 <Text>New Job Loading...</Text>
                                                                                             </HStack>
                                                                                         </>}
-                                                                                    {node.state_name != "Running" &&
+                                                                                    {node.state_name != "Running" && node.type == "invalid" &&
+                                                                                        <>
+                                                                                            <TreeView.ItemText>{node.name}</TreeView.ItemText>
+                                                                                        </>
+                                                                                    }
+                                                                                    {node.state_name != "Running" && node.type != "invalid" &&
                                                                                         <>
                                                                                             <TreeView.NodeCheckbox pl="2" aria-label="check node">
                                                                                                 <Switch.Root colorPalette="teal" size="md" pr="4"
                                                                                                     checked={nodeState.checked === false}
-                                                                                                    onCheckedChange={() => { console.log(node); checkActiveJobs(node.filename); }}>
+                                                                                                    onCheckedChange={() => { eventListener.emit("toggleJobWithId", node.filename); }}>
                                                                                                     <Switch.HiddenInput />
                                                                                                     <Switch.Label />
                                                                                                     <Switch.Control>
@@ -485,55 +483,51 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                                                 </Switch.Root>
                                                                                             </TreeView.NodeCheckbox>
                                                                                             <TreeView.ItemText>{node.name.split("/")[2]}
-                                                                                                {node.type != "invalid" &&
-                                                                                                    <>
-                                                                                                        <Tooltip content="Download current result">
-                                                                                                            <Button
-                                                                                                                color="black"
-                                                                                                                _hover={{ bg: "teal.50" }}
-                                                                                                                size="xs"
-                                                                                                                variant="ghost"
-                                                                                                                onClick={() => { console.log("download: ", node.name); downloadCurrentResult(node.name); }}>
-                                                                                                                <LuDownload />
-                                                                                                            </Button>
-                                                                                                        </Tooltip>
-                                                                                                        <Tooltip content="View current result file">
-                                                                                                            
-                                                                                                        </Tooltip>
-                                                                                                        <Dialog.Root size="xl" scrollBehavior="inside">
-                                                                                                            <Dialog.Trigger asChild>
-                                                                                                                <Button
-                                                                                                                color="black"
-                                                                                                                _hover={{ bg: "teal.50" }}
-                                                                                                                size="xs"
-                                                                                                                variant="ghost"
-                                                                                                                onClick={() => { console.log("view"); }}>
-                                                                                                                <LuEye />
-                                                                                                            </Button>
-                                                                                                            </Dialog.Trigger>
-                                                                                                            <Portal>
-                                                                                                                <Dialog.Backdrop />
-                                                                                                                <Dialog.Positioner>
-                                                                                                                    <Dialog.Content>
-                                                                                                                        <Dialog.Header>
-                                                                                                                            <Dialog.Title>View Result {node.filename}</Dialog.Title>
-                                                                                                                            <Dialog.CloseTrigger asChild>
-                                                                                                                                <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                                                                                                            </Dialog.CloseTrigger>
-                                                                                                                        </Dialog.Header>
-                                                                                                                        <Dialog.Body>
-                                                                                                                            {node.name}
-                                                                                                                        </Dialog.Body>
-                                                                                                                        <Dialog.Footer />
-                                                                                                                    </Dialog.Content>
-                                                                                                                </Dialog.Positioner>
-                                                                                                            </Portal>
-                                                                                                        </Dialog.Root>
+                                                                                                <Tooltip content="Download current result">
+                                                                                                    <Button
+                                                                                                        color="black"
+                                                                                                        _hover={{ bg: "teal.50" }}
+                                                                                                        size="xs"
+                                                                                                        variant="ghost"
+                                                                                                        onClick={() => { console.log("download: ", node.name); downloadCurrentResult(node.name); }}>
+                                                                                                        <LuDownload />
+                                                                                                    </Button>
+                                                                                                </Tooltip>
+                                                                                                <Tooltip content="View current result file">
 
-                                                                                                    </>
-                                                                                                }
+                                                                                                </Tooltip>
+                                                                                                <Dialog.Root size="xl" scrollBehavior="inside">
+                                                                                                    <Dialog.Trigger asChild>
+                                                                                                        <Button
+                                                                                                            color="black"
+                                                                                                            _hover={{ bg: "teal.50" }}
+                                                                                                            size="xs"
+                                                                                                            variant="ghost">
+                                                                                                            <LuEye />
+                                                                                                        </Button>
+                                                                                                    </Dialog.Trigger>
+                                                                                                    <Portal>
+                                                                                                        <Dialog.Backdrop />
+                                                                                                        <Dialog.Positioner>
+                                                                                                            <Dialog.Content>
+                                                                                                                <Dialog.Header>
+                                                                                                                    <Dialog.Title>View Result {node.filename}</Dialog.Title>
+                                                                                                                    <Dialog.CloseTrigger asChild>
+                                                                                                                        <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                                                                                                    </Dialog.CloseTrigger>
+                                                                                                                </Dialog.Header>
+                                                                                                                <Dialog.Body>
+                                                                                                                    <Image rounded="md" src={node.filename} />
+                                                                                                                </Dialog.Body>
+                                                                                                                <Dialog.Footer />
+                                                                                                            </Dialog.Content>
+                                                                                                        </Dialog.Positioner>
+                                                                                                    </Portal>
+                                                                                                </Dialog.Root>
+
                                                                                             </TreeView.ItemText>
-                                                                                        </>}
+                                                                                        </>
+                                                                                    }
                                                                                 </TreeView.Item>
                                                                             )
                                                                         }

@@ -69,7 +69,7 @@ export function SiteDetails() {
         (value: string) => {
             const currentSliderResults = [];
             for (const jobResult of jobResults!) {
-                if (jobResult.job == value) {
+                if (jobResult.filename == value) {
                     jobResult.visible = !jobResult.visible;
                 }
                 if (jobResult.visible == true) {
@@ -86,7 +86,7 @@ export function SiteDetails() {
 
     useEffect(() => {
         fetchJobs();
-        setActiveSliderResult(0);
+        //setActiveSliderResult(5);
     }, [selectedTimeseries]);
 
     // useEffect(() => {
@@ -133,7 +133,6 @@ export function SiteDetails() {
                 }
             }
             setJobs(jobs);
-            console.log(jobs);
             await fetchResult(jobs);
         } catch (error) {
             console.error(error);
