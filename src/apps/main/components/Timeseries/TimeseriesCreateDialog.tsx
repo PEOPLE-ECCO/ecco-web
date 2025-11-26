@@ -91,7 +91,6 @@ function ExtentSelection(props: ExtentSelectionProps) {
 
         const drawStart = drawInteraction.on("drawstart", () => {
             vector.getSource()?.clear();
-            console.log("drawstart");
         });
 
         const drawEnd = drawInteraction.on("drawend", (e) => {
@@ -109,7 +108,6 @@ function ExtentSelection(props: ExtentSelectionProps) {
             setExtent(newExtent);
             drawInteraction.abortDrawing();
             props.onBboxChange(newExtent);
-            console.log("drawend");
         });
     }
 
@@ -121,16 +119,11 @@ function ExtentSelection(props: ExtentSelectionProps) {
         }
     }, [props.isVisible]);
 
-    useEffect(() => {
-        console.log("useEffect extent: ", !extent);
-    }, [extent]);
-
-    useEffect(() => {
-        if (props.dialogClosed) {
-            console.log("dialog was closed before");
-            drawBox();
-        }
-    }, [props.dialogClosed]);
+    // useEffect(() => {
+    //     if (props.dialogClosed) {
+    //         drawBox();
+    //     }
+    // }, [props.dialogClosed]);
 
     return (
         <>
@@ -239,7 +232,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     }, [step]);
 
     useEffect(() => {
-        console.log("value useeffect: ", value);
         if (value.length > 0) {
             setNextButtonDisabled(false);
         }

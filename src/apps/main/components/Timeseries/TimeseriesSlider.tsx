@@ -27,7 +27,7 @@ export function TimeseriesSlider({ jobs, jobResults, eventListener }: Timeseries
                             defaultValue={[0]}
                             onValueChangeEnd={(val) => {
                                 console.log("onChangeEnd" + val.value);
-                                eventListener.emit("selectedJobResult", val.value[0]!);
+                                //eventListener.emit("selectedJobResult", val.value[0]!);
                             }
                             }
                         >
