@@ -192,7 +192,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             console.error(error);
         }
     };
-    
+
     const handleExitClick = () => {
         setStep(0);
         setName("");
@@ -222,12 +222,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         });
     };
 
-    const checkValue = () => {
-        if (step == 0 && value.length > 0) {
-            setNextButtonDisabled(false);
-        }
-    };
-
 
     useEffect(() => {
         if (name != "" && description != "") {
@@ -237,6 +231,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             setNextButtonDisabled(true);
         }
     }, [name, description]);
+
+    useEffect(() => {
+        if (step == 1 && value.length > 0) {
+            setNextButtonDisabled(false);
+        }
+    }, [step]);
 
     useEffect(() => {
         console.log("value useeffect: ", value);
@@ -336,13 +336,14 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
         },
         {
             title: "Extent Selection",
-            description: <ExtentSelection
-                isVisible={step == 2}
-                dialogClosed={expandDialogClosed}
-                onBboxChange={(ext) => {
-                    //setExtent(ext);
-                    setNextButtonDisabled(!ext);
-                }} />,
+            description:
+                <ExtentSelection
+                    isVisible={step == 2}
+                    dialogClosed={expandDialogClosed}
+                    onBboxChange={(ext) => {
+                        //setExtent(ext);
+                        setNextButtonDisabled(!ext);
+                    }} />,
         },
         {
             title: "Check Data",
@@ -439,7 +440,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                 color="black"
                                                 border="1px solid #2C7D75"
                                                 _hover={{ bg: "teal.50" }}
-                                                onClick={() => { setNextButtonDisabled(false); console.log(step);}}>
+                                                onClick={() => { setNextButtonDisabled(false); }}>
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
@@ -450,7 +451,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
                                                     border="1px solid #2C7D75"
                                                     _hover={{ bg: "teal.50" }}
                                                     disabled={nextButtonDisabled}
-                                                    onClick={() => { setNextButtonDisabled(true); checkValue(); console.log(step);}}>
+                                                    onClick={() => { setNextButtonDisabled(true); }}>
                                                     Next
                                                 </Button>
                                             </Steps.NextTrigger>
