@@ -27,10 +27,10 @@ const NAV_ITEMS: Array<NavItem> = [
         ],
         href: "/sites",
     },
-    {
-        label: "Data Inventory",
-        href: "/dataInventory",
-    },
+    // {
+    //     label: "Data Inventory",
+    //     href: "/dataInventory",
+    // },
     {
         label: "Documentation",
         href: "/documentation",

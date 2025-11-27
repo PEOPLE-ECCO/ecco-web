@@ -43,7 +43,7 @@ export function DownloadAllButton({
                 icon={<LuDownload />}
                 label="Download all results"
                 tooltip="Download all available timeseries results"
-                disabled={false}
+                disabled={true}
                 onClick={onDownloadAll}
             />
         

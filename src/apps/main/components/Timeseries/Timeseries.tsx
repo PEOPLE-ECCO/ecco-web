@@ -499,6 +499,7 @@ export function TimeseriesItem({ timeseries, eventListener, jobResults }: Timese
                                                                                                 <Dialog.Root size="xl" scrollBehavior="inside">
                                                                                                     <Dialog.Trigger asChild>
                                                                                                         <Button
+                                                                                                            disabled
                                                                                                             color="black"
                                                                                                             _hover={{ bg: "teal.50" }}
                                                                                                             size="xs"
@@ -580,7 +581,7 @@ function MenuContent({ ts, el }: MenuContentProps) {
     return (
         <>
             <Menu.Root>
-                <Menu.Trigger asChild>
+                <Menu.Trigger disabled asChild>
                     <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
                         <Ellipsis />
                     </IconButton>
