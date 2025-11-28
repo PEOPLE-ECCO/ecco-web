@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 import { AuthService } from "@open-pioneer/authentication";
-import { ServiceOptions} from "@open-pioneer/runtime";
-import { Interceptor, BeforeRequestParams} from "@open-pioneer/http";
+import { ServiceOptions } from "@open-pioneer/runtime";
+import { Interceptor, BeforeRequestParams } from "@open-pioneer/http";
 
 interface References {
     authService: AuthService;
@@ -31,6 +31,10 @@ export class TokenInterceptor implements Interceptor {
 import { MapConfig, MapConfigProvider, SimpleLayer } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
+import ImageTile from "ol/source/ImageTile";
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+import GeoJSON from "ol/format/GeoJSON";
 
 export const MAP_ID = "main";
 export class MainMapProvider implements MapConfigProvider {
@@ -40,7 +44,7 @@ export class MainMapProvider implements MapConfigProvider {
         return {
             initialView: {
                 kind: "position",
-                center: { x: 850000, y: 6793120},
+                center: { x: 850000, y: 6793120 },
                 zoom: 10
             },
             projection: "EPSG:3857",
@@ -52,10 +56,19 @@ export class MainMapProvider implements MapConfigProvider {
                         properties: { title: "OSM" }
                     }),
                     isBaseLayer: true
+                }),
+                new SimpleLayer({
+                    title: "SatelliteImage",
+                    olLayer: new TileLayer({
+                        source: new ImageTile({
+                            url: "https://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}"
+                        }),
+                    }),
+                    isBaseLayer: true
                 })
             ]
         };
-    }    
+    }
 }
 
 export const MAP_BOX = "boxselection";
@@ -66,7 +79,7 @@ export class BoxMapProvider implements MapConfigProvider {
         return {
             initialView: {
                 kind: "position",
-                center: { x: 850000, y: 6793120},
+                center: { x: 850000, y: 6793120 },
                 zoom: 10
             },
             projection: "EPSG:3857",
@@ -81,5 +94,33 @@ export class BoxMapProvider implements MapConfigProvider {
                 })
             ]
         };
-    }    
+    }
+}
+
+
+
+export const MAP_SiteView = "siteview";
+export class SiteViewMapProvider implements MapConfigProvider {
+    mapId = MAP_SiteView;
+
+    async getMapConfig(): Promise<MapConfig> {
+        return {
+            initialView: {
+                kind: "position",
+                center: { x: 850000, y: 6793120 },
+                zoom: 1
+            },
+            projection: "EPSG:3857",
+            layers: [
+                new SimpleLayer({
+                    title: "OpenStreetMap",
+                    olLayer: new TileLayer({
+                        source: new OSM(),
+                        properties: { title: "OSM" }
+                    }),
+                    isBaseLayer: true
+                }),
+              ]
+        };
+    }
 }
