@@ -153,7 +153,7 @@ export function SiteDetails() {
         const layer = new SimpleLayer({
             id: "current",
             title: "current",
-            olLayer: new WebGLTileLayer({
+            olLayer: new TileLayer({
                 source: image,
                 style: style
             }),
