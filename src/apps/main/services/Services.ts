@@ -4,7 +4,7 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job, JobParameters, JobResult, Timeseries } from "../components/definitions";
+import { Job, JobParameters, JobResult, Timeseries, TimeseriesImpl } from "../components/definitions";
 import { useState } from "react";
 
 export const useServices = () => {
@@ -41,7 +41,13 @@ export const useServices = () => {
         const responseData = await response.json();
 
         if (responseData) {
-            return responseData;
+            const raw = [];
+            for (const obj of responseData) {
+                raw.push(
+                    new TimeseriesImpl(obj, httpService)
+                );
+            }
+            return raw;
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
@@ -116,63 +122,5 @@ export const useServices = () => {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
-
-    const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string): Promise<Job[]> => {
-        const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + timeseries_id + "/jobs/";
-        const response = await httpService.fetch(url);
-        const responseData = await response.json();
-
-        if (responseData) {
-            for (const job of responseData) {
-                job.id = "" + job.id;
-            }
-            return responseData;
-        } else {
-            throw new Error("Unexpected response: " + JSON.stringify(responseData));
-        }
-    };
-
-    const getJobResult = async (job: Job): Promise<JobResult[]> => {
-        console.log("getJobResult for job: " + job.id);
-
-        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/results/";
-        const response = await httpService.fetch(url);
-
-        if (response.status != 200) {
-            console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
-            return [];
-        } else {
-            const responseData = await response.json();
-            if (responseData) {
-                for (const res of responseData) {
-                    res.id = res.job;
-                    res.name = res.filename;
-                    res.visible = true;
-                }
-                return responseData;
-
-            } else {
-                throw new Error("Unexpected response: " + JSON.stringify(responseData));
-            }
-        }
-    };
-
-    const getJobLog = async (job: Job) => {
-        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + job.id + "/log/";
-        const response = await httpService.fetch(url);
-
-        if (response.status != 200) {
-            console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
-            return null;
-        } else {
-            const responseData = await response.json();
-            if (responseData) {
-                return responseData;
-            } else {
-                throw new Error("Unexpected response: " + JSON.stringify(responseData));
-            }
-        }
-    };
-
-    return { getUser, getScenarios, getTimeseries, getProcesses, getJobsByTimeseriesId, getJobResult, getJobLog, createTimeseries, createJob };
+    return { getUser, getScenarios, getTimeseries, getProcesses, createTimeseries, createJob };
 };

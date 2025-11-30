@@ -36,6 +36,7 @@ import { Job, JobResult, Timeseries } from "../../../components/definitions";
 import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
 import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
 import { TimeseriesSlider } from "../../../components/Timeseries/TimeseriesSlider";
+import WebGLTileLayer from "ol/layer/WebGLTile.js";
 
 
 export interface Events {
@@ -45,14 +46,15 @@ export interface Events {
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
 const _proj32631 = new Projection({ code: "EPSG:32631" });
+const _proj32648 = new Projection({ code: "EPSG:32648" });
+const _proj32636 = new Projection({ code: "EPSG:32636" });
 
 export function SiteDetails() {
     const { id } = useParams();
-    const { getTimeseries, getJobsByTimeseriesId, getJobResult } = useServices();
+    const { getTimeseries } = useServices();
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [jobs, setJobs] = useState<Job[]>();
-    const [jobResults, setJobResults] = useState<JobResult[]>([]);
     const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
     const [viewableJobResultsSteps, setViewableJobResultsSteps] = useState<number[]>([]);
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
@@ -81,23 +83,19 @@ export function SiteDetails() {
     );
 
     useEffect(() => {
+        const fetchTimeseries = async () => {
+            if (!id)
+                return;
+            try {
+                const data = await getTimeseries(id);
+                setTimeseries(data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
         fetchTimeseries();
     }, []);
-
-    useEffect(() => {
-        fetchJobs();
-        //setActiveSliderResult(5);
-    }, [selectedTimeseries]);
-
-    // useEffect(() => {
-    //     fetchJobs();
-    // }, [selectedTimeseries?.jobs?.length]); // should react on jobs length change selectedTimeseries?.jobs.length
-
-    useEffect(() => {
-        if (jobResults.length == 0) {
-            return;
-        };
-    }, [jobResults]);
 
     useEffect(() => {
         showSelectedJobResult(0);
@@ -108,58 +106,6 @@ export function SiteDetails() {
         setViewableJobResultsSteps(currentSliderMarks);
     }, [viewableJobResults]);
 
-
-    const fetchTimeseries = async () => {
-        if (!id)
-            return;
-        try {
-            const data = await getTimeseries(id);
-            setTimeseries(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const fetchJobs = async () => {
-        if (!selectedTimeseries) return;
-        try {
-            const jobs = await getJobsByTimeseriesId(id!, selectedTimeseries.id!);
-            selectedTimeseries.jobs = jobs;
-            selectedTimeseries.children = selectedTimeseries.jobs;
-
-            for (const ts of timeseries!) {
-                if (ts.id === selectedTimeseries.id) {
-                    ts.jobs = jobs;
-                }
-            }
-            setJobs(jobs);
-            await fetchResult(jobs);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    async function fetchResult(newjobs: Job[]) {
-        if (!newjobs) return;
-        const fetchedJobs = [];
-        const fetchedJobResults = [];
-        for (const job of newjobs!) {
-            const cat = await getJobResult(job);
-            if (cat) {
-                // Catalog might not be ready yet (e.g. because processing is still ongoing)
-                job.result = cat;
-                job.children = cat;
-                fetchedJobs.push(job);
-                for (const result of cat) {
-                    fetchedJobResults.push(result);
-                }
-            }
-        }
-        setViewableJobResults(fetchedJobResults);
-        setJobResults(fetchedJobResults);
-        setJobs(fetchedJobs);
-    }
-
     async function remove_current_item(id: string) {
         const map = await mapService.expectMapModel(MAP_ID);
         map.layers.removeLayerById(id);
@@ -167,20 +113,36 @@ export function SiteDetails() {
     }
 
     async function showSelectedJobResult(id: number) {
+        console.log("TODO: showSelectedJobResult");
+        return;
         if (jobResults.length == 0 || viewableJobResults == undefined) {
             return;
         }
         const jobResult = viewableJobResults[id]!;
-
         const map = await mapService.expectMapModel(MAP_ID);
 
         remove_current_item(activeSliderResult.toString());
 
         const google = new Projection({ code: "EPSG:3857" });
-        const stacproj = new Projection({ code: "EPSG:32631" });
-        // const stacproj = new Projection({ code: "EPSG:4326" });
+
+        const ndvi = {
+            color: [
+                "interpolate",
+                ["linear"],
+                ["band", 1],
+                // color ramp for NDVI values, ranging from -1 to 1
+                0, // NODATA Value is represented as 0 here
+                [52, 52, 52, 0],
+                0.000001,
+                [255, 255, 255, 1],
+                0.58,  // For R80P this value needs to be different.
+                [0, 0, 0, 1],
+            ],
+        };
 
         const image = new GeoTIFF({
+            normalize: false,
+            interpolate: false,
             sources: [
                 {
                     url: jobResult.href,
@@ -188,11 +150,17 @@ export function SiteDetails() {
             ],
         });
 
+        // Read layer from actual image
+        //const stacproj = new Projection({ code: "EPSG:32636" });
+        const stacproj = new Projection({ code: "EPSG:32648" });
+        //const stacproj = new Projection({ code: "EPSG:4326" });
+
         const layer = new SimpleLayer({
             id: id.toString(),
             title: "current",
             olLayer: new TileLayer({
                 source: image,
+                style: ndvi
             }),
         });
         map.layers.addLayer(layer);
@@ -204,8 +172,7 @@ export function SiteDetails() {
                 [
                     new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
                     new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-                ],
-                { maxZoom: 11 }
+                ]
             );
         }
     }
@@ -214,7 +181,7 @@ export function SiteDetails() {
     return (
         <Flex>
             <Box width="450px" p="2">
-                <TimeseriesItem timeseries={timeseries} eventListener={emitter} jobResults={jobResults} />
+                <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
             </Box>
 
             <Box h="88vh" flexGrow="1" p="2">
@@ -239,7 +206,7 @@ export function SiteDetails() {
                                 zIndex="10"
                                 pointerEvents="auto"
                             >
-                                {jobs && viewableJobResults.length > 0 && (
+                                {false && jobs && viewableJobResults.length > 0 && (
                                     <Card.Root w="100%" padding={4}>
                                         <Card.Body>
                                             <Center w="100%">

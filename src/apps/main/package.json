@@ -17,6 +17,7 @@
         "@open-pioneer/notifier": "catalog:",
         "@open-pioneer/overview-map": "catalog:",
         "@open-pioneer/runtime": "catalog:",
+        "@open-pioneer/reactivity": "catalog:",
         "@open-pioneer/scale-bar": "catalog:",
         "@open-pioneer/scale-viewer": "catalog:",
         "lucide-react": "0.488.0",

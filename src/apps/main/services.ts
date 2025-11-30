@@ -31,6 +31,8 @@ export class TokenInterceptor implements Interceptor {
 import { MapConfig, MapConfigProvider, SimpleLayer } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
+import WebGLTileLayer from "ol/layer/WebGLTile";
+import { GeoTIFF } from "ol/source";
 
 export const MAP_ID = "main";
 export class MainMapProvider implements MapConfigProvider {
@@ -52,7 +54,26 @@ export class MainMapProvider implements MapConfigProvider {
                         properties: { title: "OSM" }
                     }),
                     isBaseLayer: true
-                })
+                }),
+                /*
+                new SimpleLayer({
+                    id: "right",
+                    title: "Mean Temperature (2000-01)",
+                    olLayer: new WebGLTileLayer({
+                        source: new GeoTIFF({
+                            normalize: false,
+                            sources: [
+                                {
+                                    url: "https://s3.people-ecco.dev.52north.org/original-anteater//tmp/52_North_Examples/Vietnam/deltaIR_NBR.cog.tif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=GKcee6e50255a82b471f712fea%2F20251126%2Fgarage%2Fs3%2Faws4_request&X-Amz-Date=20251126T174505Z&X-Amz-Expires=7200&X-Amz-SignedHeaders=host&X-Amz-Signature=e12080ddd539fbf97e4dcdef889d44e793eaeac7087e870e58ddc16917504660",
+                                    nodata: -9999
+                                }
+                            ]
+                        }),
+                        properties: { title: "Mean Temperature (2000-01)" }
+                    }),
+                    isBaseLayer: false
+                }),
+                */
             ]
         };
     }    

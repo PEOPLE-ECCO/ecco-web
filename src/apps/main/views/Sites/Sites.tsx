@@ -15,6 +15,9 @@ register(proj4);
 fromEPSGCode("EPSG:32631");
 fromEPSGCode("EPSG:3857");
 fromEPSGCode("EPSG:32635");
+fromEPSGCode("EPSG:32648");
+fromEPSGCode("EPSG:25830");
+fromEPSGCode("EPSG:32636");
 
 
 export const Sites: FC = () => {

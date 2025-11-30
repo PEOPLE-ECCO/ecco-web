@@ -230,6 +230,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             setNextButtonDisabled(false);
         }
     }, [step]);
+    
 
     useEffect(() => {
         if (value.length > 0) {

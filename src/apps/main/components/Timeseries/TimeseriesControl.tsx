@@ -3,7 +3,6 @@
 
 import { Card, Flex, HStack } from "@chakra-ui/react";
 import { TimeseriesIcons } from "./TimeseriesIcons";
-import { TimeseriesActions } from "./TimeseriesActions";
 import { Timeseries } from "../definitions";
 
 interface TimeseriesControlProps {
