@@ -214,7 +214,7 @@ function MenuContent({ ts }: MenuContentProps) {
     return (
         <>
             <Menu.Root>
-                <Menu.Trigger asChild>
+                <Menu.Trigger disabled asChild>
                     <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
                         <Ellipsis />
                     </IconButton>

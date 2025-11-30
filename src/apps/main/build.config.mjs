@@ -17,6 +17,9 @@ export default defineBuildConfig({
         },
         BoxMapProvider: {
             provides: "map.MapConfigProvider"
+        },
+        SiteViewMapProvider: {
+            provides: "map.MapConfigProvider"
         }
     },
     ui: {
