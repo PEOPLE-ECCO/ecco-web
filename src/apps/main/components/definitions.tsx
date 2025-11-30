@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { computed, effect, reactiveArray, ReactiveArray, ReactiveMap, reactiveMap, ReadonlyReactive } from "@conterra/reactivity-core";
+import { computed, effect, Reactive, reactive, reactiveArray, ReactiveArray, ReactiveMap, reactiveMap, ReadonlyReactive } from "@conterra/reactivity-core";
 import { HttpService } from "@open-pioneer/http";
 
 export interface Timeseries {
@@ -238,7 +238,7 @@ export class JobImpl implements Job {
                     if (response) {
                         for (const res of response) {
                             // Format to JobResponse
-                            this.#results.push(res);
+                            this.#results.push(new JobResultData(res));
                         }
                     } else {
                         throw new Error("Unexpected response: " + JSON.stringify(response));
@@ -261,7 +261,7 @@ export class JobImpl implements Job {
             .then(response => {
                 if (response) {
                     //TODO: check if this is correct
-                    this.#logs.concat(Array<LogLine> (response).slice(this.#logs.length));
+                    this.#logs.concat(Array<LogLine>(response).slice(this.#logs.length));
                 } else {
                     throw new Error("Unexpected response: " + JSON.stringify(response));
                 }
@@ -286,14 +286,101 @@ export interface Usage {
     sentinelhub: UnitValue
 }
 
-export interface JobResult {
-    name: string
-    filename: string
-    href: string
-    job: string
-    mime: string
-    type: string
+interface RestJobResult {
+    readonly name: string
+    readonly filename: string
+    readonly href: string
+    readonly job: string
+    readonly mime: string
+    readonly type: string
+    readonly epsg: string
+    readonly style: string
 }
+
+export interface JobResult extends RestJobResult {
+    visible: Reactive<boolean>
+}
+
+class JobResultData implements JobResult {
+    // Private class fields (prefixed with #) for all variables
+    #filename: string;
+    #href: string;
+    #job: string;
+    #mime: string;
+    #type: string;
+    #epsg: string;
+    #style: string;
+    #visible: Reactive<boolean>;
+    #name: ReadonlyReactive<string>;
+
+    /**
+     * @param name A human-readable name for the result.
+     * @param filename The local or server filename of the result.
+     * @param href The URL/link to access the result data.
+     * @param job The ID of the job that produced this result.
+     * @param mime The MIME type of the result file (e.g., 'application/json', 'image/png').
+     * @param type The type of the result object.
+     */
+    constructor(
+        payload: RestJobResult
+    ) {
+        this.#filename = payload.filename;
+        this.#href = payload.href;
+        this.#job = payload.job;
+        this.#mime = payload.mime;
+        this.#type = payload.type;
+        this.#epsg = payload.epsg;
+        this.#style = payload.style;
+
+        this.#visible = reactive(false);
+
+        this.#name = computed(() => {
+            return this.#filename.split("/").slice(-1)[0]!;
+        });
+    }
+
+    // Public getters
+    public get name(): string {
+        return this.#name.value;
+    }
+
+    public get filename(): string {
+        return this.#filename;
+    }
+
+    public get href(): string {
+        return this.#href;
+    }
+
+    public get mime(): string {
+        return this.#mime;
+    }
+
+    public get type(): string {
+        return this.#type;
+    }
+
+    public get job(): string {
+        return this.#job;
+    }
+
+    public get visible(): Reactive<boolean> {
+        return this.#visible;
+    }
+
+    public set visible(state: boolean) {
+        this.#visible.value = state;
+    }
+
+    public get epsg(): string {
+        return this.#epsg;
+    }
+
+    public get style(): string {
+        return this.#style;
+    }
+}
+
 
 export interface STACProperties {
 

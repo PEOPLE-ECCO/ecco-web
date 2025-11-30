@@ -8,10 +8,7 @@ import {
     Card,
     Center,
     Flex,
-    Slider,
-    Icon,
-    Circle,
-    Text
+    Slider
 } from "@chakra-ui/react";
 
 import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
@@ -30,12 +27,10 @@ import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
-import { MapSwitcherControls } from "../../../components/Map/MapSwitcherControls";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { Job, JobResult, Timeseries } from "../../../components/definitions";
-import { TimeseriesControl } from "../../../components/Timeseries/TimeseriesControl";
-import { TimeseriesIcons } from "../../../components/Timeseries/TimeseriesIcons";
-import { TimeseriesSlider } from "../../../components/Timeseries/TimeseriesSlider";
+import { useReactiveSnapshot } from "@open-pioneer/reactivity";
+import { computed, effect, Reactive, reactive, reactiveArray, ReactiveArray, ReactiveMap, reactiveMap, ReadonlyReactive, watch, watchValue } from "@conterra/reactivity-core";
 import WebGLTileLayer from "ol/layer/WebGLTile.js";
 
 
@@ -54,8 +49,7 @@ export function SiteDetails() {
     const { getTimeseries } = useServices();
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
-    const [jobs, setJobs] = useState<Job[]>();
-    const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
+    const [viewableJobResults, setViewableJobResults] = useState<ReactiveArray<JobResult>>(reactiveArray());
     const [viewableJobResultsSteps, setViewableJobResultsSteps] = useState<number[]>([]);
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
@@ -67,9 +61,12 @@ export function SiteDetails() {
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
 
+    /*
     emitter.on("toggleJobWithId",
         (value: string) => {
             const currentSliderResults = [];
+            console.log("toggleJobWithId");
+            console.log(value);
             for (const jobResult of jobResults!) {
                 if (jobResult.filename == value) {
                     jobResult.visible = !jobResult.visible;
@@ -81,6 +78,7 @@ export function SiteDetails() {
             setViewableJobResults(currentSliderResults);
         }
     );
+    */
 
     useEffect(() => {
         const fetchTimeseries = async () => {
@@ -98,48 +96,47 @@ export function SiteDetails() {
     }, []);
 
     useEffect(() => {
-        showSelectedJobResult(0);
+        console.log("    useEffect(() => {");
         const currentSliderMarks = [];
         for (let i = 0; i in viewableJobResults; i++) {
             currentSliderMarks.push(i);
         }
         setViewableJobResultsSteps(currentSliderMarks);
+        showSelectedJobResult(0);
+        setActiveSliderResult(0);
     }, [viewableJobResults]);
 
-    async function remove_current_item(id: string) {
+    async function remove_current_item() {
+        console.log("removing");
+        console.log(id);
         const map = await mapService.expectMapModel(MAP_ID);
-        map.layers.removeLayerById(id);
+        map.layers.removeLayerById("current");
         map.removeHighlights();
     }
 
+    useReactiveSnapshot(
+        () => {
+            for (const job of selectedTimeseries?.jobs ?? []) {
+                setViewableJobResults(job.results.filter((
+                    (val, i) => val.visible.value
+                ))
+                );
+            };
+            console.log("shotsnap");
+        }, [selectedTimeseries, selectedTimeseries?.jobs]
+    );
+
     async function showSelectedJobResult(id: number) {
-        console.log("TODO: showSelectedJobResult");
-        return;
-        if (jobResults.length == 0 || viewableJobResults == undefined) {
+        const jobResult = viewableJobResults.get(id);
+        if (!jobResult) {
+            console.log("result not yet available");
             return;
         }
-        const jobResult = viewableJobResults[id]!;
-        const map = await mapService.expectMapModel(MAP_ID);
 
-        remove_current_item(activeSliderResult.toString());
+        const map = await mapService.expectMapModel(MAP_ID);
+        await remove_current_item();
 
         const google = new Projection({ code: "EPSG:3857" });
-
-        const ndvi = {
-            color: [
-                "interpolate",
-                ["linear"],
-                ["band", 1],
-                // color ramp for NDVI values, ranging from -1 to 1
-                0, // NODATA Value is represented as 0 here
-                [52, 52, 52, 0],
-                0.000001,
-                [255, 255, 255, 1],
-                0.58,  // For R80P this value needs to be different.
-                [0, 0, 0, 1],
-            ],
-        };
-
         const image = new GeoTIFF({
             normalize: false,
             interpolate: false,
@@ -150,23 +147,25 @@ export function SiteDetails() {
             ],
         });
 
-        // Read layer from actual image
-        //const stacproj = new Projection({ code: "EPSG:32636" });
-        const stacproj = new Projection({ code: "EPSG:32648" });
-        //const stacproj = new Projection({ code: "EPSG:4326" });
+        //TODO: this is really really bad
+        const style = JSON.parse(jobResult.style);
 
         const layer = new SimpleLayer({
-            id: id.toString(),
+            id: "current",
             title: "current",
-            olLayer: new TileLayer({
+            olLayer: new WebGLTileLayer({
                 source: image,
-                style: ndvi
+                style: style
             }),
         });
         map.layers.addLayer(layer);
+        console.log("map.layers.addLayer(" + id.toString());
+
 
         // const bbox = catalog.bbox;
         if (shouldHighlightAndZoom) {
+            console.log(jobResult.epsg);
+            const stacproj = new Projection({ code: jobResult.epsg });
             const bbox = (await image.getView()).extent;
             map.highlightAndZoom(
                 [
@@ -206,7 +205,7 @@ export function SiteDetails() {
                                 zIndex="10"
                                 pointerEvents="auto"
                             >
-                                {false && jobs && viewableJobResults.length > 0 && (
+                                {viewableJobResults.length > 1 && (
                                     <Card.Root w="100%" padding={4}>
                                         <Card.Body>
                                             <Center w="100%">
@@ -218,7 +217,8 @@ export function SiteDetails() {
                                                     max={viewableJobResults.length - 1}
                                                     defaultValue={[0]}
                                                     onValueChangeEnd={(val) => {
-                                                        console.log("onChangeEnd " + val.value);
+                                                        console.log("onValueChangeEnd");
+                                                        console.log(val.value[0]!);
                                                         showSelectedJobResult(val.value[0]!);
                                                         setActiveSliderResult(val.value[0]!);
                                                     }}
@@ -227,7 +227,7 @@ export function SiteDetails() {
                                                         {viewableJobResults.map((jobResult, index) => (
                                                             <>
                                                                 <Slider.Marker key={index} value={index} pt={12} w={"100%"}>
-                                                                    {jobResult.name.split("/")[2]}
+                                                                    {jobResult.name}
                                                                 </Slider.Marker>
                                                                 <Slider.Marks marks={viewableJobResultsSteps} pt="-10" />
                                                             </>

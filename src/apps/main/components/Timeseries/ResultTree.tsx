@@ -37,15 +37,10 @@ interface ResultTreeProps {
     eventListener: EventEmitter<Events>
 }
 
-interface Result {
-    name: string
-    visible: boolean
-}
-
 interface ResultType {
     name: string
     type: string
-    children?: Result[]
+    children?: JobResult[]
 }
 
 export interface TreeNode {
@@ -64,13 +59,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                     {
                         name: type,
                         type: type,
-                        children:
-                            results.map(r => {
-                                return {
-                                    name: r.filename,
-                                    visible: true,
-                                };
-                            })
+                        children: results
                     }
                 );
             };
@@ -144,12 +133,12 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                         <>
                                             <TreeView.ItemText>
                                                 <VStack>
-                                                    {node.name.split("/").slice(-1)[0]}
+                                                    {node.name}
                                                     <HStack>
                                                         <TreeView.NodeCheckbox pl="2" aria-label="check node">
                                                             <Switch.Root colorPalette="teal" size="md" pr="4"
-                                                                checked={nodeState.checked === false}
-                                                                onCheckedChange={() => { eventListener.emit("toggleJobWithId", node.filename); }}>
+                                                                checked={nodeState.checked === true}
+                                                                onCheckedChange={() => { node.visible.value = !node.visible.value; }}>
                                                                 <Switch.HiddenInput />
                                                                 <Switch.Label />
                                                                 <Switch.Control>
@@ -183,6 +172,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                                     size="xs"
                                                                     variant="ghost"
                                                                     onClick={() => { console.log("TODO: zoom to layer"); }}
+                                                                    disabled={true}
                                                                 >
                                                                     <LuEye />
                                                                 </Button>

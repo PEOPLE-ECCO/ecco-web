@@ -186,7 +186,7 @@ export function JobTree({ jobs, eventListener }: JobTreeProps) {
                                                 <TreeView.NodeCheckbox pl="2" aria-label="check node">
                                                     <Switch.Root colorPalette="teal" size="md" pr="4"
                                                         checked={nodeState.checked === false}
-                                                        onCheckedChange={() => { eventListener.emit("toggleJobWithId", node.filename); }}>
+                                                        onCheckedChange={() => { eventListener.emit("toggleJobWithId", node); }}>
                                                         <Switch.HiddenInput />
                                                         <Switch.Label />
                                                         <Switch.Control>

@@ -9,7 +9,7 @@ export const Documentation: FC = () => {
     return (
         <>
             <object
-                data="https://www.uni-muenster.de/imperia/md/content/wwu/ab_uni/ab2013/ausgabe39/beitrag01.pdf"
+                data="https://files.specki.xyz/hdZCjTNh/PEOPLE-ECCO%20-%20D4.1%20-%20Technical%20Specifications%20V0.2.docx.pdf"
                 type="application/pdf"
                 width="100%"
                 height="800"

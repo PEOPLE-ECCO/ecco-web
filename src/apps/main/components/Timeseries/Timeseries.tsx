@@ -13,21 +13,11 @@ import {
     Accordion,
     Portal,
     Collapsible,
-    ScrollArea,
-    Dialog,
-    CloseButton,
-    Switch,
-    createTreeCollection,
-    TreeView,
-    Spinner,
-    Checkbox,
-    Image
-} from "@chakra-ui/react";
-import { Tooltip } from "../../components/tooltip";
+    ScrollArea} from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuChevronDown, LuDownload, LuEye, LuFolder, LuMap } from "react-icons/lu";
+import { LuChevronDown } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -35,12 +25,9 @@ import { useService } from "open-pioneer:react-hooks";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
-import { Job, JobResult, Timeseries, Node } from "../definitions";
+import { Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
-import { ViewDetails, ViewLog } from "./ViewJob";
 
-import { ReadonlyReactiveArray, watch } from "@conterra/reactivity-core";
-import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { JobTree } from "./JobTree";
 import { ResultTree } from "./ResultTree";
 
@@ -180,7 +167,6 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                         </Accordion.Item>
                                     ))}
                                 </Accordion.Root>
-
                                 <CreateTimeseries eventListener={eventListener} />
                             </Stack>
                         </Box>
