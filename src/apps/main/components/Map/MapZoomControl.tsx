@@ -1,15 +1,31 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from "@chakra-ui/react";
+import { Flex, Slider } from "@chakra-ui/react";
 import { ZoomIn, ZoomOut } from "@open-pioneer/map-navigation";
-import { MapAnchor } from "@open-pioneer/map";
+import { MapAnchor, MapRegistry, SimpleLayer } from "@open-pioneer/map";
+import { useService } from "open-pioneer:react-hooks";
+import { useEffect, useState } from "react";
 
 interface MapZoomControlsProps {
     mapId: string;
 }
 
 export const MapZoomControls = ({ mapId }: MapZoomControlsProps) => {
+    const mapService = useService<MapRegistry>("map.MapRegistry");
+
+    const [opacity, setOpacity] = useState<number>(100);
+    useEffect(() => {
+        const updateMap = async () => {
+            const map = await mapService.expectMapModel(mapId);
+            const layer = map.layers.getLayerById("current") as SimpleLayer;
+            if (layer) {
+                layer.olLayer.setOpacity(opacity / 100);
+            }
+        };
+        updateMap();
+    }, [mapId, opacity]);
+
     return (
         <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={40}>
             <Flex
@@ -23,6 +39,19 @@ export const MapZoomControls = ({ mapId }: MapZoomControlsProps) => {
             >
                 <ZoomIn mapId={mapId} />
                 <ZoomOut mapId={mapId} />
+
+                <Slider.Root width="200px"
+                    value={[opacity]}
+                    onValueChange={(e) => setOpacity(e.value[0]!)}
+                    onValueChangeEnd={(e) => setOpacity(e.value[0]!)}
+                >
+                    <Slider.Control>
+                        <Slider.Track>
+                            <Slider.Range />
+                        </Slider.Track>
+                        <Slider.Thumbs />
+                    </Slider.Control>
+                </Slider.Root>
             </Flex>
         </MapAnchor>
     );

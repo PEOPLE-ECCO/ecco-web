@@ -158,7 +158,9 @@ export function SiteDetails() {
                 style: style
             }),
         });
+        // layer.olLayer.setOpacity(0.5);
         map.layers.addLayer(layer);
+
         console.log("map.layers.addLayer(" + id.toString());
 
 
@@ -192,7 +194,7 @@ export function SiteDetails() {
                     <MapSidebarControls mapId={MAP_ID} />
                     <MapInfoControls mapId={MAP_ID} />
                     {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
-                    <MapZoomControls mapId={MAP_ID} />
+                    <MapZoomControls mapId={MAP_ID}/>
                     <Box>
                         {selectedTimeseries &&
                             <Box
