@@ -31,14 +31,25 @@ export class TokenInterceptor implements Interceptor {
 import { MapConfig, MapConfigProvider, SimpleLayer } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
-import WebGLTileLayer from "ol/layer/WebGLTile";
-import { GeoTIFF } from "ol/source";
+import WMTS, { optionsFromCapabilities } from "ol/source/WMTS.js";
+import WMTSCapabilities from "ol/format/WMTSCapabilities.js";
 
 export const MAP_ID = "main";
 export class MainMapProvider implements MapConfigProvider {
     mapId = MAP_ID;
 
     async getMapConfig(): Promise<MapConfig> {
+
+        const parser = new WMTSCapabilities();
+        const response = await fetch("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml");
+        const responseText = await response.text();
+
+        const result = parser.read(responseText);
+        const options = optionsFromCapabilities(result, {
+            layer: "World_Imagery",
+            matrixSet: "EPSG:3857",
+        });
+
         return {
             initialView: {
                 kind: "position",
@@ -54,6 +65,17 @@ export class MainMapProvider implements MapConfigProvider {
                         properties: { title: "OSM" }
                     }),
                     isBaseLayer: true
+                }),
+
+
+                new SimpleLayer({
+                    title: "SatelliteImage",
+                    olLayer: new TileLayer({
+                        opacity: 1,
+                        source: new WMTS(options!),
+                        maxZoom: 17
+                    }),
+                    isBaseLayer: true,
                 }),
                 /*
                 new SimpleLayer({
@@ -128,7 +150,7 @@ export class SiteViewMapProvider implements MapConfigProvider {
                     }),
                     isBaseLayer: true
                 }),
-              ]
+            ]
         };
     }
 }
