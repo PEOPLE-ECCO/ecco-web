@@ -13,7 +13,8 @@ import {
     Accordion,
     Portal,
     Collapsible,
-    ScrollArea} from "@chakra-ui/react";
+    ScrollArea
+} from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
@@ -108,8 +109,6 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                             <Text fontWeight="medium" pb="2">Description:</Text>
                                                             <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                                         </HStack>
-                                                        <CreateJob timeseries={ts} eventListener={eventListener} />
-                                                        <MenuContent ts={ts} el={eventListener} />
                                                         {false &&
                                                             <Collapsible.Root>
                                                                 <Flex pb="2" gap="1" justify="flex-start" direction="row">
@@ -128,6 +127,8 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                             </Collapsible.Indicator>
                                                                         </Button>
                                                                     </Collapsible.Trigger>
+                                                                    <CreateJob timeseries={ts} eventListener={eventListener} />
+                                                                    <MenuContent ts={ts} el={eventListener} />
                                                                 </Flex>
                                                                 <Collapsible.Content>
                                                                     <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
@@ -153,6 +154,8 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                         </Collapsible.Indicator>
                                                                     </Button>
                                                                 </Collapsible.Trigger>
+                                                                <CreateJob timeseries={ts} eventListener={eventListener} />
+                                                                <MenuContent ts={ts} el={eventListener} />
                                                             </Flex>
                                                             <Collapsible.Content>
                                                                 <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
@@ -161,7 +164,6 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                             </Collapsible.Content>
                                                         </Collapsible.Root>
                                                     </>
-
                                                 }
                                             </Accordion.ItemContent>
                                         </Accordion.Item>
