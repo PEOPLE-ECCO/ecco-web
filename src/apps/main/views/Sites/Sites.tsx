@@ -15,6 +15,8 @@ import { Projection } from "ol/proj";
 import { useService } from "open-pioneer:react-hooks";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
+import { MapZoomControls } from "../../components/Map/MapZoomControl";
+import { MapInfoControls } from "../../components/Map/MapInfoControls";
 
 
 register(proj4);
@@ -79,14 +81,6 @@ export const Sites: FC = () => {
 
     return (
         <>
-            {/* <GridItem colSpan={12} rowSpan={12} margin="2px" padding="2px">
-                <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(200px, 1fr))'>
-                    {sites && sites.map((site) =>
-                        <Site key={site.id} {...site} />
-                    )}
-                </SimpleGrid>
-            </GridItem> */}
-
             <Flex gap="4" p="4" direction="row">
                 <Box>
                     <Flex gap="4" direction="row" wrap="wrap" justify="center">
@@ -105,7 +99,10 @@ export const Sites: FC = () => {
                         mapId={MAP_SiteView}
                         role="siteview"
                         aria-label=""
-                    />
+                    >
+                        <MapInfoControls mapId={MAP_SiteView} />
+                        <MapZoomControls mapId={MAP_SiteView} />
+                    </MapContainer>
                 </Box>
             </Flex>
         </>
