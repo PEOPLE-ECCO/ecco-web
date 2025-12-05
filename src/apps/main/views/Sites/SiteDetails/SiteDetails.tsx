@@ -32,6 +32,7 @@ import { Job, JobResult, Timeseries } from "../../../components/definitions";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { computed, effect, Reactive, reactive, reactiveArray, ReactiveArray, ReactiveMap, reactiveMap, ReadonlyReactive, watch, watchValue } from "@conterra/reactivity-core";
 import WebGLTileLayer from "ol/layer/WebGLTile.js";
+import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
 
 
 export interface Events {
@@ -195,14 +196,15 @@ export function SiteDetails() {
                     <MapInfoControls mapId={MAP_ID} />
                     {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
                     <MapZoomControls mapId={MAP_ID}/>
+                    <MapOpacityControl mapId={MAP_ID}/>
                     <Box>
                         {selectedTimeseries &&
                             <Box
                                 position="absolute"
                                 bottom="3%"
-                                left="45%"
+                                left="40%"
                                 transform="translateX(-50%)"
-                                width="90%"
+                                width="80%"
                                 padding="4"
                                 zIndex="10"
                                 pointerEvents="auto"
@@ -214,7 +216,7 @@ export function SiteDetails() {
                                                 <Slider.Root
                                                     size="lg"
                                                     colorPalette={"teal"}
-                                                    w="90%"
+                                                    w="80%"
                                                     step={1}
                                                     max={viewableJobResults.length - 1}
                                                     defaultValue={[0]}
