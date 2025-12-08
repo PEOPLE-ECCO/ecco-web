@@ -9,6 +9,7 @@ import {
     Circle,
     Flex,
     Slider,
+    Tabs,
     Text,
     type StackProps,
 } from "@chakra-ui/react";
@@ -35,7 +36,8 @@ import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
 import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
 import { forwardRef, useRef } from "react";
-import { LuInfo, LuFolderTree } from "react-icons/lu";
+import { LuInfo, LuFolderTree, LuFolder, LuSquareCheck, LuUser, LuMap, LuUtensils, LuPenTool, LuRuler, LuDatabase } from "react-icons/lu";
+import { buffer } from "stream/consumers";
 
 
 export interface Events {
@@ -180,7 +182,8 @@ export function SiteDetails() {
                 [
                     new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
                     new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-                ]
+                ],
+                {viewPadding: { top: 50, bottom: 100 }}
             );
         }
     }
@@ -311,15 +314,47 @@ export function SiteDetails() {
             </Box>
             {infoViewOpen &&
                 <Box h="88vh" width="350px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
-                    <MapContainer
-                        mapId={MAP_ID}
-                        role="main"
-                        aria-label=""
-                    >
-                        <MapOpacityControl mapId={MAP_ID} />
-                        <MapSidebarControls mapId={MAP_ID} />
-
-                    </MapContainer>
+                    <Tabs.Root defaultValue="legend">
+                        <Tabs.List>
+                            <Tabs.Trigger value="legend">
+                                <LuMap />
+                                Legend
+                            </Tabs.Trigger>
+                            <Tabs.Trigger value="tools">
+                                <LuRuler />
+                                Tools
+                            </Tabs.Trigger>
+                            <Tabs.Trigger value="info">
+                                <LuDatabase />
+                                Info
+                            </Tabs.Trigger>
+                        </Tabs.List>
+                        <Tabs.Content value="legend">
+                            View Map Legend
+                            <Box pt="4" h="80vh">
+                                red = lower than 0
+                            </Box>
+                        </Tabs.Content>
+                        <Tabs.Content value="tools">
+                            Use Tools
+                            <Box pt="4" h="80vh">
+                                <MapContainer
+                                    mapId={MAP_ID}
+                                    role="main"
+                                    aria-label=""
+                                >
+                                    <MapOpacityControl mapId={MAP_ID} />
+                                    <MapSidebarControls mapId={MAP_ID} />
+                                </MapContainer>
+                            </Box>
+                        </Tabs.Content>
+                        <Tabs.Content value="info">
+                            View Data and Values
+                            <Box pt="4" h="80vh">
+                                Table with Pixelvalues, Metadata, ...
+                            </Box>
+                        </Tabs.Content>
+                    </Tabs.Root>
                 </Box>
             }
         </Flex>
