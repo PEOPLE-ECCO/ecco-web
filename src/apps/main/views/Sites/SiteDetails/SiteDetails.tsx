@@ -6,11 +6,10 @@ import { useEffect, useState } from "react";
 import {
     Box,
     Button,
-    Card,
-    Center,
+    Circle,
     Flex,
     Slider,
-    Stack,
+    Text,
     type StackProps,
 } from "@chakra-ui/react";
 
@@ -55,7 +54,6 @@ export function SiteDetails() {
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [viewableJobResults, setViewableJobResults] = useState<ReactiveArray<JobResult>>(reactiveArray());
-    const [viewableJobResultsSteps, setViewableJobResultsSteps] = useState<number[]>([]);
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
@@ -104,16 +102,13 @@ export function SiteDetails() {
     }, []);
 
     useEffect(() => {
-        console.log(selectedTimeseries?.jobs);
+        if (!selectedTimeseries) {
+            remove_current_item();
+        }
     }, [selectedTimeseries]);
 
     useEffect(() => {
         console.log("    useEffect(() => {");
-        const currentSliderMarks = [];
-        for (let i = 0; i in viewableJobResults; i++) {
-            currentSliderMarks.push(i);
-        }
-        setViewableJobResultsSteps(currentSliderMarks);
         showSelectedJobResult(0);
         setActiveSliderResult(0);
     }, [viewableJobResults]);
@@ -194,7 +189,7 @@ export function SiteDetails() {
     return (
         <Flex>
             {dataViewOpen &&
-                <Box width="450px">
+                <Box width="450px" p="2" bg="teal.50">
                     <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
                 </Box>
             }
@@ -213,11 +208,9 @@ export function SiteDetails() {
                             bottom="3%"
                             aria-label="Zoom controls"
                             direction="column"
-                            gap={1}
-                            padding={1}
                             colorPalette={"teal"}
                         >
-                            <Button onClick={() => { setInfoViewOpen(!infoViewOpen);}} >
+                            <Button onClick={() => { setInfoViewOpen(!infoViewOpen); }} >
                                 <LuInfo />
                             </Button>
                         </Flex>
@@ -228,63 +221,85 @@ export function SiteDetails() {
                             bottom="3%"
                             aria-label="Zoom controls"
                             direction="column"
-                            gap={1}
-                            padding={1}
                             colorPalette={"teal"}
                         >
-                            <Button onClick={() => { setDataViewOpen(!dataViewOpen);}} >
+                            <Button onClick={() => { setDataViewOpen(!dataViewOpen); }} >
                                 <LuFolderTree />
                             </Button>
                         </Flex>
                     </MapAnchor>
                     <Box>
-                        {selectedTimeseries &&
+                        {selectedTimeseries && viewableJobResults.length > 0 &&
                             <Box
                                 position="absolute"
-                                bottom="3%"
-                                left="40%"
+                                bottom="14"
+                                left="55%"
                                 transform="translateX(-50%)"
-                                width="80%"
-                                padding="4"
+                                width="90%"
                                 zIndex="10"
                                 pointerEvents="auto"
                             >
+                                {viewableJobResults.length == 1 && (
+                                    <Slider.Root
+                                        size="lg"
+                                        colorPalette="teal"
+                                        w="90%"
+                                        step={1}
+                                        max={viewableJobResults.length - 1}
+                                        defaultValue={[0]}
+                                        onValueChangeEnd={(val) => {
+                                            console.log("onValueChangeEnd");
+                                            console.log(val.value[0]!);
+                                            showSelectedJobResult(val.value[0]!);
+                                            setActiveSliderResult(val.value[0]!);
+                                        }}
+                                    >
+                                        <Slider.Control>
+                                            {viewableJobResults.map((jobResult, index) => (
+                                                <>
+                                                    <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
+                                                        <Circle h="3" w="3" bg="teal"></Circle>
+                                                        <Text>{jobResult.name}</Text>
+                                                    </Slider.Marker>
+                                                </>
+                                            ))}
+                                            <Slider.Track>
+                                                <Slider.Range />
+                                            </Slider.Track>
+                                            <SliderCircle />
+                                        </Slider.Control>
+                                    </Slider.Root>
+                                )}
                                 {viewableJobResults.length > 1 && (
-                                    <Card.Root w="100%" padding={4}>
-                                        <Card.Body>
-                                            <Center w="100%">
-                                                <Slider.Root
-                                                    size="lg"
-                                                    colorPalette={"teal"}
-                                                    w="80%"
-                                                    step={1}
-                                                    max={viewableJobResults.length - 1}
-                                                    defaultValue={[0]}
-                                                    onValueChangeEnd={(val) => {
-                                                        console.log("onValueChangeEnd");
-                                                        console.log(val.value[0]!);
-                                                        showSelectedJobResult(val.value[0]!);
-                                                        setActiveSliderResult(val.value[0]!);
-                                                    }}
-                                                >
-                                                    <Slider.Control>
-                                                        {viewableJobResults.map((jobResult, index) => (
-                                                            <>
-                                                                <Slider.Marker key={index} value={index} pt={12} w={"100%"}>
-                                                                    {jobResult.name}
-                                                                </Slider.Marker>
-                                                                <Slider.Marks marks={viewableJobResultsSteps} pt="-10" />
-                                                            </>
-                                                        ))}
-                                                        <Slider.Track >
-                                                            <Slider.Range />
-                                                        </Slider.Track>
-                                                        <SliderCircle />
-                                                    </Slider.Control>
-                                                </Slider.Root>
-                                            </Center>
-                                        </Card.Body>
-                                    </Card.Root>
+                                    <Slider.Root
+                                        size="lg"
+                                        colorPalette="teal"
+                                        w="90%"
+                                        step={1}
+                                        max={viewableJobResults.length - 1}
+                                        defaultValue={[0]}
+                                        onValueChangeEnd={(val) => {
+                                            console.log("onValueChangeEnd");
+                                            console.log(val.value[0]!);
+                                            showSelectedJobResult(val.value[0]!);
+                                            setActiveSliderResult(val.value[0]!);
+                                        }}
+                                    >
+                                        <Slider.Control>
+                                            {viewableJobResults.map((jobResult, index) => (
+                                                <>
+                                                    <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
+                                                        <Circle h="3" w="3" bg="teal"></Circle>
+                                                        <Text>{jobResult.name}</Text>
+                                                    </Slider.Marker>
+                                                </>
+                                            ))}
+                                            <Slider.Track bg="teal">
+                                                <Slider.Range bg="teal" />
+                                            </Slider.Track>
+                                            <SliderCircle />
+                                        </Slider.Control>
+                                    </Slider.Root>
                                 )}
                                 {/* <TimeseriesControl
                                     Timeseries={selectedTimeseries!}
@@ -295,7 +310,7 @@ export function SiteDetails() {
                 </MapContainer>
             </Box>
             {infoViewOpen &&
-                <Box h="88vh" width="350px" bg="white" p="4" borderRadius="md" boxShadow="sm">
+                <Box h="88vh" width="350px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                     <MapContainer
                         mapId={MAP_ID}
                         role="main"
