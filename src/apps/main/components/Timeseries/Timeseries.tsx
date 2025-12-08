@@ -46,7 +46,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
             return;
         }
-        viewDetailsDisabling(selectedTimeseries!);
+        viewResultsDisabling(selectedTimeseries!);
     }, [selectedTimeseries?.jobs]);
 
     const timeseriesSelection = (ts: Timeseries) => {
@@ -55,7 +55,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
         setSelectedTimeseries(ts);
     };
 
-    const viewDetailsDisabling = (ts: Timeseries) => {
+    const viewResultsDisabling = (ts: Timeseries) => {
         if (ts?.jobs?.length !== undefined) {
             if (selectedTimeseries?.jobs?.length !== 0) {
                 setViewResultsButtonDisabled(false);
@@ -85,7 +85,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
             <ScrollArea.Root maxW="md" h="86vh" variant="hover">
                 <ScrollArea.Viewport>
                     <ScrollArea.Content spaceY="4">
-                        <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
+                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                             <Stack gap="4">
                                 <Text fontWeight="700" fontSize={22}>Timeseries</Text>
                                 <Accordion.Root
@@ -137,7 +137,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                 </Collapsible.Content>
                                                             </Collapsible.Root>
                                                         }
-                                                        <Collapsible.Root>
+                                                        <Collapsible.Root defaultOpen>
                                                             <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                                 <Collapsible.Trigger>
                                                                     <Button

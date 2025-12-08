@@ -332,7 +332,7 @@ class JobResultData implements JobResult {
         this.#epsg = payload.epsg;
         this.#style = payload.style;
 
-        this.#visible = reactive(false);
+        this.#visible = reactive(true);
 
         this.#name = computed(() => {
             return this.#filename.split("/").slice(-1)[0]!;

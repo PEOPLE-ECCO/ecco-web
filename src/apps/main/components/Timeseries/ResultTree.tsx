@@ -11,24 +11,19 @@ import {
     Switch,
     createTreeCollection,
     TreeView,
-    Spinner,
     Image,
     VStack
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
-import { useState } from "react";
 import { LuDownload, LuEye, LuFolder, LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 
-import { Job, JobResult, Timeseries } from "../definitions";
+import { JobResult, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
-import { ViewDetails, ViewLog } from "./ViewJob";
 
-import { ReadonlyReactiveArray, watch } from "@conterra/reactivity-core";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
-import { time } from "console";
 
 
 
@@ -137,7 +132,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                     <HStack>
                                                         <TreeView.NodeCheckbox pl="2" aria-label="check node">
                                                             <Switch.Root colorPalette="teal" size="md" pr="4"
-                                                                checked={nodeState.checked === true}
+                                                                checked={nodeState.checked === false}
                                                                 onCheckedChange={() => { node.visible.value = !node.visible.value; }}>
                                                                 <Switch.HiddenInput />
                                                                 <Switch.Label />

@@ -38,19 +38,19 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
     );
 
     return (
-        <MapAnchor position="top-right" horizontalGap={5} verticalGap={5}>
+        <MapAnchor position="top-right" horizontalGap={8} verticalGap={0}>
             <Box
                 backgroundColor="white"
                 borderWidth="1px"
-                borderRadius="sm"
-                padding={2}
+                borderRadius="md"
+                padding="2"
                 boxShadow="sm"
                 role="top-right"
                 aria-label="Map sidebar controls"
             >
                 <Collapsible.Root defaultOpen>
                     <Collapsible.Trigger
-                        paddingY="3"
+                        paddingY="1"
                         display="flex"
                         gap="2"
                         alignItems="center"
@@ -67,7 +67,7 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
                     </Collapsible.Trigger>
                     <Collapsible.Content>
                         <OverviewMap mapId={mapId} olLayer={overviewMapLayer} ></OverviewMap>
-                        <Separator mt={2} colorPalette="teal" />
+                        <Separator mt={2} colorPalette="gray" />
                         <Field.Root>
                             <Field.Label mt={1}>
                                 <Text as="b">Select basemap:</Text>
