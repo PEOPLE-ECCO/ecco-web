@@ -5,13 +5,16 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import {
     Box,
+    Button,
     Card,
     Center,
     Flex,
-    Slider
+    Slider,
+    Stack,
+    type StackProps,
 } from "@chakra-ui/react";
 
-import { MapRegistry, MapContainer, SimpleLayer } from "@open-pioneer/map";
+import { MapRegistry, MapContainer, SimpleLayer, MapAnchor } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
 import { useService } from "open-pioneer:react-hooks";
 
@@ -28,11 +31,12 @@ import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { Job, JobResult, Timeseries } from "../../../components/definitions";
+import { JobResult, Timeseries } from "../../../components/definitions";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
-import { computed, effect, Reactive, reactive, reactiveArray, ReactiveArray, ReactiveMap, reactiveMap, ReadonlyReactive, watch, watchValue } from "@conterra/reactivity-core";
-import WebGLTileLayer from "ol/layer/WebGLTile.js";
+import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
 import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
+import { forwardRef, useRef } from "react";
+import { LuInfo, LuFolderTree } from "react-icons/lu";
 
 
 export interface Events {
@@ -55,6 +59,9 @@ export function SiteDetails() {
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
+    const [dataViewOpen, setDataViewOpen] = useState(true);
+    const [infoViewOpen, setInfoViewOpen] = useState(false);
+
 
     const emitter = new EventEmitter<Events>();
 
@@ -95,6 +102,10 @@ export function SiteDetails() {
 
         fetchTimeseries();
     }, []);
+
+    useEffect(() => {
+        console.log(selectedTimeseries?.jobs);
+    }, [selectedTimeseries]);
 
     useEffect(() => {
         console.log("    useEffect(() => {");
@@ -182,21 +193,50 @@ export function SiteDetails() {
 
     return (
         <Flex>
-            <Box width="450px" p="2">
-                <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
-            </Box>
-
-            <Box h="88vh" flexGrow="1" p="2">
+            {dataViewOpen &&
+                <Box width="450px">
+                    <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
+                </Box>
+            }
+            <Box h="88vh" flexGrow="1" >
                 <MapContainer
                     mapId={MAP_ID}
                     role="main"
                     aria-label=""
                 >
-                    <MapSidebarControls mapId={MAP_ID} />
                     <MapInfoControls mapId={MAP_ID} />
                     {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
-                    <MapZoomControls mapId={MAP_ID}/>
-                    <MapOpacityControl mapId={MAP_ID}/>
+                    <MapZoomControls mapId={MAP_ID} />
+                    <MapAnchor position="top-right" horizontalGap={0} verticalGap={10}>
+                        <Flex
+                            role="top-right"
+                            bottom="3%"
+                            aria-label="Zoom controls"
+                            direction="column"
+                            gap={1}
+                            padding={1}
+                            colorPalette={"teal"}
+                        >
+                            <Button onClick={() => { setInfoViewOpen(!infoViewOpen);}} >
+                                <LuInfo />
+                            </Button>
+                        </Flex>
+                    </MapAnchor>
+                    <MapAnchor position="top-left" horizontalGap={0} verticalGap={10}>
+                        <Flex
+                            role="top-left"
+                            bottom="3%"
+                            aria-label="Zoom controls"
+                            direction="column"
+                            gap={1}
+                            padding={1}
+                            colorPalette={"teal"}
+                        >
+                            <Button onClick={() => { setDataViewOpen(!dataViewOpen);}} >
+                                <LuFolderTree />
+                            </Button>
+                        </Flex>
+                    </MapAnchor>
                     <Box>
                         {selectedTimeseries &&
                             <Box
@@ -254,6 +294,19 @@ export function SiteDetails() {
                     </Box>
                 </MapContainer>
             </Box>
+            {infoViewOpen &&
+                <Box h="88vh" width="350px" bg="white" p="4" borderRadius="md" boxShadow="sm">
+                    <MapContainer
+                        mapId={MAP_ID}
+                        role="main"
+                        aria-label=""
+                    >
+                        <MapOpacityControl mapId={MAP_ID} />
+                        <MapSidebarControls mapId={MAP_ID} />
+
+                    </MapContainer>
+                </Box>
+            }
         </Flex>
     );
 }
