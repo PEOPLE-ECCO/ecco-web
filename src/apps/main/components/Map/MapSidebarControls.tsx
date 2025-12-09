@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { OverviewMap } from "@open-pioneer/overview-map";
 import { BasemapSwitcher } from "@open-pioneer/basemap-switcher";
-import { MapAnchor } from "@open-pioneer/map";
+import { MapAnchor, MapAnchorPosition } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
 
@@ -25,6 +25,10 @@ import { LuChevronDown, LuMap } from "react-icons/lu";
 
 interface MapSidebarControlsProps {
     mapId: string;
+    position?: MapAnchorPosition | "top-right";
+    horizontalGap?: number | 10;
+    verticalGap?: number | 60;
+    
 }
 
 export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
@@ -38,14 +42,12 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
     );
 
     return (
-        <MapAnchor position="top-right" horizontalGap={8} verticalGap={0}>
             <Box
                 backgroundColor="white"
                 borderWidth="1px"
                 borderRadius="md"
                 padding="2"
                 boxShadow="sm"
-                role="top-right"
                 aria-label="Map sidebar controls"
             >
                 <Collapsible.Root defaultOpen>
@@ -77,6 +79,5 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
                     </Collapsible.Content>
                 </Collapsible.Root>
             </Box>
-        </MapAnchor >
     );
 };

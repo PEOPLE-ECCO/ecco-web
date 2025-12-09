@@ -6,21 +6,30 @@ import { useEffect, useState } from "react";
 import {
     Box,
     Button,
+    Checkbox,
+    CheckboxCard,
     Circle,
+    Collapsible,
     Flex,
+    HStack,
+    Icon,
     Slider,
+    Stack,
     Tabs,
-    Text
+    Text,
+    useCollapsible
 } from "@chakra-ui/react";
 
 import { MapRegistry, MapContainer, SimpleLayer, MapAnchor } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
 import { useService } from "open-pioneer:react-hooks";
+import { Measurement } from "@open-pioneer/measurement";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
 import { GeoTIFF } from "ol/source";
 import TileLayer from "ol/layer/WebGLTile.js";
+import { Fill, Stroke, Style } from "ol/style";
 
 import { useServices } from "../../../services/Services";
 import { MAP_ID } from "../../../services";
@@ -34,7 +43,7 @@ import { JobResult, Timeseries } from "../../../components/definitions";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
 import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
-import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase } from "react-icons/lu";
+import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronRight, LuChevronUp } from "react-icons/lu";
 import { Site } from "../Site/Site";
 import { Legend } from "../../../components/Map/LegendControl";
 
@@ -60,6 +69,7 @@ export function SiteDetails() {
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
     const [dataViewOpen, setDataViewOpen] = useState(true);
     const [infoViewOpen, setInfoViewOpen] = useState(false);
+    const collapsible = useCollapsible();
 
 
     const emitter = new EventEmitter<Events>();
@@ -67,6 +77,26 @@ export function SiteDetails() {
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
+
+    const BLACK_STYLE = new Style({
+        stroke: new Stroke({
+            color: "teal",
+            width: 4
+        }),
+        fill: new Fill({
+            color: "rgba(255, 255, 255, 0.25)"
+        })
+    });
+
+    const RED_STYLE = new Style({
+        stroke: new Stroke({
+            color: "teal",
+            width: 4
+        }),
+        fill: new Fill({
+            color: "rgba(110, 150, 168, 0.25)"
+        })
+    });
 
     /*
     emitter.on("toggleJobWithId",
@@ -221,12 +251,17 @@ export function SiteDetails() {
                         </Tabs.Content>
                         <Tabs.Content value="layer">
                             View Layers as Groups
-                            <Box pt="4" h="80vh">
-                                opacity & checkbox for every Layer,
-                            </Box>
+                            {timeseries?.map((element) =>
+                                <HStack key={element.name} gap="6">
+                                    <Checkbox.Root>
+                                        <Checkbox.HiddenInput />
+                                        <Checkbox.Control />
+                                        <Checkbox.Label>{element.name}</Checkbox.Label>
+                                    </Checkbox.Root>
+                                </HStack>
+                            )}
                         </Tabs.Content>
                     </Tabs.Root>
-
                 </Box>
             }
             <Box h="88vh" flexGrow="1" >
@@ -346,7 +381,7 @@ export function SiteDetails() {
                 </MapContainer>
             </Box>
             {infoViewOpen &&
-                <Box h="88vh" width="350px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+                <Box h="88vh" width="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                     <Tabs.Root defaultValue="tools" colorPalette="teal">
                         <Tabs.List>
                             <Tabs.Trigger value="tools">
@@ -363,7 +398,7 @@ export function SiteDetails() {
                             </Tabs.Trigger>
                         </Tabs.List>
                         <Tabs.Content value="legend">
-                           <Legend process={"R80P"}/>  {/* must be activeSliderResult Process later */}
+                            <Legend process={"R80P"} />  {/* must be activeSliderResult Process later */}
                         </Tabs.Content>
                         <Tabs.Content value="tools">
                             Use Tools
@@ -373,8 +408,31 @@ export function SiteDetails() {
                                     role="main"
                                     aria-label=""
                                 >
-                                    <MapOpacityControl mapId={MAP_ID} />
-                                    <MapSidebarControls mapId={MAP_ID} />
+                                    <Flex gap="4" direction="column">
+                                        <MapSidebarControls mapId={MAP_ID} position={"top-left"} verticalGap={0} />
+                                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                                            <Stack >
+                                                <Button
+                                                    size="md"
+                                                    onClick={() => collapsible.setOpen(!collapsible.open)}
+                                                >
+                                                    <LuRuler />
+                                                    Start measurement
+                                                    <Icon>{collapsible.open ? <LuChevronUp /> : <LuChevronDown />}</Icon>
+                                                </Button>
+                                                <Collapsible.RootProvider value={collapsible}>
+                                                    <Collapsible.Content>
+                                                        {collapsible.open &&
+                                                            <Measurement mapId={MAP_ID} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE}/>
+                                                        }
+                                                    </Collapsible.Content>
+                                                </Collapsible.RootProvider>
+                                            </Stack>
+                                        </Box>
+                                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                                        <MapOpacityControl mapId={MAP_ID} />
+                                        </Box>
+                                    </Flex>
                                 </MapContainer>
                             </Box>
                         </Tabs.Content>
@@ -387,6 +445,6 @@ export function SiteDetails() {
                     </Tabs.Root>
                 </Box>
             }
-        </Flex>
+        </Flex >
     );
 }

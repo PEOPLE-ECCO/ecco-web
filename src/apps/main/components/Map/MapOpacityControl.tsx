@@ -26,26 +26,24 @@ export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
     }, [mapId, opacity]);
 
     return (
-        <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={60}>
             <Flex
-                role="bottom-right"
-                bottom="3%"
                 aria-label="Zoom controls"
                 direction="column"
                 gap={1}
                 padding={1}
                 colorPalette={"teal"}
+                align="center"
             >
                 <Box p="4px" rounded="md">
                     <Slider.Root
-                        width="200px"
+                        width="250px"
                         orientation="horizontal"
                         defaultValue={[100]}
                         value={[opacity]}
                         onValueChange={(e) => setOpacity(e.value[0]!)}
                         onValueChangeEnd={(e) => setOpacity(e.value[0]!)}
                     >
-                        <Slider.Label textAlign="center" pb="4px">Opacity: {[opacity]} %</Slider.Label>
+                        <Slider.Label textAlign="center" pb="4px">Layer Opacity: {[opacity]} %</Slider.Label>
 
                         <Slider.Control>
                             <Slider.Track>
@@ -57,6 +55,5 @@ export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
                     </Slider.Root>
                 </Box>
             </Flex>
-        </MapAnchor>
     );
 };
