@@ -34,6 +34,20 @@ export const useServices = () => {
         }
     };
 
+    const getScenario = async (id: string) => {
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+
+        if (responseData) {
+            for (const obj of responseData) {
+                if (""+obj.id == id) {
+                    return obj;
+                }
+            };
+        }
+    };
+
     const getTimeseries = async (id: string) => {
         console.log("getTimeseries " + id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/timeseries/";
@@ -122,5 +136,5 @@ export const useServices = () => {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
-    return { getUser, getScenarios, getTimeseries, getProcesses, createTimeseries, createJob };
+    return { getUser, getScenarios, getScenario, getTimeseries, getProcesses, createTimeseries, createJob };
 };

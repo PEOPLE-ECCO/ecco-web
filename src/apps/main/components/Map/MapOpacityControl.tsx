@@ -26,7 +26,7 @@ export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
     }, [mapId, opacity]);
 
     return (
-        <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={150}>
+        <MapAnchor position="bottom-right" horizontalGap={10} verticalGap={60}>
             <Flex
                 role="bottom-right"
                 bottom="3%"
@@ -36,16 +36,16 @@ export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
                 padding={1}
                 colorPalette={"teal"}
             >
-                <Box bg="white" p="4px" rounded="md">
+                <Box p="4px" rounded="md">
                     <Slider.Root
-                        height="200px"
-                        orientation="vertical"
+                        width="200px"
+                        orientation="horizontal"
                         defaultValue={[100]}
                         value={[opacity]}
                         onValueChange={(e) => setOpacity(e.value[0]!)}
                         onValueChangeEnd={(e) => setOpacity(e.value[0]!)}
                     >
-                        <Slider.Label textAlign="center" pb="4px">Opacity</Slider.Label>
+                        <Slider.Label textAlign="center" pb="4px">Opacity: {[opacity]} %</Slider.Label>
 
                         <Slider.Control>
                             <Slider.Track>
@@ -53,7 +53,7 @@ export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
                             </Slider.Track>
                             <Slider.Thumbs />
                         </Slider.Control>
-                        <Slider.Label textAlign="center" pt="4px">{[opacity]} %</Slider.Label>
+                        {/* <Slider.Label textAlign="center" pt="4px">{[opacity]} %</Slider.Label> */}
                     </Slider.Root>
                 </Box>
             </Flex>

@@ -10,8 +10,7 @@ import {
     Flex,
     Slider,
     Tabs,
-    Text,
-    type StackProps,
+    Text
 } from "@chakra-ui/react";
 
 import { MapRegistry, MapContainer, SimpleLayer, MapAnchor } from "@open-pioneer/map";
@@ -35,10 +34,9 @@ import { JobResult, Timeseries } from "../../../components/definitions";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
 import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
-import { forwardRef, useRef } from "react";
-import { LuInfo, LuFolderTree, LuFolder, LuSquareCheck, LuUser, LuMap, LuUtensils, LuPenTool, LuRuler, LuDatabase } from "react-icons/lu";
-import { buffer } from "stream/consumers";
-
+import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase } from "react-icons/lu";
+import { Site } from "../Site/Site";
+import { Legend } from "../../../components/Map/LegendControl";
 
 export interface Events {
     selectedTimeseries: Timeseries;
@@ -52,8 +50,9 @@ const _proj32636 = new Projection({ code: "EPSG:32636" });
 
 export function SiteDetails() {
     const { id } = useParams();
-    const { getTimeseries } = useServices();
+    const { getTimeseries, getScenario } = useServices();
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
+    const [scenario, setScenario] = useState<Site>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [viewableJobResults, setViewableJobResults] = useState<ReactiveArray<JobResult>>(reactiveArray());
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
@@ -99,8 +98,18 @@ export function SiteDetails() {
                 console.error(error);
             }
         };
-
+        const fetchScenario = async () => {
+            if (!id)
+                return;
+            try {
+                const scenario = await getScenario(id);
+                setScenario(scenario);
+            } catch (error) {
+                console.error(error);
+            }
+        };
         fetchTimeseries();
+        fetchScenario();
     }, []);
 
     useEffect(() => {
@@ -183,7 +192,7 @@ export function SiteDetails() {
                     new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
                     new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
                 ],
-                {viewPadding: { top: 50, bottom: 100 }}
+                { viewPadding: { top: 50, bottom: 100 } }
             );
         }
     }
@@ -193,7 +202,31 @@ export function SiteDetails() {
         <Flex>
             {dataViewOpen &&
                 <Box width="450px" p="2" bg="teal.50">
-                    <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
+                    <Box p="2">
+                        <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
+                    </Box>
+                    <Tabs.Root defaultValue="timeseries" colorPalette="teal">
+                        <Tabs.List>
+                            <Tabs.Trigger value="timeseries">
+                                <LuMap />
+                                Timeseries View
+                            </Tabs.Trigger>
+                            <Tabs.Trigger value="layer">
+                                <LuDatabase />
+                                Layer View
+                            </Tabs.Trigger>
+                        </Tabs.List>
+                        <Tabs.Content value="timeseries">
+                            <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
+                        </Tabs.Content>
+                        <Tabs.Content value="layer">
+                            View Layers as Groups
+                            <Box pt="4" h="80vh">
+                                opacity & checkbox for every Layer,
+                            </Box>
+                        </Tabs.Content>
+                    </Tabs.Root>
+
                 </Box>
             }
             <Box h="88vh" flexGrow="1" >
@@ -314,15 +347,15 @@ export function SiteDetails() {
             </Box>
             {infoViewOpen &&
                 <Box h="88vh" width="350px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
-                    <Tabs.Root defaultValue="legend">
+                    <Tabs.Root defaultValue="tools" colorPalette="teal">
                         <Tabs.List>
-                            <Tabs.Trigger value="legend">
-                                <LuMap />
-                                Legend
-                            </Tabs.Trigger>
                             <Tabs.Trigger value="tools">
                                 <LuRuler />
                                 Tools
+                            </Tabs.Trigger>
+                            <Tabs.Trigger value="legend">
+                                <LuMap />
+                                Legend
                             </Tabs.Trigger>
                             <Tabs.Trigger value="info">
                                 <LuDatabase />
@@ -330,10 +363,7 @@ export function SiteDetails() {
                             </Tabs.Trigger>
                         </Tabs.List>
                         <Tabs.Content value="legend">
-                            View Map Legend
-                            <Box pt="4" h="80vh">
-                                red = lower than 0
-                            </Box>
+                           <Legend process={"R80P"}/>  {/* must be activeSliderResult Process later */}
                         </Tabs.Content>
                         <Tabs.Content value="tools">
                             Use Tools
