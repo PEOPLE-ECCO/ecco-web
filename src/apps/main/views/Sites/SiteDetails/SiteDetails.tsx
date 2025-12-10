@@ -140,6 +140,7 @@ export function SiteDetails() {
         };
         fetchTimeseries();
         fetchScenario();
+        zoomToInitialView();
     }, []);
 
     useEffect(() => {
@@ -153,6 +154,16 @@ export function SiteDetails() {
         showSelectedJobResult(0);
         setActiveSliderResult(0);
     }, [viewableJobResults]);
+
+    async function zoomToInitialView() {
+        const map = await mapService.expectMapModel(MAP_ID);
+        map.zoom(
+            [
+                new Point([850000, 6793120])
+            ],
+            { pointZoom: 10 }
+        );
+    }
 
     async function remove_current_item() {
         console.log("removing");
@@ -401,7 +412,7 @@ export function SiteDetails() {
                             <Legend process={"R80P"} />  {/* must be activeSliderResult Process later */}
                         </Tabs.Content>
                         <Tabs.Content value="tools">
-                            Use Tools
+                            Use Map Tools
                             <Box pt="4" h="80vh">
                                 <MapContainer
                                     mapId={MAP_ID}
@@ -423,14 +434,14 @@ export function SiteDetails() {
                                                 <Collapsible.RootProvider value={collapsible}>
                                                     <Collapsible.Content>
                                                         {collapsible.open &&
-                                                            <Measurement mapId={MAP_ID} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE}/>
+                                                            <Measurement mapId={MAP_ID} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE} />
                                                         }
                                                     </Collapsible.Content>
                                                 </Collapsible.RootProvider>
                                             </Stack>
                                         </Box>
                                         <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                                        <MapOpacityControl mapId={MAP_ID} />
+                                            <MapOpacityControl mapId={MAP_ID} />
                                         </Box>
                                     </Flex>
                                 </MapContainer>
