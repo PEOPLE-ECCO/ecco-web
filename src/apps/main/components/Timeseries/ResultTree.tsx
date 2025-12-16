@@ -20,14 +20,14 @@ import { LuDownload, LuEye, LuFolder, LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 
-import { JobResult, Timeseries } from "../definitions";
+import { Job, JobResult, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { MapOpacityControl } from "../Map/MapOpacityControl";
 import { MAP_ID } from "../../services";
 import { useState } from "react";
-
+import { ViewDetails, ViewLog } from "./ViewJob";
 
 
 interface ResultTreeProps {
@@ -39,6 +39,17 @@ interface ResultType {
     name: string
     type: string
     children?: JobResult[]
+}
+interface ResultInTree {
+    result: JobResult
+    name: string
+    visible: boolean
+}
+
+export interface JobInTree {
+    job: Job
+    name: string
+    children: ResultInTree[]
 }
 
 export interface TreeNode {
@@ -179,21 +190,24 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                                     <LuDownload />
                                                                 </Button>
                                                             </Tooltip>
-                                                            <Tooltip content="View current result file">
+                                                            
+                                                            <ViewDetails job={timeseries.jobs.get(0)}></ViewDetails>
+                                                            <ViewLog job={timeseries.jobs.get(0)}></ViewLog>
 
-                                                            </Tooltip>
                                                             <Dialog.Root size="xl" scrollBehavior="inside">
                                                                 <Dialog.Trigger asChild>
-                                                                    <Button
-                                                                        color="black"
-                                                                        _hover={{ bg: "teal.50" }}
-                                                                        size="xs"
-                                                                        variant="ghost"
-                                                                        onClick={() => { console.log("TODO: zoom to layer"); }}
-                                                                        disabled={true}
-                                                                    >
-                                                                        <LuEye />
-                                                                    </Button>
+                                                                    <Tooltip content="View current result file">
+                                                                        <Button
+                                                                            color="black"
+                                                                            _hover={{ bg: "teal.50" }}
+                                                                            size="xs"
+                                                                            variant="ghost"
+                                                                            onClick={() => { console.log("TODO: zoom to layer"); }}
+                                                                            disabled={true}
+                                                                        >
+                                                                            <LuEye />
+                                                                        </Button>
+                                                                    </Tooltip>
                                                                 </Dialog.Trigger>
                                                                 <Portal>
                                                                     <Dialog.Backdrop />

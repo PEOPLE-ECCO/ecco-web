@@ -11,6 +11,7 @@ import {
     Flex,
     HStack,
     Icon,
+    ScrollArea,
     Slider,
     Stack,
     Tabs,
@@ -234,7 +235,7 @@ export function SiteDetails() {
         
         await remove_current_item(id.toString());
         */
-        
+
 
 
         //TODO: this is really really bad
@@ -264,57 +265,68 @@ export function SiteDetails() {
     return (
         <Flex>
             {dataViewOpen &&
-                <Box h="88vh" width="450px" p="2" bg="teal.50">
-                    <Box p="2" colorPalette="teal">
-                        <HStack>
-                            <Button onClick={() => navigate("..")}>
-                                <LuArrowBigLeft></LuArrowBigLeft>
-                                Sites
-                            </Button>
-                            <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
-                        </HStack>
-                    </Box>
-                    <Tabs.Root defaultValue="timeseries" colorPalette="teal">
-                        <Tabs.List>
-                            <Tabs.Trigger value="timeseries">
-                                <LuMap />
-                                Timeseries View
-                                <Tooltip content="This view shows different timestamps of one process and area and provides a time-slider to swicht the results">
-                                    <Button size="xs" variant="ghost">
-                                        <LuInfo />
-                                    </Button>
-                                </Tooltip>
-                            </Tabs.Trigger>
-                            <Tabs.Trigger value="layer">
-                                <LuDatabase />
-                                Layer View
-                                <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
-                                    <Button size="xs" variant="ghost">
-                                        <LuInfo />
-                                    </Button>
-                                </Tooltip>
-                            </Tabs.Trigger>
-                        </Tabs.List>
-
-                        <Tabs.Content value="timeseries">
-                            <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
-                        </Tabs.Content>
-                        <Tabs.Content value="layer">
-                            View Layers as Groups
-                            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                                {map &&
-                                    <Toc map={map} showTools={true} showBasemapSwitcher={false} collapsibleGroups={true} initiallyCollapsed={false} />
-                                }
-                                {timeseries?.map((element) =>
-                                    <HStack key={element.name} gap="6">
+                <Box width="450px" p="2" bg="teal.50">
+                    <ScrollArea.Root maxW="md" variant="hover">
+                        <ScrollArea.Viewport>
+                            <ScrollArea.Content spaceY="4">
+                                <Box p="2" colorPalette="teal">
+                                    <HStack>
+                                        <Button onClick={() => navigate("..")}>
+                                            <LuArrowBigLeft></LuArrowBigLeft>
+                                            Sites
+                                        </Button>
+                                        <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
                                     </HStack>
-                                )}
-                            </Box>
-                        </Tabs.Content>
-                    </Tabs.Root>
+                                </Box>
+                                <Tabs.Root defaultValue="timeseries" colorPalette="teal">
+                                    <Tabs.List>
+                                        <Tabs.Trigger value="timeseries">
+                                            <LuMap />
+                                            Timeseries View
+                                            <Tooltip content="This view shows different timestamps of one process and area and provides a time-slider to swicht the results">
+                                                <Button size="xs" variant="ghost">
+                                                    <LuInfo />
+                                                </Button>
+                                            </Tooltip>
+                                        </Tabs.Trigger>
+                                        <Tabs.Trigger value="layer">
+                                            <LuDatabase />
+                                            Layer View
+                                            <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
+                                                <Button size="xs" variant="ghost">
+                                                    <LuInfo />
+                                                </Button>
+                                            </Tooltip>
+                                        </Tabs.Trigger>
+                                    </Tabs.List>
+
+                                    <Tabs.Content value="timeseries">
+                                        <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
+                                    </Tabs.Content>
+                                    <Tabs.Content value="layer">
+                                        View Layers as Groups
+                                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                                            {map &&
+                                                <Toc map={map} showTools={true} showBasemapSwitcher={false} collapsibleGroups={true} initiallyCollapsed={false} />
+                                            }
+                                            {timeseries?.map((element) =>
+                                                <HStack key={element.name} gap="6">
+                                                </HStack>
+                                            )}
+                                        </Box>
+                                    </Tabs.Content>
+                                </Tabs.Root>
+                            </ScrollArea.Content>
+                        </ScrollArea.Viewport>
+                        <ScrollArea.Scrollbar>
+                            <ScrollArea.Thumb />
+                        </ScrollArea.Scrollbar>
+                        <ScrollArea.Corner />
+                    </ScrollArea.Root >
                 </Box>
+
             }
-            <Box h="88vh" flexGrow="1" >
+            <Box flexGrow="1" >
                 <MapContainer
                     mapId={MAP_ID}
                     role="main"
@@ -431,7 +443,7 @@ export function SiteDetails() {
                 </MapContainer>
             </Box>
             {infoViewOpen &&
-                <Box h="88vh" width="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+                <Box width="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                     <Tabs.Root defaultValue="tools" colorPalette="teal">
                         <Tabs.List>
                             <Tabs.Trigger value="tools">

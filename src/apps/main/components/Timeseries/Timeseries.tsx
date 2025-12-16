@@ -13,7 +13,9 @@ import {
     Accordion,
     Portal,
     Collapsible,
-    ScrollArea
+    ScrollArea,
+    Dialog,
+    VStack
 } from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
@@ -82,9 +84,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
 
     return (
         <>
-            <ScrollArea.Root maxW="md" h="86vh" variant="hover">
-                <ScrollArea.Viewport>
-                    <ScrollArea.Content spaceY="4">
+            
                         <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                             <Stack gap="4">
                                 <Text fontWeight="700" fontSize={22}>Timeseries</Text>
@@ -105,10 +105,10 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                             <Accordion.ItemContent pb={4} bg="white">
                                                 {ts.id == selectedTimeseries?.id &&
                                                     <>
-                                                        <HStack>
-                                                            <Text fontWeight="medium" pb="2">Description:</Text>
+                                                        <Flex pb="2" gap="1" justify="space-between" direction="row">
                                                             <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
-                                                        </HStack>
+                                                            <MenuContent ts={ts} el={eventListener} />
+                                                        </Flex>
                                                         {/* {false &&
                                                             <Collapsible.Root>
                                                                 <Flex pb="2" gap="1" justify="flex-start" direction="row">
@@ -137,32 +137,10 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                 </Collapsible.Content>
                                                             </Collapsible.Root>
                                                         } */}
-                                                        <Collapsible.Root defaultOpen>
-                                                            <Flex pb="2" gap="1" justify="flex-start" direction="row">
-                                                                <Collapsible.Trigger>
-                                                                    <Button
-                                                                        size="md"
-                                                                        width="100%"
-                                                                        bg="#2C7D75"
-                                                                        _hover={{ bg: "teal.700" }}
-                                                                        disabled={false}>
-                                                                        View Results
-                                                                        <Collapsible.Indicator
-                                                                            transition="transform 0.2s"
-                                                                            _open={{ transform: "rotate(180deg)" }}>
-                                                                            <LuChevronDown />
-                                                                        </Collapsible.Indicator>
-                                                                    </Button>
-                                                                </Collapsible.Trigger>
-                                                                <CreateJob timeseries={ts} eventListener={eventListener} />
-                                                                <MenuContent ts={ts} el={eventListener} />
-                                                            </Flex>
-                                                            <Collapsible.Content>
-                                                                <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                                    <ResultTree timeseries={ts} eventListener={eventListener}></ResultTree>
-                                                                </Box>
-                                                            </Collapsible.Content>
-                                                        </Collapsible.Root>
+                                                        <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                            <Text fontWeight="bold">Results</Text>
+                                                            <ResultTree timeseries={ts} eventListener={eventListener}></ResultTree>
+                                                        </Box>
                                                     </>
                                                 }
                                             </Accordion.ItemContent>
@@ -172,13 +150,6 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                 <CreateTimeseries eventListener={eventListener} />
                             </Stack>
                         </Box>
-                    </ScrollArea.Content>
-                </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar>
-                    <ScrollArea.Thumb />
-                </ScrollArea.Scrollbar>
-                <ScrollArea.Corner />
-            </ScrollArea.Root >
         </>
     );
 }
@@ -188,8 +159,12 @@ interface MenuContentProps {
     el: EventEmitter<Events>
 }
 
-function MenuContent({ ts }: MenuContentProps) {
+function MenuContent({ ts, el }: MenuContentProps) {
     const notificationService = useService<NotificationService>("notifier.NotificationService");
+
+    const handleExpand = (ts: Timeseries) => {
+        console.log("Expand:", ts);
+    };
 
     const handleDelete = (ts: Timeseries) => {
         console.log("Delete:", ts);
@@ -201,45 +176,57 @@ function MenuContent({ ts }: MenuContentProps) {
 
     return (
         <>
-            <Menu.Root>
-                <Menu.Trigger disabled asChild>
-                    <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
-                        <Ellipsis />
-                    </IconButton>
-                </Menu.Trigger>
-                <Portal>
-                    <Menu.Positioner>
-                        <Menu.Content>
-                            <Menu.Item
-                                value="delete"
-                                onClick={() => {
-                                    handleDelete(ts);
-                                    notificationService.notify({
-                                        title: "Deleted",
-                                        message: ts.name,
-                                        level: "info",
-                                        displayDuration: 5000,
-                                    });
-                                }}>
-                                Delete
-                            </Menu.Item>
-                            <Menu.Item
-                                value="archive"
-                                onClick={() => {
-                                    handleArchive(ts);
-                                    notificationService.notify({
-                                        title: "Archived",
-                                        message: ts.name,
-                                        level: "info",
-                                        displayDuration: 5000,
-                                    });
-                                }}>
-                                Archive
-                            </Menu.Item>
-                        </Menu.Content>
-                    </Menu.Positioner>
-                </Portal>
-            </Menu.Root >
+            <Dialog.Root size="lg" placement="center">
+                <Menu.Root>
+                    <Menu.Trigger asChild>
+                        <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
+                            <Ellipsis />
+                        </IconButton>
+                    </Menu.Trigger>
+                    <Portal>
+                        <Menu.Positioner>
+                            <Menu.Content>
+                                <Dialog.Trigger asChild>
+                                    <Menu.Item
+                                        value="expand"
+                                        onClick={() => {
+                                            handleExpand(ts);
+                                        }}>
+                                        Expand
+                                    </Menu.Item>
+                                </Dialog.Trigger>
+                                <Menu.Item
+                                    value="delete"
+                                    onClick={() => {
+                                        handleDelete(ts);
+                                        notificationService.notify({
+                                            title: "Deleted",
+                                            message: ts.name,
+                                            level: "info",
+                                            displayDuration: 5000,
+                                        });
+                                    }}>
+                                    Delete
+                                </Menu.Item>
+                                <Menu.Item
+                                    value="archive"
+                                    onClick={() => {
+                                        handleArchive(ts);
+                                        notificationService.notify({
+                                            title: "Archived",
+                                            message: ts.name,
+                                            level: "info",
+                                            displayDuration: 5000,
+                                        });
+                                    }}>
+                                    Archive
+                                </Menu.Item>
+                            </Menu.Content>
+                        </Menu.Positioner>
+                    </Portal>
+                </Menu.Root >
+                <CreateJob timeseries={ts} eventListener={el} />
+            </Dialog.Root>
         </>
     );
 }

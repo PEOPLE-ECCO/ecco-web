@@ -33,7 +33,7 @@ export default function Header() {
                 <Flex
                     bg={"#2C7D75"}
                     color={"gray.600"}
-                    minH={"86px"}
+                    minH={"75px"}
                     py={{ base: 2 }}
                     px={{ base: 4 }}
                     borderBottom={1}
@@ -57,7 +57,7 @@ export default function Header() {
                     </Flex>
                     <Flex flex={1} align="center">
                         <Box onClick={() => navigate("/")} cursor="pointer">
-                            <Image src={logo} htmlWidth="148px" height="82px" />
+                            <Image src={logo} htmlWidth="148px" height="75px" />
                         </Box>
                     </Flex>
 

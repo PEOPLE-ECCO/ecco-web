@@ -24,11 +24,11 @@ import { Job, LogLine, Timeseries } from "../definitions";
 import { useServices } from "../../services/Services";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { ReadonlyReactiveArray, watchValue } from "@conterra/reactivity-core";
-import { JobInTree } from "./Timeseries";
+import { JobInTree } from "./JobTree";
 
 
 export interface ViewLogProps {
-    job: JobInTree
+    job: Job | undefined
 }
 
 export function ViewLog({ job }: ViewLogProps) {
@@ -37,9 +37,9 @@ export function ViewLog({ job }: ViewLogProps) {
     const [logs, setLogs] = useState<Array<Array<LogLine>>>([[],[],[],[]]);
 
     watchValue(
-        () => [job.job.logs.length],
+        () => [job!.logs.length],
         () => {
-            const alllogs = job.job.logs.getItems();
+            const alllogs = job!.logs.getItems();
             setLogs(
                 [
                     alllogs,
@@ -91,7 +91,7 @@ export function ViewLog({ job }: ViewLogProps) {
                         <Dialog.Header>
                             <Stack>
                                 <Box pb="4">
-                                    <Dialog.Title>View Logs of Job: {job.name}</Dialog.Title>
+                                    <Dialog.Title>View Logs of Job: {job!.name}</Dialog.Title>
                                 </Box>
                                 <Box>
                                     <HStack pb="4" gap="6">
@@ -177,10 +177,10 @@ export function ViewLog({ job }: ViewLogProps) {
 };
 
 export interface ViewDetailsProps {
-    job: Job
+    job: Job | undefined
 }
 export function ViewDetails({ job }: ViewDetailsProps) {
-    const tabledata = Object.entries(job).map(([key, value]) => ({
+    const tabledata = Object.entries(job!).map(([key, value]) => ({
         key: key,
         value: value
     }));
@@ -202,7 +202,7 @@ export function ViewDetails({ job }: ViewDetailsProps) {
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header>
-                            <Dialog.Title>View Details of Job: {job.name}</Dialog.Title>
+                            <Dialog.Title>View Details of Job: {job!.name}</Dialog.Title>
                             <Dialog.CloseTrigger asChild>
                                 <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
                             </Dialog.CloseTrigger>

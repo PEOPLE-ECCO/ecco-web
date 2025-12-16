@@ -97,17 +97,10 @@ export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
 
     return (
         <>
-            <Dialog.Root size="md" placement="center">
-                <Dialog.Trigger asChild>
-                    <Button size="md" width="40%" bg="#2C7D75" _hover={{ bg: "teal.700" }}>
-                        Expand Timeseries
-                    </Button>
-                </Dialog.Trigger>
                 <Portal>
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-
                             <Dialog.Header>
                                 <Dialog.Title>
                                     <Flex gap="4">
@@ -162,7 +155,6 @@ export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
                                             </Box>
                                         </Field.Root>
                                     </Stack>
-
                                 </Box>
                             </Dialog.Body>
                             <Dialog.Footer>
@@ -184,7 +176,6 @@ export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
                         </Dialog.Content>
                     </Dialog.Positioner>
                 </Portal>
-            </Dialog.Root >
         </>
     );
 };
