@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
-import { LuDownload, LuEye, LuFolder, LuMap } from "react-icons/lu";
+import { LuDownload, LuEye, LuFolder, LuInfo, LuLayers, LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 
@@ -26,8 +26,9 @@ import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { MapOpacityControl } from "../Map/MapOpacityControl";
 import { MAP_ID } from "../../services";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ViewDetails, ViewLog } from "./ViewJob";
+import { cp } from "fs";
 
 
 interface ResultTreeProps {
@@ -60,6 +61,12 @@ export interface TreeNode {
 
 export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
     const [expandedValue, setExpandedValue] = useState<string[]>([]);
+    const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
+
+    useEffect(() => {
+        eventListener.emit("legendType", expandedValue[0]!);
+    }, [expandedValue]);
+
 
     const treeCollection = useReactiveSnapshot(
         () => {
@@ -136,6 +143,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                             setExpandedValue([]);
                         } else {
                             setExpandedValue([e.focusedValue!]);
+                            eventListener.emit("legendType", e.expandedValue[0]!);
                         };
                         console.log("TODO: close all previously expanded results via Event");
                     }}
@@ -151,6 +159,19 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                             <TreeView.BranchText fontWeight="bold">
                                                 {node.name}
                                             </TreeView.BranchText>
+                                            <TreeView.Item>
+                                                <Tooltip content="View legend">
+                                                    <Button
+                                                        color="black"
+                                                        _hover={{ bg: "teal.50" }}
+                                                        size="xs"
+                                                        variant="ghost"
+                                                        onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
+                                                        <LuLayers />
+                                                    </Button>
+                                                </Tooltip>
+                                            </TreeView.Item>
+
                                         </>
                                     </TreeView.BranchControl>
                                 ) : (
@@ -190,9 +211,13 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                                     <LuDownload />
                                                                 </Button>
                                                             </Tooltip>
-                                                            
-                                                            <ViewDetails job={timeseries.jobs.get(0)}></ViewDetails>
-                                                            <ViewLog job={timeseries.jobs.get(0)}></ViewLog>
+
+                                                            <Tooltip content="View Job Details">
+                                                                <ViewDetails job={timeseries.jobs.get(0)}></ViewDetails>
+                                                            </Tooltip>
+                                                            <Tooltip content="View Job Logs">
+                                                                <ViewLog job={timeseries.jobs.get(0)}></ViewLog>
+                                                            </Tooltip>
 
                                                             <Dialog.Root size="xl" scrollBehavior="inside">
                                                                 <Dialog.Trigger asChild>

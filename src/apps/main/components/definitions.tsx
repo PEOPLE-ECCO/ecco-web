@@ -415,3 +415,8 @@ export interface Process {
     name: string
     parameters: object
 }
+
+export interface LegendElement {
+    value: string
+    color: string
+}

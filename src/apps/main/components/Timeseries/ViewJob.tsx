@@ -25,6 +25,7 @@ import { useServices } from "../../services/Services";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { ReadonlyReactiveArray, watchValue } from "@conterra/reactivity-core";
 import { JobInTree } from "./JobTree";
+import { Tooltip } from "../tooltip";
 
 
 export interface ViewLogProps {
@@ -34,7 +35,7 @@ export interface ViewLogProps {
 export function ViewLog({ job }: ViewLogProps) {
     const [selectedLogs, setSelectedLogs] = useState<ReadonlyReactiveArray<LogLine>>();
     const [viewLogVisible, setViewLogVisible] = useState(false);
-    const [logs, setLogs] = useState<Array<Array<LogLine>>>([[],[],[],[]]);
+    const [logs, setLogs] = useState<Array<Array<LogLine>>>([[], [], [], []]);
 
     watchValue(
         () => [job!.logs.length],
@@ -75,6 +76,7 @@ export function ViewLog({ job }: ViewLogProps) {
     return (
         <Dialog.Root size="cover" scrollBehavior="inside">
             <Dialog.Trigger asChild>
+                <Tooltip content="View Job Logs">
                 <Button
                     color="black"
                     _hover={{ bg: "teal.50" }}
@@ -83,6 +85,7 @@ export function ViewLog({ job }: ViewLogProps) {
                     onClick={() => setViewLogVisible(!viewLogVisible)}>
                     <LuLogs />
                 </Button>
+                </Tooltip>
             </Dialog.Trigger>
             <Portal>
                 <Dialog.Backdrop />
@@ -188,14 +191,16 @@ export function ViewDetails({ job }: ViewDetailsProps) {
     return (
         <Dialog.Root size="xl" scrollBehavior="inside">
             <Dialog.Trigger asChild>
-                <Button
-                    color="black"
-                    _hover={{ bg: "teal.50" }}
-                    size="xs"
-                    variant="ghost"
-                >
-                <LuInfo />
-                </Button>
+                <Tooltip content="View Job Details">
+                    <Button
+                        color="black"
+                        _hover={{ bg: "teal.50" }}
+                        size="xs"
+                        variant="ghost"
+                    >
+                        <LuInfo />
+                    </Button>
+                </Tooltip>
             </Dialog.Trigger>
             <Portal>
                 <Dialog.Backdrop />

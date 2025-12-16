@@ -84,32 +84,32 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
 
     return (
         <>
-            
-                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                            <Stack gap="4">
-                                <Text fontWeight="700" fontSize={22}>Timeseries</Text>
-                                <Accordion.Root
-                                    collapsible
-                                    onValueChange={(e) => {
-                                        const ts: Timeseries = timeseries![e.value[0]!];
-                                        timeseriesSelection(ts);
-                                    }}>
-                                    {timeseries?.map((ts, key) => (
-                                        <Accordion.Item value={key} key={key}>
-                                            <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
-                                                <Box as="span" flex="1" textAlign="left" fontWeight="700">
-                                                    {ts.name}
-                                                </Box>
-                                                <Accordion.ItemIndicator />
-                                            </Accordion.ItemTrigger>
-                                            <Accordion.ItemContent pb={4} bg="white">
-                                                {ts.id == selectedTimeseries?.id &&
-                                                    <>
-                                                        <Flex pb="2" gap="1" justify="space-between" direction="row">
-                                                            <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
-                                                            <MenuContent ts={ts} el={eventListener} />
-                                                        </Flex>
-                                                        {/* {false &&
+
+            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                <Stack gap="4">
+                    <Text fontWeight="700" fontSize={22}>Timeseries</Text>
+                    <Accordion.Root
+                        collapsible
+                        onValueChange={(e) => {
+                            const ts: Timeseries = timeseries![e.value[0]!];
+                            timeseriesSelection(ts);
+                        }}>
+                        {timeseries?.map((ts, key) => (
+                            <Accordion.Item value={key} key={key}>
+                                <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
+                                    <Box as="span" flex="1" textAlign="left" fontWeight="700">
+                                        {ts.name}
+                                    </Box>
+                                    <Accordion.ItemIndicator />
+                                </Accordion.ItemTrigger>
+                                <Accordion.ItemContent pb={4} bg="white">
+                                    {ts.id == selectedTimeseries?.id &&
+                                        <>
+                                            <Flex pb="2" gap="1" justify="space-between" direction="row">
+                                                <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
+                                                <MenuContent ts={ts} el={eventListener} />
+                                            </Flex>
+                                            {/* {false &&
                                                             <Collapsible.Root>
                                                                 <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                                     <Collapsible.Trigger>
@@ -137,19 +137,19 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                 </Collapsible.Content>
                                                             </Collapsible.Root>
                                                         } */}
-                                                        <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                            <Text fontWeight="bold">Results</Text>
-                                                            <ResultTree timeseries={ts} eventListener={eventListener}></ResultTree>
-                                                        </Box>
-                                                    </>
-                                                }
-                                            </Accordion.ItemContent>
-                                        </Accordion.Item>
-                                    ))}
-                                </Accordion.Root>
-                                <CreateTimeseries eventListener={eventListener} />
-                            </Stack>
-                        </Box>
+                                            <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                <Text fontWeight="bold">Results</Text>
+                                                <ResultTree timeseries={ts} eventListener={eventListener}></ResultTree>
+                                            </Box>
+                                        </>
+                                    }
+                                </Accordion.ItemContent>
+                            </Accordion.Item>
+                        ))}
+                    </Accordion.Root>
+                    <CreateTimeseries eventListener={eventListener} />
+                </Stack>
+            </Box>
         </>
     );
 }

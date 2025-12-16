@@ -53,6 +53,8 @@ import { Legend } from "../../../components/Map/LegendControl";
 export interface Events {
     selectedTimeseries: Timeseries;
     toggleJobWithId: string;
+    infoViewOpen: boolean;
+    legendType: string;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -73,6 +75,7 @@ export function SiteDetails() {
     const [dataViewOpen, setDataViewOpen] = useState(true);
     const [infoViewOpen, setInfoViewOpen] = useState(false);
     const [map, setMap] = useState<MapModel>();
+    const [legendType, setLegendType] = useState<string>();
     const collapsible = useCollapsible();
     const navigate = useNavigate();
 
@@ -81,6 +84,14 @@ export function SiteDetails() {
 
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
+    );
+
+    emitter.on("infoViewOpen",
+        (value: boolean) => (setInfoViewOpen(value))
+    );
+
+    emitter.on("legendType",
+        (value: string) => (setLegendType(value))
     );
 
     const BLACK_STYLE = new Style({
@@ -265,8 +276,8 @@ export function SiteDetails() {
     return (
         <Flex>
             {dataViewOpen &&
-                <Box width="450px" p="2" bg="teal.50">
-                    <ScrollArea.Root maxW="md" variant="hover">
+                <Box h="90vh" w="450px" p="2" bg="teal.50">
+                    <ScrollArea.Root maxW="md" minH="50vh" variant="hover">
                         <ScrollArea.Viewport>
                             <ScrollArea.Content spaceY="4">
                                 <Box p="2" colorPalette="teal">
@@ -326,7 +337,7 @@ export function SiteDetails() {
                 </Box>
 
             }
-            <Box flexGrow="1" >
+            <Box h="90vh" flexGrow="1" >
                 <MapContainer
                     mapId={MAP_ID}
                     role="main"
@@ -443,68 +454,77 @@ export function SiteDetails() {
                 </MapContainer>
             </Box>
             {infoViewOpen &&
-                <Box width="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
-                    <Tabs.Root defaultValue="tools" colorPalette="teal">
-                        <Tabs.List>
-                            <Tabs.Trigger value="tools">
-                                <LuRuler />
-                                Tools
-                            </Tabs.Trigger>
-                            <Tabs.Trigger value="legend">
-                                <LuMap />
-                                Legend
-                            </Tabs.Trigger>
-                            <Tabs.Trigger value="info">
-                                <LuDatabase />
-                                Info
-                            </Tabs.Trigger>
-                        </Tabs.List>
-                        <Tabs.Content value="legend">
-                            <Legend process={"R80P"} />  {/* must be activeSliderResult Process later */}
-                        </Tabs.Content>
-                        <Tabs.Content value="tools">
-                            Use Map Tools
-                            <Box pt="4" h="80vh">
-                                <MapContainer
-                                    mapId={MAP_ID}
-                                    role="main"
-                                    aria-label=""
-                                >
-                                    <Flex gap="4" direction="column">
-                                        <MapSidebarControls mapId={MAP_ID} position={"top-left"} verticalGap={0} />
-                                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                                            <Stack >
-                                                <Button
-                                                    size="md"
-                                                    onClick={() => collapsible.setOpen(!collapsible.open)}
-                                                >
-                                                    <LuRuler />
-                                                    {collapsible.open ? <Text>End measurement</Text> : <Text>Start measurement</Text>}
-                                                    <Icon>{collapsible.open ? <LuChevronUp /> : <LuChevronDown />}</Icon>
-                                                </Button>
-                                                <Collapsible.RootProvider value={collapsible}>
-                                                    <Collapsible.Content>
-                                                        {collapsible.open &&
-                                                            <Measurement mapId={MAP_ID} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE} />
-                                                        }
-                                                    </Collapsible.Content>
-                                                </Collapsible.RootProvider>
-                                            </Stack>
+                <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+                    <ScrollArea.Root maxW="md" minH="50vh" variant="hover">
+                        <ScrollArea.Viewport>
+                            <ScrollArea.Content spaceY="4">
+                                <Tabs.Root defaultValue="legend" colorPalette="teal">
+                                    <Tabs.List>
+                                        <Tabs.Trigger value="legend">
+                                            <LuMap />
+                                            Legend
+                                        </Tabs.Trigger>
+                                        <Tabs.Trigger value="tools">
+                                            <LuRuler />
+                                            Tools
+                                        </Tabs.Trigger>
+                                        <Tabs.Trigger value="info">
+                                            <LuDatabase />
+                                            Info
+                                        </Tabs.Trigger>
+                                    </Tabs.List>
+                                    <Tabs.Content value="legend">
+                                        <Legend process={legendType}/>  {/* must be activeSliderResult Process later */}
+                                    </Tabs.Content>
+                                    <Tabs.Content value="tools">
+                                        Use Map Tools
+                                        <Box pt="4" h="80vh">
+                                            <MapContainer
+                                                mapId={MAP_ID}
+                                                role="main"
+                                                aria-label=""
+                                            >
+                                                <Flex gap="4" direction="column">
+                                                    <MapSidebarControls mapId={MAP_ID} position={"top-left"} verticalGap={0} />
+
+                                                    <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+
+                                                        <Stack >
+                                                            <Button
+                                                                size="md"
+                                                                onClick={() => collapsible.setOpen(!collapsible.open)}
+                                                            >
+                                                                <LuRuler />
+                                                                {collapsible.open ? <Text>End measurement</Text> : <Text>Start measurement</Text>}
+                                                                <Icon>{collapsible.open ? <LuChevronUp /> : <LuChevronDown />}</Icon>
+                                                            </Button>
+                                                            <Collapsible.RootProvider value={collapsible}>
+                                                                <Collapsible.Content>
+                                                                    {collapsible.open &&
+                                                                        <Measurement mapId={MAP_ID} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE} />
+                                                                    }
+                                                                </Collapsible.Content>
+                                                            </Collapsible.RootProvider>
+                                                        </Stack>
+                                                    </Box>
+                                                </Flex>
+                                            </MapContainer>
                                         </Box>
-                                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                                            <MapOpacityControl mapId={MAP_ID} />
+                                    </Tabs.Content>
+                                    <Tabs.Content value="info">
+                                        View Data and Values
+                                        <Box pt="4" h="80vh">
+                                            Table with Pixelvalues, Metadata, ...
                                         </Box>
-                                    </Flex>
-                                </MapContainer>
-                            </Box>
-                        </Tabs.Content>
-                        <Tabs.Content value="info">
-                            View Data and Values
-                            <Box pt="4" h="80vh">
-                                Table with Pixelvalues, Metadata, ...
-                            </Box>
-                        </Tabs.Content>
-                    </Tabs.Root>
+                                    </Tabs.Content>
+                                </Tabs.Root>
+                            </ScrollArea.Content>
+                        </ScrollArea.Viewport>
+                        <ScrollArea.Scrollbar>
+                            <ScrollArea.Thumb />
+                        </ScrollArea.Scrollbar>
+                        <ScrollArea.Corner />
+                    </ScrollArea.Root >
                 </Box>
             }
         </Flex >
