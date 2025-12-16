@@ -3,20 +3,23 @@
 
 import { Flex } from "@chakra-ui/react";
 import { ZoomIn, ZoomOut } from "@open-pioneer/map-navigation";
-import { MapAnchor, MapRegistry, SimpleLayer } from "@open-pioneer/map";
+import { MapAnchor, MapAnchorPosition, MapRegistry, SimpleLayer } from "@open-pioneer/map";
 import { useService } from "open-pioneer:react-hooks";
 
 interface MapZoomControlsProps {
     mapId: string;
+    position?: MapAnchorPosition | "bottom-right";
+    horizontalGap?: number | 10;
+    verticalGap?: number | 30;
 }
 
-export const MapZoomControls = ({ mapId }: MapZoomControlsProps) => {
+export const MapZoomControls = ({ mapId, position, horizontalGap, verticalGap }: MapZoomControlsProps) => {
     const mapService = useService<MapRegistry>("map.MapRegistry");
 
     return (
-        <MapAnchor position="top-right" horizontalGap={10} verticalGap={60}>
+        <MapAnchor position={position} horizontalGap={horizontalGap} verticalGap={verticalGap}>
             <Flex
-                role="top-right"
+                role={position}
                 aria-label="Zoom controls"
                 direction="column"
                 gap={1}

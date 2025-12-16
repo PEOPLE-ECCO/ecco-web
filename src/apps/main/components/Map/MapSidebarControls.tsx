@@ -57,7 +57,7 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
                         gap="2"
                         alignItems="center"
                     >
-                        <IconButton variant="plain" w="100%" size="2xs">
+                        <IconButton variant="plain" w="100%" p="4" size="sm">
                             <LuMap />
                             <Collapsible.Indicator
                                 transition="transform 0.2s"

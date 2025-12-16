@@ -109,7 +109,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                             <Text fontWeight="medium" pb="2">Description:</Text>
                                                             <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
                                                         </HStack>
-                                                        {false &&
+                                                        {/* {false &&
                                                             <Collapsible.Root>
                                                                 <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                                     <Collapsible.Trigger>
@@ -136,7 +136,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                                     </Box>
                                                                 </Collapsible.Content>
                                                             </Collapsible.Root>
-                                                        }
+                                                        } */}
                                                         <Collapsible.Root defaultOpen>
                                                             <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                                 <Collapsible.Trigger>

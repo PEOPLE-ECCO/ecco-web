@@ -1,13 +1,11 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import {
     Box,
     Button,
-    Checkbox,
-    CheckboxCard,
     Circle,
     Collapsible,
     Flex,
@@ -17,13 +15,18 @@ import {
     Stack,
     Tabs,
     Text,
-    useCollapsible
+    useCollapsible,
+    VStack
 } from "@chakra-ui/react";
+import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft } from "react-icons/lu";
 
-import { MapRegistry, MapContainer, SimpleLayer, MapAnchor } from "@open-pioneer/map";
+import { MapRegistry, MapContainer, SimpleLayer, MapAnchor, MapModel, GroupLayer } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
 import { useService } from "open-pioneer:react-hooks";
 import { Measurement } from "@open-pioneer/measurement";
+import { useReactiveSnapshot } from "@open-pioneer/reactivity";
+import { Toc } from "@open-pioneer/toc";
+import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
@@ -33,19 +36,18 @@ import { Fill, Stroke, Style } from "ol/style";
 
 import { useServices } from "../../../services/Services";
 import { MAP_ID } from "../../../services";
-
+import { Site } from "../Site/Site";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { JobResult, Timeseries } from "../../../components/definitions";
-import { useReactiveSnapshot } from "@open-pioneer/reactivity";
-import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
 import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
-import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronRight, LuChevronUp } from "react-icons/lu";
-import { Site } from "../Site/Site";
+import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
+
+
 
 export interface Events {
     selectedTimeseries: Timeseries;
@@ -69,7 +71,9 @@ export function SiteDetails() {
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
     const [dataViewOpen, setDataViewOpen] = useState(true);
     const [infoViewOpen, setInfoViewOpen] = useState(false);
+    const [map, setMap] = useState<MapModel>();
     const collapsible = useCollapsible();
+    const navigate = useNavigate();
 
 
     const emitter = new EventEmitter<Events>();
@@ -151,7 +155,9 @@ export function SiteDetails() {
 
     useEffect(() => {
         console.log("    useEffect(() => {");
-        showSelectedJobResult(0);
+        for (let i = 0; i < viewableJobResults.length; i++) {
+            showSelectedJobResult(i);
+        }
         setActiveSliderResult(0);
     }, [viewableJobResults]);
 
@@ -159,17 +165,19 @@ export function SiteDetails() {
         const map = await mapService.expectMapModel(MAP_ID);
         map.zoom(
             [
+                // should be scenario.extent later
                 new Point([850000, 6793120])
             ],
             { pointZoom: 10 }
         );
+        setMap(map);
     }
 
-    async function remove_current_item() {
+    async function remove_current_item(id: string) {
         console.log("removing");
         console.log(id);
         const map = await mapService.expectMapModel(MAP_ID);
-        map.layers.removeLayerById("current");
+        map.layers.removeLayerById(id);
         map.removeHighlights();
     }
 
@@ -181,52 +189,65 @@ export function SiteDetails() {
                 ))
                 );
             };
-            console.log("shotsnap");
         }, [selectedTimeseries, selectedTimeseries?.jobs]
     );
 
-    async function showSelectedJobResult(id: number) {
+    async function showSelectedJobResult() {
+        const map = await mapService.expectMapModel(MAP_ID);
+
+        selectedTimeseries?.results.value.forEach((results, resultType) => {
+
+            const groupLayer = new GroupLayer({
+                id: resultType,
+                title: resultType,
+                layers: results.map(res => {
+                    const image = new GeoTIFF({
+                        normalize: false,
+                        interpolate: false,
+                        sources: [
+                            {
+                                url: res.href,
+                            },
+                        ],
+                    });
+                    const style = JSON.parse(res.style);
+                    return new SimpleLayer({
+                        id: res.name,
+                        title: res.name,
+                        olLayer: new TileLayer({
+                            source: image,
+                            style: style
+                        }),
+                    });
+                })
+            });
+            map.layers.addLayer(groupLayer);
+        });
+
+        /*
         const jobResult = viewableJobResults.get(id);
         if (!jobResult) {
             console.log("result not yet available");
             return;
         }
 
-        const map = await mapService.expectMapModel(MAP_ID);
-        await remove_current_item();
+        
+        await remove_current_item(id.toString());
+        */
+        
 
-        const google = new Projection({ code: "EPSG:3857" });
-        const image = new GeoTIFF({
-            normalize: false,
-            interpolate: false,
-            sources: [
-                {
-                    url: jobResult.href,
-                },
-            ],
-        });
 
         //TODO: this is really really bad
-        const style = JSON.parse(jobResult.style);
 
-        const layer = new SimpleLayer({
-            id: "current",
-            title: "current",
-            olLayer: new TileLayer({
-                source: image,
-                style: style
-            }),
-        });
+
         // layer.olLayer.setOpacity(0.5);
-        map.layers.addLayer(layer);
-
-        console.log("map.layers.addLayer(" + id.toString());
-
 
         // const bbox = catalog.bbox;
+        /*
         if (shouldHighlightAndZoom) {
-            console.log(jobResult.epsg);
+            const google = new Projection({ code: "EPSG:3857" });
             const stacproj = new Projection({ code: jobResult.epsg });
+            // bbox should be selectedTimeseries.extent from TS creation later
             const bbox = (await image.getView()).extent;
             map.highlightAndZoom(
                 [
@@ -236,41 +257,59 @@ export function SiteDetails() {
                 { viewPadding: { top: 50, bottom: 100 } }
             );
         }
+        */
     }
 
 
     return (
         <Flex>
             {dataViewOpen &&
-                <Box width="450px" p="2" bg="teal.50">
-                    <Box p="2">
-                        <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
+                <Box h="88vh" width="450px" p="2" bg="teal.50">
+                    <Box p="2" colorPalette="teal">
+                        <HStack>
+                            <Button onClick={() => navigate("..")}>
+                                <LuArrowBigLeft></LuArrowBigLeft>
+                                Sites
+                            </Button>
+                            <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
+                        </HStack>
                     </Box>
                     <Tabs.Root defaultValue="timeseries" colorPalette="teal">
                         <Tabs.List>
                             <Tabs.Trigger value="timeseries">
                                 <LuMap />
                                 Timeseries View
+                                <Tooltip content="This view shows different timestamps of one process and area and provides a time-slider to swicht the results">
+                                    <Button size="xs" variant="ghost">
+                                        <LuInfo />
+                                    </Button>
+                                </Tooltip>
                             </Tabs.Trigger>
                             <Tabs.Trigger value="layer">
                                 <LuDatabase />
                                 Layer View
+                                <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
+                                    <Button size="xs" variant="ghost">
+                                        <LuInfo />
+                                    </Button>
+                                </Tooltip>
                             </Tabs.Trigger>
                         </Tabs.List>
+
                         <Tabs.Content value="timeseries">
                             <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
                         </Tabs.Content>
                         <Tabs.Content value="layer">
                             View Layers as Groups
-                            {timeseries?.map((element) =>
-                                <HStack key={element.name} gap="6">
-                                    <Checkbox.Root>
-                                        <Checkbox.HiddenInput />
-                                        <Checkbox.Control />
-                                        <Checkbox.Label>{element.name}</Checkbox.Label>
-                                    </Checkbox.Root>
-                                </HStack>
-                            )}
+                            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                                {map &&
+                                    <Toc map={map} showTools={true} showBasemapSwitcher={false} collapsibleGroups={true} initiallyCollapsed={false} />
+                                }
+                                {timeseries?.map((element) =>
+                                    <HStack key={element.name} gap="6">
+                                    </HStack>
+                                )}
+                            </Box>
                         </Tabs.Content>
                     </Tabs.Root>
                 </Box>
@@ -283,14 +322,14 @@ export function SiteDetails() {
                 >
                     <MapInfoControls mapId={MAP_ID} />
                     {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
-                    <MapZoomControls mapId={MAP_ID} />
+                    <MapZoomControls mapId={MAP_ID} position="top-right" horizontalGap={10} verticalGap={60} />
                     <MapAnchor position="top-right" horizontalGap={0} verticalGap={10}>
                         <Flex
                             role="top-right"
                             bottom="3%"
-                            aria-label="Zoom controls"
+                            aria-label="Data View controls"
                             direction="column"
-                            colorPalette={"teal"}
+                            colorPalette="teal"
                         >
                             <Button onClick={() => { setInfoViewOpen(!infoViewOpen); }} >
                                 <LuInfo />
@@ -301,9 +340,9 @@ export function SiteDetails() {
                         <Flex
                             role="top-left"
                             bottom="3%"
-                            aria-label="Zoom controls"
+                            aria-label="Info controls"
                             direction="column"
-                            colorPalette={"teal"}
+                            colorPalette="teal"
                         >
                             <Button onClick={() => { setDataViewOpen(!dataViewOpen); }} >
                                 <LuFolderTree />
@@ -428,7 +467,7 @@ export function SiteDetails() {
                                                     onClick={() => collapsible.setOpen(!collapsible.open)}
                                                 >
                                                     <LuRuler />
-                                                    Start measurement
+                                                    {collapsible.open ? <Text>End measurement</Text> : <Text>Start measurement</Text>}
                                                     <Icon>{collapsible.open ? <LuChevronUp /> : <LuChevronDown />}</Icon>
                                                 </Button>
                                                 <Collapsible.RootProvider value={collapsible}>

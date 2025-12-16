@@ -13,13 +13,17 @@ interface MapOpacityControlsProps {
 export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
     const mapService = useService<MapRegistry>("map.MapRegistry");
 
-    const [opacity, setOpacity] = useState<number>(100);
+    const [opacity, setOpacity] = useState<number | undefined>(undefined);
     useEffect(() => {
         const updateMap = async () => {
             const map = await mapService.expectMapModel(mapId);
             const layer = map.layers.getLayerById("current") as SimpleLayer;
             if (layer) {
+                if (opacity == undefined) {
+                    setOpacity(layer.olLayer.getOpacity() * 100);
+                } else {
                 layer.olLayer.setOpacity(opacity / 100);
+                }
             }
         };
         updateMap();
@@ -38,7 +42,7 @@ export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
                     <Slider.Root
                         width="250px"
                         orientation="horizontal"
-                        defaultValue={[100]}
+                        //defaultValue={[100]}
                         value={[opacity]}
                         onValueChange={(e) => setOpacity(e.value[0]!)}
                         onValueChangeEnd={(e) => setOpacity(e.value[0]!)}

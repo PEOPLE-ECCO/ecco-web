@@ -17,6 +17,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
+import { Point } from "ol/geom";
 
 
 register(proj4);
@@ -35,6 +36,9 @@ export const Sites: FC = () => {
     const [sites, setSites] = useState<[Site]>();
     const mapService = useService<MapRegistry>("map.MapRegistry");
 
+    // coordinates will be fetched from sites later
+    const coordinates = [{ x: 3991971.41, y: 3959480.73, content: "Lebanon" }, { x: 12001233.97, y: 2698071.59, content: "Vietnam" }, { x: 13196037.26, y: 493067.14, content: "Malaysia" }, { x: 850000, y: 6793120, content: "Münster"}];
+
     useEffect(() => {
         const fetchScenarios = async () => {
             try {
@@ -46,12 +50,30 @@ export const Sites: FC = () => {
         };
 
         fetchScenarios();
-        showScenarios();
+        zoomToInitialView();
+        showScenarios(coordinates);
     }, []);
 
-    async function showScenarios() {
+    async function zoomToInitialView() {
+            const map = await mapService.expectMapModel(MAP_SiteView);
+            map.zoom(
+                [
+                    new Point([850000, 6793120])
+                ],
+                { pointZoom: 1 }
+            );
+        }
+
+    async function showScenarios(coordinates) {
 
         const map = await mapService.expectMapModel(MAP_SiteView);
+
+        for (const coord of coordinates) {
+            map.highlight([
+                new Point([coord.x, coord.y])
+            ]);
+        };
+
         const lebanon = {
             "type": "FeatureCollection",
             "name": "rest2011-2012_41R1_S1_S2_WGS84",
@@ -101,7 +123,7 @@ export const Sites: FC = () => {
                         aria-label=""
                     >
                         <MapInfoControls mapId={MAP_SiteView} />
-                        <MapZoomControls mapId={MAP_SiteView} />
+                        <MapZoomControls mapId={MAP_SiteView} position="bottom-right" horizontalGap={10} verticalGap={30} />
                     </MapContainer>
                 </Box>
             </Flex>
