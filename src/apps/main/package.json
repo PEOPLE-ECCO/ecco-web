@@ -22,6 +22,7 @@
         "@open-pioneer/scale-viewer": "catalog:",
         "@open-pioneer/toc": "catalog:",
         "@open-pioneer/legend": "catalog:",
+        "@open-pioneer/experimental-layout-sidebar": "catalog:",
         "lucide-react": "0.488.0",
         "ol": "catalog:",
         "ol-stac": "1.0.0-beta.10",
