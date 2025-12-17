@@ -64,7 +64,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
 
     useEffect(() => {
-        eventListener.emit("legendType", expandedValue[0]!);
+        eventListener.emit("expandedValue", expandedValue[0]!);
     }, [expandedValue]);
 
 
@@ -143,7 +143,6 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                             setExpandedValue([]);
                         } else {
                             setExpandedValue([e.focusedValue!]);
-                            eventListener.emit("legendType", e.expandedValue[0]!);
                         };
                         console.log("TODO: close all previously expanded results via Event");
                     }}
@@ -159,7 +158,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                             <TreeView.BranchText fontWeight="bold">
                                                 {node.name}
                                             </TreeView.BranchText>
-                                            <TreeView.Item>
+                                            {/* <TreeView.Item>
                                                 <Tooltip content="View legend">
                                                     <Button
                                                         color="black"
@@ -170,7 +169,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                         <LuLayers />
                                                     </Button>
                                                 </Tooltip>
-                                            </TreeView.Item>
+                                            </TreeView.Item> */}
 
                                         </>
                                     </TreeView.BranchControl>
@@ -179,7 +178,21 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                         <>
                                             <TreeView.ItemText>
                                                 {node.type == "meta" &&
-                                                    <MapOpacityControl mapId={MAP_ID} />
+                                                    <>
+                                                        <HStack>
+                                                            <MapOpacityControl mapId={MAP_ID} />
+                                                            <Tooltip content="View legend">
+                                                                <Button
+                                                                    color="black"
+                                                                    _hover={{ bg: "teal.50" }}
+                                                                    size="xs"
+                                                                    variant="ghost"
+                                                                    onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
+                                                                    <LuLayers />
+                                                                </Button>
+                                                            </Tooltip>
+                                                        </HStack>
+                                                    </>
                                                 }
                                                 {node.type != "meta" &&
                                                     <VStack>

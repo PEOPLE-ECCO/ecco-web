@@ -28,6 +28,8 @@ import { Measurement } from "@open-pioneer/measurement";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { Toc } from "@open-pioneer/toc";
 import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
+import { SidebarItem, Sidebar, SidebarProperties } from "@open-pioneer/experimental-layout-sidebar";
+
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
@@ -47,6 +49,7 @@ import { JobResult, Timeseries } from "../../../components/definitions";
 import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
+import { info } from "node:console";
 
 
 
@@ -54,7 +57,7 @@ export interface Events {
     selectedTimeseries: Timeseries;
     toggleJobWithId: string;
     infoViewOpen: boolean;
-    legendType: string;
+    expandedValue: string;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -72,47 +75,27 @@ export function SiteDetails() {
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
-    const [dataViewOpen, setDataViewOpen] = useState(true);
-    const [infoViewOpen, setInfoViewOpen] = useState(false);
+    const [dataViewOpen, setDataViewOpen] = useState<boolean>(true);
+    const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
+    const [sidebarWidth, setSidebarWidth] = useState<number>();
     const [map, setMap] = useState<MapModel>();
-    const [legendType, setLegendType] = useState<string>();
+    const [expandedValue, setExpandedValue] = useState<string>();
+    const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
+
     const collapsible = useCollapsible();
     const navigate = useNavigate();
 
 
     const emitter = new EventEmitter<Events>();
-
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
-
     emitter.on("infoViewOpen",
         (value: boolean) => (setInfoViewOpen(value))
     );
-
-    emitter.on("legendType",
-        (value: string) => (setLegendType(value))
+    emitter.on("expandedValue",
+        (value: string) => (setExpandedValue(value))
     );
-
-    const BLACK_STYLE = new Style({
-        stroke: new Stroke({
-            color: "teal",
-            width: 4
-        }),
-        fill: new Fill({
-            color: "rgba(255, 255, 255, 0.25)"
-        })
-    });
-
-    const RED_STYLE = new Style({
-        stroke: new Stroke({
-            color: "teal",
-            width: 4
-        }),
-        fill: new Fill({
-            color: "rgba(110, 150, 168, 0.25)"
-        })
-    });
 
     /*
     emitter.on("toggleJobWithId",
@@ -122,16 +105,16 @@ export function SiteDetails() {
             console.log(value);
             for (const jobResult of jobResults!) {
                 if (jobResult.filename == value) {
-                    jobResult.visible = !jobResult.visible;
+                jobResult.visible = !jobResult.visible;
                 }
-                if (jobResult.visible == true) {
-                    currentSliderResults.push(jobResult);
+            if (jobResult.visible == true) {
+                currentSliderResults.push(jobResult);
                 }
             }
             setViewableJobResults(currentSliderResults);
         }
-    );
-    */
+            );
+            */
 
     useEffect(() => {
         const fetchTimeseries = async () => {
@@ -166,18 +149,33 @@ export function SiteDetails() {
     }, [selectedTimeseries]);
 
     useEffect(() => {
-        console.log("    useEffect(() => {");
-        for (let i = 0; i < viewableJobResults.length; i++) {
-            showSelectedJobResult(i);
-        }
+
+        showSelectedJobResult(0);
+
         setActiveSliderResult(0);
     }, [viewableJobResults]);
+
+    useEffect(() => {
+        console.log("expandedValue changed, visibility check:");
+        for (const res of viewableJobResults) {
+            console.log("start;");
+            console.log(res.type, expandedValue);
+            if (res.type == expandedValue) {
+                res.visible.value = true;
+                console.log("same", res.type, res.visible.value);
+            }
+            if (res.type != expandedValue) {
+                res.visible.value = false;
+                console.log("different", res.type, res.visible.value);
+            }
+        }
+    }, [expandedValue]);
 
     async function zoomToInitialView() {
         const map = await mapService.expectMapModel(MAP_ID);
         map.zoom(
             [
-                // should be scenario.extent later
+                // should be scenario.extent or centerpoint later
                 new Point([850000, 6793120])
             ],
             { pointZoom: 10 }
@@ -185,11 +183,11 @@ export function SiteDetails() {
         setMap(map);
     }
 
-    async function remove_current_item(id: string) {
+    async function remove_current_item() {
         console.log("removing");
         console.log(id);
         const map = await mapService.expectMapModel(MAP_ID);
-        map.layers.removeLayerById(id);
+        map.layers.removeLayerById("current");
         map.removeHighlights();
     }
 
@@ -201,65 +199,52 @@ export function SiteDetails() {
                 ))
                 );
             };
+            console.log("shotsnap");
         }, [selectedTimeseries, selectedTimeseries?.jobs]
     );
 
-    async function showSelectedJobResult() {
-        const map = await mapService.expectMapModel(MAP_ID);
-
-        selectedTimeseries?.results.value.forEach((results, resultType) => {
-
-            const groupLayer = new GroupLayer({
-                id: resultType,
-                title: resultType,
-                layers: results.map(res => {
-                    const image = new GeoTIFF({
-                        normalize: false,
-                        interpolate: false,
-                        sources: [
-                            {
-                                url: res.href,
-                            },
-                        ],
-                    });
-                    const style = JSON.parse(res.style);
-                    return new SimpleLayer({
-                        id: res.name,
-                        title: res.name,
-                        olLayer: new TileLayer({
-                            source: image,
-                            style: style
-                        }),
-                    });
-                })
-            });
-            map.layers.addLayer(groupLayer);
-        });
-
-        /*
+    async function showSelectedJobResult(id: number) {
         const jobResult = viewableJobResults.get(id);
         if (!jobResult) {
             console.log("result not yet available");
             return;
         }
 
-        
-        await remove_current_item(id.toString());
-        */
+        const map = await mapService.expectMapModel(MAP_ID);
+        await remove_current_item();
 
-
+        const google = new Projection({ code: "EPSG:3857" });
+        const image = new GeoTIFF({
+            normalize: false,
+            interpolate: false,
+            sources: [
+                {
+                    url: jobResult.href,
+                },
+            ],
+        });
 
         //TODO: this is really really bad
+        const style = JSON.parse(jobResult.style);
 
-
+        const layer = new SimpleLayer({
+            id: "current",
+            title: "current",
+            olLayer: new TileLayer({
+                source: image,
+                style: style
+            }),
+        });
         // layer.olLayer.setOpacity(0.5);
+        map.layers.addLayer(layer);
+
+        console.log("map.layers.addLayer(" + id.toString());
+
 
         // const bbox = catalog.bbox;
-        /*
         if (shouldHighlightAndZoom) {
-            const google = new Projection({ code: "EPSG:3857" });
+            console.log(jobResult.epsg);
             const stacproj = new Projection({ code: jobResult.epsg });
-            // bbox should be selectedTimeseries.extent from TS creation later
             const bbox = (await image.getView()).extent;
             map.highlightAndZoom(
                 [
@@ -269,27 +254,58 @@ export function SiteDetails() {
                 { viewPadding: { top: 50, bottom: 100 } }
             );
         }
-        */
     }
+
+    const BLACK_STYLE = new Style({
+        stroke: new Stroke({
+            color: "teal",
+            width: 4
+        }),
+        fill: new Fill({
+            color: "rgba(255, 255, 255, 0.25)"
+        })
+    });
+
+    const RED_STYLE = new Style({
+        stroke: new Stroke({
+            color: "teal",
+            width: 4
+        }),
+        fill: new Fill({
+            color: "rgba(110, 150, 168, 0.25)"
+        })
+    });
+
+    const items: SidebarItem[] = [
+        {
+            id: "info",
+            icon: <LuInfo />,
+            label: "",
+            content:
+                <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+
+                </Box>
+        }
+    ];
 
 
     return (
         <Flex>
             {dataViewOpen &&
-                <Box h="90vh" w="450px" p="2" bg="teal.50">
-                    <ScrollArea.Root maxW="md" minH="50vh" variant="hover">
+                <Box h="90vh" w="500px" p="2" bg="teal.50">
+                    <ScrollArea.Root minH="50vh" variant="hover">
                         <ScrollArea.Viewport>
                             <ScrollArea.Content spaceY="4">
                                 <Box p="2" colorPalette="teal">
                                     <HStack>
                                         <Button onClick={() => navigate("..")}>
-                                            <LuArrowBigLeft></LuArrowBigLeft>
+                                            <LuArrowBigLeft />
                                             Sites
                                         </Button>
                                         <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
                                     </HStack>
                                 </Box>
-                                <Tabs.Root defaultValue="timeseries" colorPalette="teal">
+                                <Tabs.Root defaultValue="timeseries" colorPalette="teal" onValueChange={() => setTimeseriesViewActive(!timeseriesViewActive)}>
                                     <Tabs.List>
                                         <Tabs.Trigger value="timeseries">
                                             <LuMap />
@@ -373,7 +389,7 @@ export function SiteDetails() {
                         </Flex>
                     </MapAnchor>
                     <Box>
-                        {selectedTimeseries && viewableJobResults.length > 0 &&
+                        {timeseriesViewActive && selectedTimeseries && viewableJobResults.length > 0 &&
                             <Box
                                 position="absolute"
                                 bottom="14"
@@ -453,6 +469,16 @@ export function SiteDetails() {
                     </Box>
                 </MapContainer>
             </Box>
+            <Box h="90vh" w="100px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+                <div style={{ position: "relative" }}>
+                    <Sidebar
+                        defaultExpanded={false}
+                        expandedChanged={(expanded) => setInfoViewOpen(expanded)}
+                        //sidebarWidthChanged={(width) => setSidebarWidth(width)}
+                        items={items}
+                    />
+                </div>
+            </Box>
             {infoViewOpen &&
                 <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                     <ScrollArea.Root maxW="md" minH="50vh" variant="hover">
@@ -474,7 +500,7 @@ export function SiteDetails() {
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="legend">
-                                        <Legend process={legendType}/>  {/* must be activeSliderResult Process later */}
+                                        <Legend process={expandedValue} />
                                     </Tabs.Content>
                                     <Tabs.Content value="tools">
                                         Use Map Tools

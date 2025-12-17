@@ -22,6 +22,7 @@ export const Legend = ({ process }: LegendControlProps) => {
     const [currentDescription, setCurrentDescription] = useState<string>();
 
     useEffect(() => {
+        console.log("process changed", process);
         setContent();
     }, [process]);
 
@@ -38,11 +39,15 @@ export const Legend = ({ process }: LegendControlProps) => {
             setCurrentLegend(deltaIRLegend);
             setCurrentDescription(deltaIRDescription);
         }
+        if (process == undefined) {
+            setCurrentLegend([]);
+            setCurrentDescription("");
+        }
     };
 
     return (
         <>
-            {currentLegend && (
+            {currentLegend && process != undefined && (
                 <>
                     <Box bg="white" p="6" borderWidth="1px" borderRadius="md" boxShadow="sm">
                         <Stack gap="2">
