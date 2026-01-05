@@ -60,12 +60,12 @@ export interface TreeNode {
 
 
 export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
-    const [expandedValue, setExpandedValue] = useState<string[]>([]);
+    const [expandedResultType, setExpandedResultType] = useState<string[]>([]);
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
 
     useEffect(() => {
-        eventListener.emit("expandedValue", expandedValue[0]!);
-    }, [expandedValue]);
+        eventListener.emit("expandedResultType", expandedResultType[0]!);
+    }, [expandedResultType]);
 
 
     const treeCollection = useReactiveSnapshot(
@@ -137,12 +137,12 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                 <TreeView.Root collection={treeCollection}
                     maxW="md"
                     defaultCheckedValue={[]}
-                    expandedValue={expandedValue}
+                    expandedValue={expandedResultType}
                     onExpandedChange={(e) => {
                         if (e.expandedValue.length == 0) {
-                            setExpandedValue([]);
+                            setExpandedResultType([]);
                         } else {
-                            setExpandedValue([e.focusedValue!]);
+                            setExpandedResultType([e.focusedValue!]);
                         };
                         console.log("TODO: close all previously expanded results via Event");
                     }}

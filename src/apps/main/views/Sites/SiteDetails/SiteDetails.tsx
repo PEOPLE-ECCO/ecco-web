@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { useNavigate, useParams } from "react-router";
+import { href, useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import {
     Box,
@@ -57,7 +57,7 @@ export interface Events {
     selectedTimeseries: Timeseries;
     toggleJobWithId: string;
     infoViewOpen: boolean;
-    expandedValue: string;
+    expandedResultType: string;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -71,6 +71,7 @@ export function SiteDetails() {
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [scenario, setScenario] = useState<Site>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
+    const [expandedResultType, setExpandedResultType] = useState<string>();
     const [viewableJobResults, setViewableJobResults] = useState<ReactiveArray<JobResult>>(reactiveArray());
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
@@ -79,12 +80,12 @@ export function SiteDetails() {
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
     const [sidebarWidth, setSidebarWidth] = useState<number>();
     const [map, setMap] = useState<MapModel>();
-    const [expandedValue, setExpandedValue] = useState<string>();
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
+    const [href, setHref] = useState<string>();
+    const [epsg, setEpsg] = useState<string | undefined>();
 
     const collapsible = useCollapsible();
     const navigate = useNavigate();
-
 
     const emitter = new EventEmitter<Events>();
     emitter.on("selectedTimeseries",
@@ -93,8 +94,8 @@ export function SiteDetails() {
     emitter.on("infoViewOpen",
         (value: boolean) => (setInfoViewOpen(value))
     );
-    emitter.on("expandedValue",
-        (value: string) => (setExpandedValue(value))
+    emitter.on("expandedResultType",
+        (value: string) => (setExpandedResultType(value))
     );
 
     /*
@@ -146,50 +147,31 @@ export function SiteDetails() {
         if (!selectedTimeseries) {
             remove_current_item();
         }
+        if (selectedTimeseries) {
+            ZoomToTimeseriesExtent(selectedTimeseries!);
+        }
     }, [selectedTimeseries]);
 
-    useEffect(() => {
-
-        showSelectedJobResult(0);
-
-        setActiveSliderResult(0);
-    }, [viewableJobResults]);
+    // useEffect(() => {
+    //     showSelectedJobResult(0);
+    //     setActiveSliderResult(0);
+    // }, [viewableJobResults]);
 
     useEffect(() => {
-        console.log("expandedValue changed, visibility check:");
+        console.log("expandedResultType changed, visibility check:", expandedResultType);
         for (const res of viewableJobResults) {
             console.log("start;");
-            console.log(res.type, expandedValue);
-            if (res.type == expandedValue) {
+            console.log(res.type, expandedResultType);
+            if (res.type == expandedResultType) {
                 res.visible.value = true;
                 console.log("same", res.type, res.visible.value);
             }
-            if (res.type != expandedValue) {
+            if (res.type != expandedResultType) {
                 res.visible.value = false;
                 console.log("different", res.type, res.visible.value);
             }
         }
-    }, [expandedValue]);
-
-    async function zoomToInitialView() {
-        const map = await mapService.expectMapModel(MAP_ID);
-        map.zoom(
-            [
-                // should be scenario.extent or centerpoint later
-                new Point([850000, 6793120])
-            ],
-            { pointZoom: 10 }
-        );
-        setMap(map);
-    }
-
-    async function remove_current_item() {
-        console.log("removing");
-        console.log(id);
-        const map = await mapService.expectMapModel(MAP_ID);
-        map.layers.removeLayerById("current");
-        map.removeHighlights();
-    }
+    }, [expandedResultType]);
 
     useReactiveSnapshot(
         () => {
@@ -203,16 +185,62 @@ export function SiteDetails() {
         }, [selectedTimeseries, selectedTimeseries?.jobs]
     );
 
+    async function ZoomToTimeseriesExtent(ts: Timeseries) {
+        console.log(ts.results.value.entries());
+        const map = await mapService.expectMapModel(MAP_ID);
+        for (const [type, results] of ts.results.value.entries()) {
+            setHref(results[0]?.href);
+            setEpsg(results[0]?.epsg);
+        }
+        const google = new Projection({ code: "EPSG:3857" });
+        const image = new GeoTIFF({
+            normalize: false,
+            interpolate: false,
+            sources: [
+                {
+                    url: href,
+                },
+            ],
+        });
+        const stacproj = new Projection({ code: epsg! });
+        // should be TS extent later
+        const bbox = (await image.getView()).extent;
+        map.highlightAndZoom(
+            [
+                new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
+                new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
+            ],
+            { viewPadding: { top: 50, bottom: 100 } }
+        );
+    };
+
+    async function zoomToInitialView() {
+        const map = await mapService.expectMapModel(MAP_ID);
+        map.zoom(
+            [
+                // should be scenario.extent or centerpoint later
+                new Point([850000, 6793120])
+            ],
+            { pointZoom: 10 }
+        );
+        setMap(map);
+    };
+
+    async function remove_current_item() {
+        const map = await mapService.expectMapModel(MAP_ID);
+        map.layers.removeLayerById("current");
+        map.removeHighlights();
+    };
+
     async function showSelectedJobResult(id: number) {
         const jobResult = viewableJobResults.get(id);
+        console.log(viewableJobResults, jobResult);
         if (!jobResult) {
             console.log("result not yet available");
             return;
         }
-
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
-
         const google = new Projection({ code: "EPSG:3857" });
         const image = new GeoTIFF({
             normalize: false,
@@ -223,10 +251,8 @@ export function SiteDetails() {
                 },
             ],
         });
-
         //TODO: this is really really bad
         const style = JSON.parse(jobResult.style);
-
         const layer = new SimpleLayer({
             id: "current",
             title: "current",
@@ -235,26 +261,18 @@ export function SiteDetails() {
                 style: style
             }),
         });
-        // layer.olLayer.setOpacity(0.5);
         map.layers.addLayer(layer);
-
-        console.log("map.layers.addLayer(" + id.toString());
-
-
+        // console.log("map.layers.addLayer(" + id.toString());
         // const bbox = catalog.bbox;
-        if (shouldHighlightAndZoom) {
-            console.log(jobResult.epsg);
-            const stacproj = new Projection({ code: jobResult.epsg });
-            const bbox = (await image.getView()).extent;
-            map.highlightAndZoom(
-                [
-                    new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
-                    new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-                ],
-                { viewPadding: { top: 50, bottom: 100 } }
-            );
-        }
-    }
+        const stacproj = new Projection({ code: jobResult.epsg });
+        const bbox = (await image.getView()).extent;
+        map.highlight(
+            [
+                new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
+                new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
+            ]
+        );
+    };
 
     const BLACK_STYLE = new Style({
         stroke: new Stroke({
@@ -439,8 +457,7 @@ export function SiteDetails() {
                                         max={viewableJobResults.length - 1}
                                         defaultValue={[0]}
                                         onValueChangeEnd={(val) => {
-                                            console.log("onValueChangeEnd");
-                                            console.log(val.value[0]!);
+                                            console.log("onValueChangeEnd", val.value[0]!);
                                             showSelectedJobResult(val.value[0]!);
                                             setActiveSliderResult(val.value[0]!);
                                         }}
@@ -500,7 +517,7 @@ export function SiteDetails() {
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="legend">
-                                        <Legend process={expandedValue} />
+                                        <Legend process={expandedResultType} />
                                     </Tabs.Content>
                                     <Tabs.Content value="tools">
                                         Use Map Tools
