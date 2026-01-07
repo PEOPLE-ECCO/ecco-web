@@ -50,6 +50,8 @@ import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
 import { info } from "node:console";
+import { Extent } from "ol/extent";
+import { remove } from "ol/array";
 
 
 
@@ -75,14 +77,13 @@ export function SiteDetails() {
     const [viewableJobResults, setViewableJobResults] = useState<ReactiveArray<JobResult>>(reactiveArray());
     const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
     const mapService = useService<MapRegistry>("map.MapRegistry");
-    const [shouldHighlightAndZoom, setShouldHighlightAndZoom] = useState(true);
     const [dataViewOpen, setDataViewOpen] = useState<boolean>(true);
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
-    const [sidebarWidth, setSidebarWidth] = useState<number>();
     const [map, setMap] = useState<MapModel>();
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
-    const [href, setHref] = useState<string>();
-    const [epsg, setEpsg] = useState<string | undefined>();
+    const [timeseriesExtent, setTimeseriesExtent] = useState<Extent>([765040, 3707520, 766310, 3708990]);
+    const [timeseriesEpsg, setTimeseriesEpsg] = useState<string>("EPSG:32636");
+    const google = new Projection({ code: "EPSG:3857" });
 
     const collapsible = useCollapsible();
     const navigate = useNavigate();
@@ -115,53 +116,41 @@ export function SiteDetails() {
             setViewableJobResults(currentSliderResults);
         }
             );
-            */
+    */
 
     useEffect(() => {
-        const fetchTimeseries = async () => {
-            if (!id)
-                return;
-            try {
-                const data = await getTimeseries(id);
-                setTimeseries(data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-        const fetchScenario = async () => {
-            if (!id)
-                return;
-            try {
-                const scenario = await getScenario(id);
-                setScenario(scenario);
-            } catch (error) {
-                console.error(error);
-            }
-        };
         fetchTimeseries();
         fetchScenario();
         zoomToInitialView();
     }, []);
 
     useEffect(() => {
+        console.log("useEffect on selectedTimeseries: ", selectedTimeseries);
         if (!selectedTimeseries) {
             remove_current_item();
         }
         if (selectedTimeseries) {
-            ZoomToTimeseriesExtent(selectedTimeseries!);
+            // Extent and EPSG should be from TS data later
+            ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg);
         }
     }, [selectedTimeseries]);
 
-    // useEffect(() => {
-    //     showSelectedJobResult(0);
-    //     setActiveSliderResult(0);
-    // }, [viewableJobResults]);
+    useEffect(() => {
+        console.log("useEffect on viewableJobResults: ", viewableJobResults.value);
+    }, [viewableJobResults]);
 
     useEffect(() => {
-        console.log("expandedResultType changed, visibility check:", expandedResultType);
+        console.log("useEffect on expandedResultType: ", expandedResultType);
+        if (!expandedResultType) {
+            remove_current_item();
+        }
+        if (expandedResultType) {
+            showSelectedJobResult(0);
+            setActiveSliderResult(0);
+        }
         for (const res of viewableJobResults) {
-            console.log("start;");
-            console.log(res.type, expandedResultType);
+            console.log("start visibility check");
+            console.log("resulttype: ", res.type, expandedResultType);
             if (res.type == expandedResultType) {
                 res.visible.value = true;
                 console.log("same", res.type, res.visible.value);
@@ -181,37 +170,30 @@ export function SiteDetails() {
                 ))
                 );
             };
-            console.log("shotsnap");
+            console.log("shotsnap on selectedTimeseries & selectedTimeseries?.jobs: ", selectedTimeseries, selectedTimeseries?.jobs);
         }, [selectedTimeseries, selectedTimeseries?.jobs]
     );
 
-    async function ZoomToTimeseriesExtent(ts: Timeseries) {
-        console.log(ts.results.value.entries());
-        const map = await mapService.expectMapModel(MAP_ID);
-        for (const [type, results] of ts.results.value.entries()) {
-            setHref(results[0]?.href);
-            setEpsg(results[0]?.epsg);
+    const fetchTimeseries = async () => {
+        if (!id)
+            return;
+        try {
+            const data = await getTimeseries(id);
+            setTimeseries(data);
+        } catch (error) {
+            console.error(error);
         }
-        const google = new Projection({ code: "EPSG:3857" });
-        const image = new GeoTIFF({
-            normalize: false,
-            interpolate: false,
-            sources: [
-                {
-                    url: href,
-                },
-            ],
-        });
-        const stacproj = new Projection({ code: epsg! });
-        // should be TS extent later
-        const bbox = (await image.getView()).extent;
-        map.highlightAndZoom(
-            [
-                new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
-                new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-            ],
-            { viewPadding: { top: 50, bottom: 100 } }
-        );
+    };
+
+    const fetchScenario = async () => {
+        if (!id)
+            return;
+        try {
+            const scenario = await getScenario(id);
+            setScenario(scenario);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     async function zoomToInitialView() {
@@ -219,11 +201,26 @@ export function SiteDetails() {
         map.zoom(
             [
                 // should be scenario.extent or centerpoint later
-                new Point([850000, 6793120])
+                new Point([3991698, 3959524])
             ],
-            { pointZoom: 10 }
+            { pointZoom: 12 }
         );
         setMap(map);
+    };
+
+    async function ZoomToTimeseriesExtent(extent: Extent, epsg: string) {
+        console.log("async function ZoomToTimeseriesExtent");
+        const map = await mapService.expectMapModel(MAP_ID);
+        const stacproj = new Projection({ code: epsg });
+        // extent should be TS.extent later
+        map.zoom(
+            [
+                new Point([extent[0]!, extent[1]!]).transform(stacproj, google),
+                new Point([extent[2]!, extent[3]!]).transform(stacproj, google)
+            ],
+            { viewPadding: { top: 50, bottom: 100 } }
+        );
+        console.log("Zoom done");
     };
 
     async function remove_current_item() {
@@ -234,14 +231,12 @@ export function SiteDetails() {
 
     async function showSelectedJobResult(id: number) {
         const jobResult = viewableJobResults.get(id);
-        console.log(viewableJobResults, jobResult);
         if (!jobResult) {
             console.log("result not yet available");
             return;
         }
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
-        const google = new Projection({ code: "EPSG:3857" });
         const image = new GeoTIFF({
             normalize: false,
             interpolate: false,
@@ -262,16 +257,17 @@ export function SiteDetails() {
             }),
         });
         map.layers.addLayer(layer);
-        // console.log("map.layers.addLayer(" + id.toString());
-        // const bbox = catalog.bbox;
         const stacproj = new Projection({ code: jobResult.epsg });
         const bbox = (await image.getView()).extent;
-        map.highlight(
-            [
-                new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
-                new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-            ]
-        );
+        if (bbox) {
+            map.highlight(
+                [
+                    new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
+                    new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
+                ]
+            );
+        }
+        console.log("highlight done");
     };
 
     const BLACK_STYLE = new Style({
@@ -301,7 +297,6 @@ export function SiteDetails() {
             label: "",
             content:
                 <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
-
                 </Box>
         }
     ];
@@ -407,7 +402,7 @@ export function SiteDetails() {
                         </Flex>
                     </MapAnchor>
                     <Box>
-                        {timeseriesViewActive && selectedTimeseries && viewableJobResults.length > 0 &&
+                        {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 0 &&
                             <Box
                                 position="absolute"
                                 bottom="14"
@@ -426,8 +421,7 @@ export function SiteDetails() {
                                         max={viewableJobResults.length - 1}
                                         defaultValue={[0]}
                                         onValueChangeEnd={(val) => {
-                                            console.log("onValueChangeEnd");
-                                            console.log(val.value[0]!);
+                                            console.log("onValueChangeEnd", val.value[0]!);
                                             showSelectedJobResult(val.value[0]!);
                                             setActiveSliderResult(val.value[0]!);
                                         }}
