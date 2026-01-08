@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { Tooltip } from "../../components/tooltip";
 
-import { LuDownload, LuEye, LuFolder, LuInfo, LuLayers, LuMap } from "react-icons/lu";
+import { LuAlignCenter, LuCrosshair, LuDownload, LuEye, LuFolder, LuInfo, LuLayers, LuMap, LuMapPin, LuMapPinHouse, LuMapPinned, LuMapPinXInside, LuPointer } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 
@@ -29,6 +29,7 @@ import { MAP_ID } from "../../services";
 import { useEffect, useState } from "react";
 import { ViewDetails, ViewLog } from "./ViewJob";
 import { cp } from "fs";
+import { emit } from "process";
 
 
 interface ResultTreeProps {
@@ -189,6 +190,16 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                                     variant="ghost"
                                                                     onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
                                                                     <LuLayers />
+                                                                </Button>
+                                                            </Tooltip>
+                                                            <Tooltip content="Zoom back to Extent">
+                                                                <Button
+                                                                    color="black"
+                                                                    _hover={{ bg: "teal.50" }}
+                                                                    size="xs"
+                                                                    variant="ghost"
+                                                                    onClick={() => { eventListener.emit("zoomBackToExtent"); }}>
+                                                                    <LuMapPinned />
                                                                 </Button>
                                                             </Tooltip>
                                                         </HStack>

@@ -8,6 +8,7 @@ import {
     Button,
     Circle,
     Collapsible,
+    FileUploadItemName,
     Flex,
     HStack,
     Icon,
@@ -52,6 +53,7 @@ import { Legend } from "../../../components/Map/LegendControl";
 import { info } from "node:console";
 import { Extent } from "ol/extent";
 import { remove } from "ol/array";
+import { all } from "ol/events/condition";
 
 
 
@@ -60,6 +62,7 @@ export interface Events {
     toggleJobWithId: string;
     infoViewOpen: boolean;
     expandedResultType: string;
+    zoomBackToExtent: undefined;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -74,8 +77,7 @@ export function SiteDetails() {
     const [scenario, setScenario] = useState<Site>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [expandedResultType, setExpandedResultType] = useState<string>();
-    const [viewableJobResults, setViewableJobResults] = useState<ReactiveArray<JobResult>>(reactiveArray());
-    const [activeSliderResult, setActiveSliderResult] = useState<number>(0);
+    const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [dataViewOpen, setDataViewOpen] = useState<boolean>(true);
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
@@ -83,6 +85,7 @@ export function SiteDetails() {
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
     const [timeseriesExtent, setTimeseriesExtent] = useState<Extent>([765040, 3707520, 766310, 3708990]);
     const [timeseriesEpsg, setTimeseriesEpsg] = useState<string>("EPSG:32636");
+    
     const google = new Projection({ code: "EPSG:3857" });
 
     const collapsible = useCollapsible();
@@ -98,25 +101,9 @@ export function SiteDetails() {
     emitter.on("expandedResultType",
         (value: string) => (setExpandedResultType(value))
     );
-
-    /*
-    emitter.on("toggleJobWithId",
-        (value: string) => {
-            const currentSliderResults = [];
-            console.log("toggleJobWithId");
-            console.log(value);
-            for (const jobResult of jobResults!) {
-                if (jobResult.filename == value) {
-                jobResult.visible = !jobResult.visible;
-                }
-            if (jobResult.visible == true) {
-                currentSliderResults.push(jobResult);
-                }
-            }
-            setViewableJobResults(currentSliderResults);
-        }
-            );
-    */
+    emitter.on("zoomBackToExtent",
+        () => (ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg))
+    );
 
     useEffect(() => {
         fetchTimeseries();
@@ -125,7 +112,6 @@ export function SiteDetails() {
     }, []);
 
     useEffect(() => {
-        console.log("useEffect on selectedTimeseries: ", selectedTimeseries);
         if (!selectedTimeseries) {
             remove_current_item();
         }
@@ -136,42 +122,30 @@ export function SiteDetails() {
     }, [selectedTimeseries]);
 
     useEffect(() => {
-        console.log("useEffect on viewableJobResults: ", viewableJobResults.value);
-    }, [viewableJobResults]);
-
-    useEffect(() => {
-        console.log("useEffect on expandedResultType: ", expandedResultType);
         if (!expandedResultType) {
             remove_current_item();
         }
         if (expandedResultType) {
             showSelectedJobResult(0);
-            setActiveSliderResult(0);
-        }
-        for (const res of viewableJobResults) {
-            console.log("start visibility check");
-            console.log("resulttype: ", res.type, expandedResultType);
-            if (res.type == expandedResultType) {
-                res.visible.value = true;
-                console.log("same", res.type, res.visible.value);
-            }
-            if (res.type != expandedResultType) {
-                res.visible.value = false;
-                console.log("different", res.type, res.visible.value);
-            }
+            ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg);
         }
     }, [expandedResultType]);
 
     useReactiveSnapshot(
         () => {
             for (const job of selectedTimeseries?.jobs ?? []) {
-                setViewableJobResults(job.results.filter((
+                const allTimeseriesResults = job.results.filter((
                     (val, i) => val.visible.value
-                ))
-                );
+                ));
+                const resultsOfExpandedType = [];
+                for (const result of allTimeseriesResults) {
+                    if (result.type == expandedResultType)
+                        resultsOfExpandedType.push(result);
+                }
+                setViewableJobResults(resultsOfExpandedType);
             };
             console.log("shotsnap on selectedTimeseries & selectedTimeseries?.jobs: ", selectedTimeseries, selectedTimeseries?.jobs);
-        }, [selectedTimeseries, selectedTimeseries?.jobs]
+        }, [selectedTimeseries, selectedTimeseries?.jobs, expandedResultType]
     );
 
     const fetchTimeseries = async () => {
@@ -209,7 +183,6 @@ export function SiteDetails() {
     };
 
     async function ZoomToTimeseriesExtent(extent: Extent, epsg: string) {
-        console.log("async function ZoomToTimeseriesExtent");
         const map = await mapService.expectMapModel(MAP_ID);
         const stacproj = new Projection({ code: epsg });
         // extent should be TS.extent later
@@ -230,7 +203,7 @@ export function SiteDetails() {
     };
 
     async function showSelectedJobResult(id: number) {
-        const jobResult = viewableJobResults.get(id);
+        const jobResult = viewableJobResults[id];
         if (!jobResult) {
             console.log("result not yet available");
             return;
@@ -423,7 +396,6 @@ export function SiteDetails() {
                                         onValueChangeEnd={(val) => {
                                             console.log("onValueChangeEnd", val.value[0]!);
                                             showSelectedJobResult(val.value[0]!);
-                                            setActiveSliderResult(val.value[0]!);
                                         }}
                                     >
                                         <Slider.Control>
@@ -453,7 +425,6 @@ export function SiteDetails() {
                                         onValueChangeEnd={(val) => {
                                             console.log("onValueChangeEnd", val.value[0]!);
                                             showSelectedJobResult(val.value[0]!);
-                                            setActiveSliderResult(val.value[0]!);
                                         }}
                                     >
                                         <Slider.Control>

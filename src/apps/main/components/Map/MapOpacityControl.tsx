@@ -12,7 +12,7 @@ interface MapOpacityControlsProps {
 
 export const MapOpacityControl = ({ mapId }: MapOpacityControlsProps) => {
     const mapService = useService<MapRegistry>("map.MapRegistry");
-    const [opacity, setOpacity] = useState<number | undefined>(100);
+    const [opacity, setOpacity] = useState<number>(100);
 
     useEffect(() => {
         const updateMap = async () => {
