@@ -299,6 +299,7 @@ interface RestJobResult {
 
 export interface JobResult extends RestJobResult {
     visible: Reactive<boolean>
+    visibleinoverview: Reactive<boolean>;
 }
 
 class JobResultData implements JobResult {
@@ -311,6 +312,7 @@ class JobResultData implements JobResult {
     #epsg: string;
     #style: string;
     #visible: Reactive<boolean>;
+    #visibleinoverview: Reactive<boolean>;
     #name: ReadonlyReactive<string>;
 
     /**
@@ -333,6 +335,7 @@ class JobResultData implements JobResult {
         this.#style = payload.style;
 
         this.#visible = reactive(true);
+        this.#visibleinoverview = reactive(true);
 
         this.#name = computed(() => {
             return this.#filename.split("/").slice(-1)[0]!;
@@ -370,6 +373,14 @@ class JobResultData implements JobResult {
 
     public set visible(state: boolean) {
         this.#visible.value = state;
+    }
+
+    public get visibleinoverview(): Reactive<boolean> {
+        return this.#visibleinoverview;
+    }
+
+    public set visibleinoverview(state: boolean) {
+        this.#visibleinoverview.value = state;
     }
 
     public get epsg(): string {

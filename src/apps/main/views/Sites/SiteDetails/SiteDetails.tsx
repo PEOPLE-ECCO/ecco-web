@@ -1,14 +1,11 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { href, useNavigate, useParams } from "react-router";
-import { useEffect, useState } from "react";
 import {
     Box,
     Button,
     Circle,
     Collapsible,
-    FileUploadItemName,
     Flex,
     HStack,
     Icon,
@@ -17,26 +14,27 @@ import {
     Stack,
     Tabs,
     Text,
-    useCollapsible,
-    VStack
+    useCollapsible
 } from "@chakra-ui/react";
+
+import { useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
 import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft } from "react-icons/lu";
 
-import { MapRegistry, MapContainer, SimpleLayer, MapAnchor, MapModel, GroupLayer } from "@open-pioneer/map";
+import { MapRegistry, MapContainer, SimpleLayer, MapAnchor, MapModel } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
 import { useService } from "open-pioneer:react-hooks";
 import { Measurement } from "@open-pioneer/measurement";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { Toc } from "@open-pioneer/toc";
-import { reactiveArray, ReactiveArray } from "@conterra/reactivity-core";
-import { SidebarItem, Sidebar, SidebarProperties } from "@open-pioneer/experimental-layout-sidebar";
-
+import { SidebarItem, Sidebar } from "@open-pioneer/experimental-layout-sidebar";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
 import { GeoTIFF } from "ol/source";
 import TileLayer from "ol/layer/WebGLTile.js";
 import { Fill, Stroke, Style } from "ol/style";
+import { Extent } from "ol/extent";
 
 import { useServices } from "../../../services/Services";
 import { MAP_ID } from "../../../services";
@@ -47,14 +45,9 @@ import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { JobResult, Timeseries } from "../../../components/definitions";
-import { MapOpacityControl } from "../../../components/Map/MapOpacityControl";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
-import { info } from "node:console";
-import { Extent } from "ol/extent";
-import { remove } from "ol/array";
-import { all } from "ol/events/condition";
-
+import { LayerOverview } from "../../../components/Timeseries/LayerOverview";
 
 
 export interface Events {
@@ -70,6 +63,7 @@ const _proj32631 = new Projection({ code: "EPSG:32631" });
 const _proj32648 = new Projection({ code: "EPSG:32648" });
 const _proj32636 = new Projection({ code: "EPSG:32636" });
 
+
 export function SiteDetails() {
     const { id } = useParams();
     const { getTimeseries, getScenario } = useServices();
@@ -83,9 +77,9 @@ export function SiteDetails() {
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
     const [map, setMap] = useState<MapModel>();
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
-    const [timeseriesExtent, setTimeseriesExtent] = useState<Extent>([765040, 3707520, 766310, 3708990]);
-    const [timeseriesEpsg, setTimeseriesEpsg] = useState<string>("EPSG:32636");
-    
+
+    const timeseriesExtent = [765040, 3707520, 766310, 3708990];
+    const timeseriesEpsg = "EPSG:32636";
     const google = new Projection({ code: "EPSG:3857" });
 
     const collapsible = useCollapsible();
@@ -130,6 +124,13 @@ export function SiteDetails() {
             ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg);
         }
     }, [expandedResultType]);
+
+    useEffect(() => {
+        if (!timeseriesViewActive) {
+            remove_current_item();
+            // show layers with Visibility in Overview == true
+        }
+    }, [timeseriesViewActive]);
 
     useReactiveSnapshot(
         () => {
@@ -274,7 +275,6 @@ export function SiteDetails() {
         }
     ];
 
-
     return (
         <Flex>
             {dataViewOpen &&
@@ -302,7 +302,7 @@ export function SiteDetails() {
                                                 </Button>
                                             </Tooltip>
                                         </Tabs.Trigger>
-                                        <Tabs.Trigger value="layer">
+                                        <Tabs.Trigger value="layeroverview">
                                             <LuDatabase />
                                             Layer View
                                             <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
@@ -312,13 +312,12 @@ export function SiteDetails() {
                                             </Tooltip>
                                         </Tabs.Trigger>
                                     </Tabs.List>
-
                                     <Tabs.Content value="timeseries">
                                         <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
                                     </Tabs.Content>
-                                    <Tabs.Content value="layer">
-                                        View Layers as Groups
-                                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                                    <Tabs.Content value="layeroverview">
+                                        <LayerOverview timeseries={timeseries} eventListener={emitter} />
+                                        <Box mt="4" bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                                             {map &&
                                                 <Toc map={map} showTools={true} showBasemapSwitcher={false} collapsibleGroups={true} initiallyCollapsed={false} />
                                             }
@@ -337,7 +336,6 @@ export function SiteDetails() {
                         <ScrollArea.Corner />
                     </ScrollArea.Root >
                 </Box>
-
             }
             <Box h="90vh" flexGrow="1" >
                 <MapContainer
@@ -494,9 +492,7 @@ export function SiteDetails() {
                                             >
                                                 <Flex gap="4" direction="column">
                                                     <MapSidebarControls mapId={MAP_ID} position={"top-left"} verticalGap={0} />
-
                                                     <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-
                                                         <Stack >
                                                             <Button
                                                                 size="md"

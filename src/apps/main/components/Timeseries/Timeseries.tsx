@@ -3,24 +3,18 @@
 
 import {
     Box,
-    Button,
     Stack,
     Text,
     Menu,
     IconButton,
     Flex,
-    HStack,
     Accordion,
     Portal,
-    Collapsible,
-    ScrollArea,
-    Dialog,
-    VStack
+    Dialog
 } from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuChevronDown } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -30,8 +24,6 @@ import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
 import { Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
-
-import { JobTree } from "./JobTree";
 import { ResultTree } from "./ResultTree";
 
 
@@ -39,6 +31,7 @@ interface TimeseriesProps {
     timeseries?: Timeseries[]
     eventListener: EventEmitter<Events>
 }
+
 
 export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(true);
@@ -84,7 +77,6 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
 
     return (
         <>
-
             <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                 <Stack gap="4">
                     <Text fontWeight="700" fontSize={22}>Timeseries</Text>
@@ -139,7 +131,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                         } */}
                                             <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
                                                 <Text fontWeight="bold">Results</Text>
-                                                <ResultTree timeseries={ts} eventListener={eventListener}></ResultTree>
+                                                <ResultTree timeseries={ts} eventListener={eventListener} />
                                             </Box>
                                         </>
                                     }

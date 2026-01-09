@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, useEffect, useState } from "react";
-import { SimpleGrid, GridItem, Flex, Box } from "@chakra-ui/react";
+import { Flex, Box } from "@chakra-ui/react";
 
 import { fromEPSGCode, register } from "ol/proj/proj4.js";
 import proj4 from "proj4";
@@ -37,7 +37,7 @@ export const Sites: FC = () => {
     const mapService = useService<MapRegistry>("map.MapRegistry");
 
     // coordinates will be fetched from sites later
-    const coordinates = [{ x: 3991971.41, y: 3959480.73, content: "Lebanon" }, { x: 12001233.97, y: 2698071.59, content: "Vietnam" }, { x: 13196037.26, y: 493067.14, content: "Malaysia" }, { x: 850000, y: 6793120, content: "Münster"}];
+    const coordinates = [{ x: 3991971.41, y: 3959480.73, content: "Lebanon" }, { x: 12001233.97, y: 2698071.59, content: "Vietnam" }, { x: 13196037.26, y: 493067.14, content: "Malaysia" }, { x: 850000, y: 6793120, content: "Münster" }];
 
     useEffect(() => {
         const fetchScenarios = async () => {
@@ -48,24 +48,22 @@ export const Sites: FC = () => {
                 console.error(error);
             }
         };
-
         fetchScenarios();
         zoomToInitialView();
         showScenarios(coordinates);
     }, []);
 
     async function zoomToInitialView() {
-            const map = await mapService.expectMapModel(MAP_SiteView);
-            map.zoom(
-                [
-                    new Point([850000, 6793120])
-                ],
-                { pointZoom: 1 }
-            );
-        }
+        const map = await mapService.expectMapModel(MAP_SiteView);
+        map.zoom(
+            [
+                new Point([850000, 6793120])
+            ],
+            { pointZoom: 1 }
+        );
+    }
 
-    async function showScenarios(coordinates) {
-
+    async function showScenarios(coordinates: {x: number; y: number; content: string;}[]) {
         const map = await mapService.expectMapModel(MAP_SiteView);
 
         for (const coord of coordinates) {
@@ -106,7 +104,6 @@ export const Sites: FC = () => {
             <Flex gap="4" p="4" direction="row">
                 <Box>
                     <Flex gap="4" direction="row" wrap="wrap" justify="center">
-
                         {sites && sites.map((site) =>
                             <>
                                 <Box w="40%" flexGrow="1">

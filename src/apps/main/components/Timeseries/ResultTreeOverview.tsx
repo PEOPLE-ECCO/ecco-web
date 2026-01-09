@@ -14,8 +14,8 @@ import {
     VStack
 } from "@chakra-ui/react";
 
-import { useEffect, useState } from "react";
 import { LuDownload, LuEye, LuFolder, LuLayers, LuMap, LuMapPinned } from "react-icons/lu";
+import { useState } from "react";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
@@ -23,9 +23,9 @@ import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { Job, JobResult, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { MapOpacityControl } from "../Map/MapOpacityControl";
-import { MAP_ID } from "../../services";
 import { ViewDetails, ViewLog } from "./ViewJob";
-import { Tooltip } from "../../components/tooltip";
+import { MAP_ID } from "../../services";
+import { Tooltip } from "../tooltip";
 
 
 interface ResultTreeProps {
@@ -41,7 +41,7 @@ interface ResultType {
 interface ResultInTree {
     result: JobResult
     name: string
-    visible: boolean
+    visibleinoverview: boolean
 }
 
 export interface JobInTree {
@@ -55,19 +55,17 @@ export interface TreeNode {
     children?: ResultType[]
 }
 
+// export interface OverviewNode {
+//     name: string
+//     children?: TreeNode[]
+// }
 
-export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
-    const [expandedResultType, setExpandedResultType] = useState<string[]>([]);
+
+export function ResultTreeOverview({ timeseries, eventListener }: ResultTreeProps) {
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
-
-    useEffect(() => {
-        eventListener.emit("expandedResultType", expandedResultType[0]!);
-    }, [expandedResultType]);
-
 
     const treeCollection = useReactiveSnapshot(
         () => {
-
             const children = [];
             for (const [type, results] of timeseries.results.value.entries()) {
                 const withMeta = [{
@@ -88,34 +86,18 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                 nodeToString: (node) => node.name,
                 rootNode: {
                     name: "Results",
-                    children: children
+                    children: children 
+                    // [
+                    // {
+                    //     name: "Timeseries",
+                    //     children: children
+                    // }
+                    // ]
                 },
             });
         },
         [timeseries, timeseries.results]
     );
-
-    /*
-    watch(
-        () => [jobs.length],
-        () => {
-            for (const j of jobs) {
-                // Cleanup?
-                watch(
-                    () => [j.results.length],
-                    () => {
-                        if (j.results.length > 0) {
-                            setResultsAvailable(true);
-                        }
-                    },
-                    {
-                        immediate: true
-                    }
-                );
-            };
-        }
-    );
-    */
 
     function downloadCurrentResult(href: string) {
         if (!href)
@@ -133,16 +115,6 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
             {treeCollection.rootNode.children?.length != 0 && treeCollection.rootNode.children![0]!.name != undefined &&
                 <TreeView.Root collection={treeCollection}
                     maxW="md"
-                    defaultCheckedValue={[]}
-                    expandedValue={expandedResultType}
-                    onExpandedChange={(e) => {
-                        if (e.expandedValue.length == 0) {
-                            setExpandedResultType([]);
-                        } else {
-                            setExpandedResultType([e.focusedValue!]);
-                        };
-                        console.log("TODO: close all previously expanded results via Event");
-                    }}
                     animateContent>
                     <TreeView.Tree>
                         <TreeView.Node
@@ -155,19 +127,6 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                             <TreeView.BranchText fontWeight="bold">
                                                 {node.name}
                                             </TreeView.BranchText>
-                                            {/* <TreeView.Item>
-                                                <Tooltip content="View legend">
-                                                    <Button
-                                                        color="black"
-                                                        _hover={{ bg: "teal.50" }}
-                                                        size="xs"
-                                                        variant="ghost"
-                                                        onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
-                                                        <LuLayers />
-                                                    </Button>
-                                                </Tooltip>
-                                            </TreeView.Item> */}
-
                                         </>
                                     </TreeView.BranchControl>
                                 ) : (
@@ -208,7 +167,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                             <TreeView.NodeCheckbox pl="2" aria-label="check node">
                                                                 <Switch.Root colorPalette="teal" size="md" pr="4"
                                                                     checked={nodeState.checked === false}
-                                                                    onCheckedChange={() => { node.visible.value = !node.visible.value; }}>
+                                                                    onCheckedChange={() => { node.visibleinoverview.value = !node.visibleinoverview.value; }}>
                                                                     <Switch.HiddenInput />
                                                                     <Switch.Label />
                                                                     <Switch.Control>
@@ -231,7 +190,6 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                                     <LuDownload />
                                                                 </Button>
                                                             </Tooltip>
-
                                                             <Tooltip content="View Job Details">
                                                                 <ViewDetails job={timeseries.jobs.get(0)}></ViewDetails>
                                                             </Tooltip>
