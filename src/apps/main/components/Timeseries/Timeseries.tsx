@@ -25,15 +25,17 @@ import { CreateJob } from "./TimeseriesExpandDialog";
 import { Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { ResultTree } from "./ResultTree";
+import { MapModel } from "@open-pioneer/map";
 
 
 interface TimeseriesProps {
+    map: MapModel
     timeseries?: Timeseries[]
     eventListener: EventEmitter<Events>
 }
 
 
-export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
+export function TimeseriesItem({ map, timeseries, eventListener }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(true);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
 
@@ -131,7 +133,7 @@ export function TimeseriesItem({ timeseries, eventListener }: TimeseriesProps) {
                                                         } */}
                                             <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
                                                 <Text fontWeight="bold">Results</Text>
-                                                <ResultTree timeseries={ts} eventListener={eventListener} />
+                                                <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
                                             </Box>
                                         </>
                                     }

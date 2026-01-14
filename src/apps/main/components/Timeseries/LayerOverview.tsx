@@ -36,6 +36,7 @@ export function LayerOverview({ timeseries, eventListener }: LayerOverviewProps)
             <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                 <Stack gap="4">
                     <Text fontWeight="700" fontSize={22}>Layer Overview</Text>
+                    <Text fontSize={14}>View and compare all layers individually.</Text>
                     <Accordion.Root
                         multiple
                         onValueChange={(e) => {

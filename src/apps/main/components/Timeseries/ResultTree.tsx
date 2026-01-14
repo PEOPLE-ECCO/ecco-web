@@ -26,9 +26,11 @@ import { MapOpacityControl } from "../Map/MapOpacityControl";
 import { MAP_ID } from "../../services";
 import { ViewDetails, ViewLog } from "./ViewJob";
 import { Tooltip } from "../../components/tooltip";
+import { MapModel } from "@open-pioneer/map";
 
 
 interface ResultTreeProps {
+    map: MapModel
     timeseries: Timeseries
     eventListener: EventEmitter<Events>
 }
@@ -56,14 +58,13 @@ export interface TreeNode {
 }
 
 
-export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
-    const [expandedResultType, setExpandedResultType] = useState<string[]>([]);
+export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) {
+    const [expandedResultType, setExpandedResultType] = useState<string>("");
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
 
     useEffect(() => {
-        eventListener.emit("expandedResultType", expandedResultType[0]!);
+        eventListener.emit("expandedResultType", expandedResultType!);
     }, [expandedResultType]);
-
 
     const treeCollection = useReactiveSnapshot(
         () => {
@@ -71,7 +72,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
             const children = [];
             for (const [type, results] of timeseries.results.value.entries()) {
                 const withMeta = [{
-                    name: "name",
+                    name: type,
                     type: "meta"
                 }] as JobResult[];
                 children.push(
@@ -134,13 +135,14 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                 <TreeView.Root collection={treeCollection}
                     maxW="md"
                     defaultCheckedValue={[]}
-                    expandedValue={expandedResultType}
+                    expandedValue={[expandedResultType!]}
                     onExpandedChange={(e) => {
                         if (e.expandedValue.length == 0) {
-                            setExpandedResultType([]);
+                            setExpandedResultType("");
                         } else {
-                            setExpandedResultType([e.focusedValue!]);
+                            setExpandedResultType(e.focusedValue!);
                         };
+                        console.log(expandedResultType);
                         console.log("TODO: close all previously expanded results via Event");
                     }}
                     animateContent>
@@ -177,7 +179,7 @@ export function ResultTree({ timeseries, eventListener }: ResultTreeProps) {
                                                 {node.type == "meta" &&
                                                     <>
                                                         <HStack>
-                                                            <MapOpacityControl mapId={MAP_ID} />
+                                                            <MapOpacityControl map={map} responsibleResultType={node.name} currentResultType={expandedResultType!} eventListener={eventListener}/>
                                                             <Tooltip content="View legend">
                                                                 <Button
                                                                     color="black"

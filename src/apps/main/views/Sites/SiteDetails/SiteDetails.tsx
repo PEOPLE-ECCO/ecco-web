@@ -56,6 +56,7 @@ export interface Events {
     infoViewOpen: boolean;
     expandedResultType: string;
     zoomBackToExtent: undefined;
+    layerOpacity: number;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -77,6 +78,7 @@ export function SiteDetails() {
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
     const [map, setMap] = useState<MapModel>();
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
+    const [layerOpacity, setLayerOpacity] = useState<number>(100);
 
     const timeseriesExtent = [765040, 3707520, 766310, 3708990];
     const timeseriesEpsg = "EPSG:32636";
@@ -98,11 +100,20 @@ export function SiteDetails() {
     emitter.on("zoomBackToExtent",
         () => (ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg))
     );
+    emitter.on("layerOpacity",
+        (value) => (setLayerOpacity(value), console.log("Layeropacity changed: ", value))
+    );
 
     useEffect(() => {
-        fetchTimeseries();
-        fetchScenario();
-        zoomToInitialView();
+        const init = async () => {
+            setMap(await mapService.expectMapModel(MAP_ID));
+        };
+
+        init().then(() => {
+            fetchTimeseries();
+            fetchScenario();
+            zoomToInitialView();
+        });
     }, []);
 
     useEffect(() => {
@@ -116,11 +127,12 @@ export function SiteDetails() {
     }, [selectedTimeseries]);
 
     useEffect(() => {
+        //setLayerOpacity(100);
         if (!expandedResultType) {
             remove_current_item();
         }
         if (expandedResultType) {
-            showSelectedJobResult(0);
+            showSelectedJobResult(0, layerOpacity);
             ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg);
         }
     }, [expandedResultType]);
@@ -145,7 +157,6 @@ export function SiteDetails() {
                 }
                 setViewableJobResults(resultsOfExpandedType);
             };
-            console.log("shotsnap on selectedTimeseries & selectedTimeseries?.jobs: ", selectedTimeseries, selectedTimeseries?.jobs);
         }, [selectedTimeseries, selectedTimeseries?.jobs, expandedResultType]
     );
 
@@ -172,8 +183,7 @@ export function SiteDetails() {
     };
 
     async function zoomToInitialView() {
-        const map = await mapService.expectMapModel(MAP_ID);
-        map.zoom(
+        map!.zoom(
             [
                 // should be scenario.extent or centerpoint later
                 new Point([3991698, 3959524])
@@ -203,7 +213,7 @@ export function SiteDetails() {
         map.removeHighlights();
     };
 
-    async function showSelectedJobResult(id: number) {
+    async function showSelectedJobResult(id: number, opacity: number) {
         const jobResult = viewableJobResults[id];
         if (!jobResult) {
             console.log("result not yet available");
@@ -230,6 +240,7 @@ export function SiteDetails() {
                 style: style
             }),
         });
+        layer.olLayer.setOpacity(opacity / 100);
         map.layers.addLayer(layer);
         const stacproj = new Projection({ code: jobResult.epsg });
         const bbox = (await image.getView()).extent;
@@ -313,7 +324,9 @@ export function SiteDetails() {
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="timeseries">
-                                        <TimeseriesItem timeseries={timeseries} eventListener={emitter} />
+                                        {map &&
+                                            <TimeseriesItem map={map} timeseries={timeseries} eventListener={emitter} />
+                                        }
                                     </Tabs.Content>
                                     <Tabs.Content value="layeroverview">
                                         <LayerOverview timeseries={timeseries} eventListener={emitter} />
@@ -393,7 +406,7 @@ export function SiteDetails() {
                                         defaultValue={[0]}
                                         onValueChangeEnd={(val) => {
                                             console.log("onValueChangeEnd", val.value[0]!);
-                                            showSelectedJobResult(val.value[0]!);
+                                            showSelectedJobResult(val.value[0]!, layerOpacity);
                                         }}
                                     >
                                         <Slider.Control>
@@ -422,7 +435,7 @@ export function SiteDetails() {
                                         defaultValue={[0]}
                                         onValueChangeEnd={(val) => {
                                             console.log("onValueChangeEnd", val.value[0]!);
-                                            showSelectedJobResult(val.value[0]!);
+                                            showSelectedJobResult(val.value[0]!, layerOpacity);
                                         }}
                                     >
                                         <Slider.Control>

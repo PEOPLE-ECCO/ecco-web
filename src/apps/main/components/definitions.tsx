@@ -151,6 +151,7 @@ export class JobImpl implements Job {
     #httpService: HttpService;
 
     #fetchedResults: boolean;
+    #fetchedLogs: boolean;
 
     /**
      * Initializes a new Job instance.
@@ -184,6 +185,7 @@ export class JobImpl implements Job {
         this.#httpService = httpService;
 
         this.#fetchedResults = false;
+        this.#fetchedLogs = false;
     }
 
     get timeseries_id(): number {
@@ -254,21 +256,24 @@ export class JobImpl implements Job {
     }
 
     get logs(): ReactiveArray<LogLine> {
-        // We refetch this every time, logs might have changed
-        const url = import.meta.env.VITE_API_ROOT + "/jobs/" + this.#id + "/log/";
-        this.#httpService.fetch(url)
-            .then(r => r.json())
-            .then(response => {
-                if (response) {
-                    //TODO: check if this is correct
-                    this.#logs.concat(Array<LogLine>(response).slice(this.#logs.length));
-                } else {
-                    throw new Error("Unexpected response: " + JSON.stringify(response));
-                }
-            })
-            .catch((rejectReason) => {
-                console.error("Could not load catalog for job " + this.#id + " | got HTTP Status" + rejectReason);
-            });
+        // We should refetch this often, logs might have changed
+        if (!this.#fetchedLogs) {
+            this.#fetchedLogs = true;
+            const url = import.meta.env.VITE_API_ROOT + "/jobs/" + this.#id + "/log/";
+            this.#httpService.fetch(url)
+                .then(r => r.json())
+                .then(response => {
+                    if (response) {
+                        //TODO: check if this is correct
+                        this.#logs.concat(Array<LogLine>(response).slice(this.#logs.length));
+                    } else {
+                        throw new Error("Unexpected response: " + JSON.stringify(response));
+                    }
+                })
+                .catch((rejectReason) => {
+                    console.error("Could not load catalog for job " + this.#id + " | got HTTP Status" + rejectReason);
+                });
+        }
 
         return this.#logs;
     }
