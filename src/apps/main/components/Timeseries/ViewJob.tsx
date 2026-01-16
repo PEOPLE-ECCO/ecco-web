@@ -77,14 +77,14 @@ export function ViewLog({ job }: ViewLogProps) {
         <Dialog.Root size="cover" scrollBehavior="inside">
             <Dialog.Trigger asChild>
                 <Tooltip content="View Job Logs">
-                <Button
-                    color="black"
-                    _hover={{ bg: "teal.50" }}
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => setViewLogVisible(!viewLogVisible)}>
-                    <LuLogs />
-                </Button>
+                    <Button
+                        color="black"
+                        _hover={{ bg: "teal.50" }}
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => setViewLogVisible(!viewLogVisible)}>
+                        <LuLogs />
+                    </Button>
                 </Tooltip>
             </Dialog.Trigger>
             <Portal>
@@ -120,7 +120,9 @@ export function ViewLog({ job }: ViewLogProps) {
                                         maxW="150%"
                                         defaultValue={["ERRORS"]}
                                     >
-                                        <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
+                                        <Listbox.Label>
+                                            <Text fontSize="md">Filter Levels:</Text>
+                                        </Listbox.Label>
                                         <Listbox.Content>
                                             {filterLevels.items.map((item) => (
                                                 <Listbox.Item

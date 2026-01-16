@@ -10,7 +10,9 @@ import {
     Flex,
     Accordion,
     Portal,
-    Dialog
+    Dialog,
+    ScrollArea,
+    CloseButton
 } from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
@@ -19,13 +21,15 @@ import { Ellipsis } from "lucide-react";
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
 import { useService } from "open-pioneer:react-hooks";
+import { MapModel } from "@open-pioneer/map";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { CreateJob } from "./TimeseriesExpandDialog";
-import { Timeseries } from "../definitions";
+import { Job, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { ResultTree } from "./ResultTree";
-import { MapModel } from "@open-pioneer/map";
+import { ViewDetails, ViewLog } from "./ViewJob";
+import { JobInTree } from "./JobTree";
 
 
 interface TimeseriesProps {
@@ -79,31 +83,34 @@ export function TimeseriesItem({ map, timeseries, eventListener }: TimeseriesPro
 
     return (
         <>
-            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                <Stack gap="4">
-                    <Text fontWeight="700" fontSize={22}>Timeseries</Text>
-                    <Accordion.Root
-                        collapsible
-                        onValueChange={(e) => {
-                            const ts: Timeseries = timeseries![e.value[0]!];
-                            timeseriesSelection(ts);
-                        }}>
-                        {timeseries?.map((ts, key) => (
-                            <Accordion.Item value={key} key={key}>
-                                <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
-                                    <Box as="span" flex="1" textAlign="left" fontWeight="700">
-                                        {ts.name}
-                                    </Box>
-                                    <Accordion.ItemIndicator />
-                                </Accordion.ItemTrigger>
-                                <Accordion.ItemContent pb={4} bg="white">
-                                    {ts.id == selectedTimeseries?.id &&
-                                        <>
-                                            <Flex pb="2" gap="1" justify="space-between" direction="row">
-                                                <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
-                                                <MenuContent ts={ts} el={eventListener} />
-                                            </Flex>
-                                            {/* {false &&
+            <ScrollArea.Root height="44rem" minH="20vh" variant="hover">
+                <ScrollArea.Viewport>
+                    <ScrollArea.Content spaceY="4">
+                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                            <Stack gap="4">
+                                <Text fontWeight="700" fontSize={22}>Timeseries</Text>
+                                <Accordion.Root
+                                    collapsible
+                                    onValueChange={(e) => {
+                                        const ts: Timeseries = timeseries![e.value[0]!];
+                                        timeseriesSelection(ts);
+                                    }}>
+                                    {timeseries?.map((ts, key) => (
+                                        <Accordion.Item value={key} key={key}>
+                                            <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
+                                                <Box as="span" flex="1" textAlign="left" fontWeight="700">
+                                                    {ts.name}
+                                                </Box>
+                                                <Accordion.ItemIndicator />
+                                            </Accordion.ItemTrigger>
+                                            <Accordion.ItemContent pb={4} bg="white">
+                                                {ts.id == selectedTimeseries?.id &&
+                                                    <>
+                                                        <Flex pb="2" gap="1" justify="space-between" direction="row">
+                                                            <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
+                                                            <MenuContent ts={ts} el={eventListener} />
+                                                        </Flex>
+                                                        {/* {false &&
                                                             <Collapsible.Root>
                                                                 <Flex pb="2" gap="1" justify="flex-start" direction="row">
                                                                     <Collapsible.Trigger>
@@ -131,19 +138,26 @@ export function TimeseriesItem({ map, timeseries, eventListener }: TimeseriesPro
                                                                 </Collapsible.Content>
                                                             </Collapsible.Root>
                                                         } */}
-                                            <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                <Text fontWeight="bold">Results</Text>
-                                                <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
-                                            </Box>
-                                        </>
-                                    }
-                                </Accordion.ItemContent>
-                            </Accordion.Item>
-                        ))}
-                    </Accordion.Root>
-                    <CreateTimeseries eventListener={eventListener} />
-                </Stack>
-            </Box>
+                                                        <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                            <Text fontWeight="bold">Results</Text>
+                                                            <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
+                                                        </Box>
+                                                    </>
+                                                }
+                                            </Accordion.ItemContent>
+                                        </Accordion.Item>
+                                    ))}
+                                </Accordion.Root>
+                                <CreateTimeseries eventListener={eventListener} />
+                            </Stack>
+                        </Box >
+                    </ScrollArea.Content>
+                </ScrollArea.Viewport>
+                <ScrollArea.Scrollbar>
+                    <ScrollArea.Thumb />
+                </ScrollArea.Scrollbar>
+                <ScrollArea.Corner />
+            </ScrollArea.Root >
         </>
     );
 }
@@ -160,12 +174,17 @@ function MenuContent({ ts, el }: MenuContentProps) {
         console.log("Expand:", ts);
     };
 
+    const handleViewJobInfo = (jobs: Job[]) => {
+        console.log("JobInfo:", jobs.at(0)!.logs.getItems().at(0));
+    };
+
     const handleDelete = (ts: Timeseries) => {
-        console.log("Delete:", ts);
+        console.error(ts.jobs.getItems());
+        console.log("Delete:", ts.name);
     };
 
     const handleArchive = (ts: Timeseries) => {
-        console.log("Archive:", ts);
+        console.log("Archive:", ts.name);
     };
 
     return (
@@ -180,13 +199,20 @@ function MenuContent({ ts, el }: MenuContentProps) {
                     <Portal>
                         <Menu.Positioner>
                             <Menu.Content>
-                                <Dialog.Trigger asChild>
+                                <Dialog.Trigger >
                                     <Menu.Item
                                         value="expand"
                                         onClick={() => {
                                             handleExpand(ts);
                                         }}>
                                         Expand
+                                    </Menu.Item>
+                                    <Menu.Item
+                                        value="viewdetails"
+                                        onClick={() => {
+                                                handleViewJobInfo(ts.jobs.getItems());
+                                        }}>
+                                        View Logs/Details
                                     </Menu.Item>
                                 </Dialog.Trigger>
                                 <Menu.Item
@@ -219,8 +245,24 @@ function MenuContent({ ts, el }: MenuContentProps) {
                         </Menu.Positioner>
                     </Portal>
                 </Menu.Root >
-                <CreateJob timeseries={ts} eventListener={el} />
-            </Dialog.Root>
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title>View Job Information of {ts.name}</Dialog.Title>
+                                <Dialog.CloseTrigger asChild>
+                                    <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
+                                </Dialog.CloseTrigger>
+                            </Dialog.Header>
+                            <Dialog.Body>
+                                <ViewDetails job={ts.jobs.at(0)} />
+                            </Dialog.Body>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+                {/* <CreateJob timeseries={ts} eventListener={el} /> */}
+            </Dialog.Root >
         </>
     );
-}
+};

@@ -265,7 +265,7 @@ export class JobImpl implements Job {
                 .then(response => {
                     if (response) {
                         //TODO: check if this is correct
-                        this.#logs.concat(Array<LogLine>(response).slice(this.#logs.length));
+                        this.#logs.push(...response);
                     } else {
                         throw new Error("Unexpected response: " + JSON.stringify(response));
                     }
@@ -420,9 +420,15 @@ export interface JobParameters {
 }
 
 export interface LogLine {
-    timestamp: string
+    value: []
+    created: string
+    flow_run_id: string
+    id: string
     level: number
     message: string
+    name: string
+    timestamp: string
+    updated: string
 }
 
 export interface Process {

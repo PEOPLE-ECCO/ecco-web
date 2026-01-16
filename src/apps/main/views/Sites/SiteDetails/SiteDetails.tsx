@@ -19,7 +19,7 @@ import {
 
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft } from "react-icons/lu";
+import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft, LuMapPinned } from "react-icons/lu";
 
 import { MapRegistry, MapContainer, SimpleLayer, MapAnchor, MapModel } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
@@ -275,62 +275,70 @@ export function SiteDetails() {
         })
     });
 
-    const items: SidebarItem[] = [
-        {
-            id: "info",
-            icon: <LuInfo />,
-            label: "",
-            content:
-                <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
-                </Box>
-        }
-    ];
+    // const items: SidebarItem[] = [
+    //     {
+    //         id: "info",
+    //         icon: <LuInfo />,
+    //         label: "",
+    //         content:
+    //             <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+    //             </Box>
+    //     }
+    // ];
 
     return (
         <Flex>
             {dataViewOpen &&
                 <Box h="90vh" w="500px" p="2" bg="teal.50">
-                    <ScrollArea.Root minH="50vh" variant="hover">
-                        <ScrollArea.Viewport>
-                            <ScrollArea.Content spaceY="4">
-                                <Box p="2" colorPalette="teal">
-                                    <HStack>
-                                        <Button onClick={() => navigate("..")}>
-                                            <LuArrowBigLeft />
-                                            Sites
-                                        </Button>
-                                        <Text fontSize="lg" fontWeight="bold">{scenario?.name}</Text>
-                                    </HStack>
-                                </Box>
-                                <Tabs.Root defaultValue="timeseries" colorPalette="teal" onValueChange={() => setTimeseriesViewActive(!timeseriesViewActive)}>
-                                    <Tabs.List>
-                                        <Tabs.Trigger value="timeseries">
-                                            <LuMap />
-                                            Timeseries View
-                                            <Tooltip content="This view shows different timestamps of one process and area and provides a time-slider to swicht the results">
-                                                <Button size="xs" variant="ghost">
-                                                    <LuInfo />
-                                                </Button>
-                                            </Tooltip>
-                                        </Tabs.Trigger>
-                                        <Tabs.Trigger value="layeroverview">
-                                            <LuDatabase />
-                                            Layer View
-                                            <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
-                                                <Button size="xs" variant="ghost">
-                                                    <LuInfo />
-                                                </Button>
-                                            </Tooltip>
-                                        </Tabs.Trigger>
-                                    </Tabs.List>
-                                    <Tabs.Content value="timeseries">
-                                        {map &&
-                                            <TimeseriesItem map={map} timeseries={timeseries} eventListener={emitter} />
-                                        }
-                                    </Tabs.Content>
-                                    <Tabs.Content value="layeroverview">
-                                        <LayerOverview timeseries={timeseries} eventListener={emitter} />
-                                        <Box mt="4" bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+
+                    <Box p="2" colorPalette="teal">
+                        <HStack>
+                            <Button onClick={() => navigate("..")}>
+                                <LuArrowBigLeft />
+                                Sites
+                            </Button>
+                            <Text fontSize="xl" fontWeight="bold">{scenario?.name}</Text>
+                            <Tooltip content="Zoom back to Extent">
+                                <Button
+                                    color="black"
+                                    _hover={{ bg: "teal.50" }}
+                                    size="md"
+                                    variant="ghost"
+                                    onClick={() => { zoomToInitialView(); }}>
+                                    <LuMapPinned />
+                                </Button>
+                            </Tooltip>
+                        </HStack>
+                    </Box>
+                    <Tabs.Root defaultValue="timeseries" colorPalette="teal" onValueChange={() => setTimeseriesViewActive(!timeseriesViewActive)}>
+                        <Tabs.List>
+                            <Tabs.Trigger value="timeseries">
+                                <LuMap />
+                                Timeseries View
+                                <Tooltip content="This view shows different timestamps of one process and area and provides a time-slider to swicht the results">
+                                    <Button size="xs" variant="ghost">
+                                        <LuInfo />
+                                    </Button>
+                                </Tooltip>
+                            </Tabs.Trigger>
+                            <Tabs.Trigger value="layeroverview">
+                                <LuDatabase />
+                                Layer View
+                                <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
+                                    <Button size="xs" variant="ghost">
+                                        <LuInfo />
+                                    </Button>
+                                </Tooltip>
+                            </Tabs.Trigger>
+                        </Tabs.List>
+                        <Tabs.Content value="timeseries">
+                            {map &&
+                                <TimeseriesItem map={map} timeseries={timeseries} eventListener={emitter} />
+                            }
+                        </Tabs.Content>
+                        <Tabs.Content value="layeroverview">
+                            <LayerOverview timeseries={timeseries} eventListener={emitter} />
+                            {/* <Box mt="4" bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                                             {map &&
                                                 <Toc map={map} showTools={true} showBasemapSwitcher={false} collapsibleGroups={true} initiallyCollapsed={false} />
                                             }
@@ -338,16 +346,10 @@ export function SiteDetails() {
                                                 <HStack key={element.name} gap="6">
                                                 </HStack>
                                             )}
-                                        </Box>
-                                    </Tabs.Content>
-                                </Tabs.Root>
-                            </ScrollArea.Content>
-                        </ScrollArea.Viewport>
-                        <ScrollArea.Scrollbar>
-                            <ScrollArea.Thumb />
-                        </ScrollArea.Scrollbar>
-                        <ScrollArea.Corner />
-                    </ScrollArea.Root >
+                                        </Box> */}
+                        </Tabs.Content>
+                    </Tabs.Root>
+
                 </Box>
             }
             <Box h="90vh" flexGrow="1" >
@@ -462,7 +464,7 @@ export function SiteDetails() {
                     </Box>
                 </MapContainer>
             </Box>
-            <Box h="90vh" w="100px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
+            {/* <Box h="90vh" w="100px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                 <div style={{ position: "relative" }}>
                     <Sidebar
                         defaultExpanded={false}
@@ -471,7 +473,7 @@ export function SiteDetails() {
                         items={items}
                     />
                 </div>
-            </Box>
+            </Box> */}
             {infoViewOpen &&
                 <Box h="90vh" w="335px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                     <ScrollArea.Root maxW="md" minH="50vh" variant="hover">
