@@ -44,7 +44,7 @@ import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { JobResult, Timeseries } from "../../../components/definitions";
+import { JobResult, SpatialExtent, Timeseries } from "../../../components/definitions";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
 import { LayerOverview } from "../../../components/Timeseries/LayerOverview";
@@ -80,14 +80,19 @@ export function SiteDetails() {
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
     const [layerOpacity, setLayerOpacity] = useState<number>(100);
 
-    const timeseriesExtent = [765040, 3707520, 766310, 3708990];
-    const timeseriesEpsg = "EPSG:32636";
+    const timeseriesExtent = (() => {
+        console.log(selectedTimeseries!.extent!);
+        return selectedTimeseries!.extent!;
+    });
     const google = new Projection({ code: "EPSG:3857" });
+    const geojson = new Projection({ code: "EPSG:4326" });
 
     const collapsible = useCollapsible();
     const navigate = useNavigate();
 
     const emitter = new EventEmitter<Events>();
+
+
     emitter.on("selectedTimeseries",
         (value: Timeseries) => (setSelectedTimeseries(value))
     );
@@ -98,7 +103,7 @@ export function SiteDetails() {
         (value: string) => (setExpandedResultType(value))
     );
     emitter.on("zoomBackToExtent",
-        () => (ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg))
+        () => (ZoomToTimeseriesExtent(timeseriesExtent()))
     );
     emitter.on("layerOpacity",
         (value) => (setLayerOpacity(value), console.log("Layeropacity changed: ", value))
@@ -112,7 +117,6 @@ export function SiteDetails() {
         init().then(() => {
             fetchTimeseries();
             fetchScenario();
-            zoomToInitialView();
         });
     }, []);
 
@@ -122,7 +126,7 @@ export function SiteDetails() {
         }
         if (selectedTimeseries) {
             // Extent and EPSG should be from TS data later
-            ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg);
+            ZoomToTimeseriesExtent(selectedTimeseries.extent!);
         }
     }, [selectedTimeseries]);
 
@@ -133,7 +137,7 @@ export function SiteDetails() {
         }
         if (expandedResultType) {
             showSelectedJobResult(0, layerOpacity);
-            ZoomToTimeseriesExtent(timeseriesExtent, timeseriesEpsg);
+            ZoomToTimeseriesExtent(timeseriesExtent());
         }
     }, [expandedResultType]);
 
@@ -143,6 +147,10 @@ export function SiteDetails() {
             // show layers with Visibility in Overview == true
         }
     }, [timeseriesViewActive]);
+
+    useEffect(() => {
+        zoomToInitialView(scenario);
+    }, [scenario, map]);
 
     useReactiveSnapshot(
         () => {
@@ -182,38 +190,40 @@ export function SiteDetails() {
         }
     };
 
-    async function zoomToInitialView() {
-        map!.zoom(
-            [
-                // should be scenario.extent or centerpoint later
-                new Point([3991698, 3959524])
-            ],
-            { pointZoom: 12 }
-        );
-        setMap(map);
+    async function zoomToInitialView(scenario: Site | undefined) {
+        if (scenario && map) {
+            map!.zoom(
+                [
+                    new Point([scenario.bbox[0]!, scenario.bbox[1]!]).transform(geojson, google),
+                    new Point([scenario.bbox[2]!, scenario.bbox[3]!]).transform(geojson, google)
+                ],
+                { pointZoom: 12 }
+            );
+        }
     };
 
-    async function ZoomToTimeseriesExtent(extent: Extent, epsg: string) {
-        const map = await mapService.expectMapModel(MAP_ID);
-        const stacproj = new Projection({ code: epsg });
-        // extent should be TS.extent later
-        map.zoom(
-            [
-                new Point([extent[0]!, extent[1]!]).transform(stacproj, google),
-                new Point([extent[2]!, extent[3]!]).transform(stacproj, google)
-            ],
-            { viewPadding: { top: 50, bottom: 100 } }
-        );
-        console.log("Zoom done");
+    async function ZoomToTimeseriesExtent(extent: SpatialExtent) {
+        // There might be no extent (when no job has run yet)
+        if (map && extent) {
+            map.zoom(
+                [
+                    new Point([extent.bbox[0]!, extent.bbox[1]!]),
+                    new Point([extent.bbox[2]!, extent.bbox[3]!])
+                ],
+                { viewPadding: { top: 50, bottom: 100 } }
+            );
+        }
     };
 
     async function remove_current_item() {
-        const map = await mapService.expectMapModel(MAP_ID);
-        map.layers.removeLayerById("current");
-        map.removeHighlights();
+        if (map) {
+            map.layers.removeLayerById("current");
+            map.removeHighlights();
+        }
     };
 
     async function showSelectedJobResult(id: number, opacity: number) {
+        console.log(viewableJobResults);
         const jobResult = viewableJobResults[id];
         if (!jobResult) {
             console.log("result not yet available");
@@ -230,6 +240,7 @@ export function SiteDetails() {
                 },
             ],
         });
+        console.log(jobResult);
         //TODO: this is really really bad
         const style = JSON.parse(jobResult.style);
         const layer = new SimpleLayer({
@@ -304,7 +315,7 @@ export function SiteDetails() {
                                     _hover={{ bg: "teal.50" }}
                                     size="md"
                                     variant="ghost"
-                                    onClick={() => { zoomToInitialView(); }}>
+                                    onClick={() => { zoomToInitialView(scenario); }}>
                                     <LuMapPinned />
                                 </Button>
                             </Tooltip>
@@ -332,8 +343,8 @@ export function SiteDetails() {
                             </Tabs.Trigger>
                         </Tabs.List>
                         <Tabs.Content value="timeseries">
-                            {map &&
-                                <TimeseriesItem map={map} timeseries={timeseries} eventListener={emitter} />
+                            {map && scenario &&
+                                <TimeseriesItem scenario={scenario} map={map} timeseries={timeseries} eventListener={emitter} />
                             }
                         </Tabs.Content>
                         <Tabs.Content value="layeroverview">
@@ -353,14 +364,15 @@ export function SiteDetails() {
                 </Box>
             }
             <Box h="90vh" flexGrow="1" >
+                {map && 
                 <MapContainer
-                    mapId={MAP_ID}
+                    map={map}
                     role="main"
                     aria-label=""
                 >
-                    <MapInfoControls mapId={MAP_ID} />
+                    <MapInfoControls map={map} />
                     {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
-                    <MapZoomControls mapId={MAP_ID} position="top-right" horizontalGap={10} verticalGap={60} />
+                    <MapZoomControls map={map} position="top-right" horizontalGap={10} verticalGap={60} />
                     <MapAnchor position="top-right" horizontalGap={0} verticalGap={10}>
                         <Flex
                             role="top-right"
@@ -463,6 +475,7 @@ export function SiteDetails() {
                         }
                     </Box>
                 </MapContainer>
+                }
             </Box>
             {/* <Box h="90vh" w="100px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
                 <div style={{ position: "relative" }}>

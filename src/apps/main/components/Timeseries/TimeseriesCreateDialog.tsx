@@ -24,10 +24,9 @@ import {
     Listbox,
     createListCollection,
     ListCollection,
-    CollectionItem
 } from "@chakra-ui/react";
 
-import { MapContainer, MapRegistry, SimpleLayer } from "@open-pioneer/map";
+import { MapContainer, MapModel, MapRegistry, SimpleLayer } from "@open-pioneer/map";
 import { useService } from "open-pioneer:react-hooks";
 import { NotificationService } from "@open-pioneer/notifier";
 
@@ -44,18 +43,41 @@ import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
 import { EventEmitter } from "@open-pioneer/core";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
-
+import { Projection } from "ol/proj";
+import { Point } from "ol/geom";
+import { Site } from "../../views/Sites/Site/Site";
+import GeoJSON from "ol/format/GeoJSON";
 
 // Extent
 interface ExtentSelectionProps {
-    onBboxChange: (extent?: SpatialExtent) => void;
+    initialExtent: number[]
+    onGeometryChange: (extent?: SpatialExtent) => void
     isVisible: boolean
-    dialogClosed: boolean;
+    dialogClosed: boolean
 }
 
 function ExtentSelection(props: ExtentSelectionProps) {
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [extent, setExtent] = useState<SpatialExtent | undefined>();
+    const [map, setMap] = useState<MapModel>();
+    const geojson = new Projection({ code: "EPSG:4326" });
+    const google = new Projection({ code: "EPSG:3857" });
+
+    useEffect(() => {
+        const init = async () => {
+            const map = await mapService.expectMapModel(MAP_BOX);
+            setMap(map);
+            map.zoom(
+                [
+                    new Point([props.initialExtent[0]!, props.initialExtent[1]!]).transform(geojson, google),
+                    new Point([props.initialExtent[2]!, props.initialExtent[3]!]).transform(geojson, google)
+                ],
+                { viewPadding: { top: 50, bottom: 100 } }
+            );
+        };
+
+        init();
+    }, []);
 
     const source = new VectorSource();
     const vector = new VectorLayer({
@@ -71,8 +93,8 @@ function ExtentSelection(props: ExtentSelectionProps) {
 
     const drawInteraction = new Draw({
         source: source,
-        type: "Circle",
-        geometryFunction: createBox(),
+        type: "Polygon",
+        // geometryFunction: createPolygon(),
         style: {
             "stroke-color": "#2C7D75",
             "stroke-width": 2,
@@ -81,13 +103,12 @@ function ExtentSelection(props: ExtentSelectionProps) {
         }
     });
 
-    async function drawBox() {
+    async function createPolygon() {
         vector.getSource()?.clear();
         drawInteraction.removeLastPoint();
-        const map = await mapService.expectMapModel(MAP_BOX);
 
-        map.olMap.addInteraction(drawInteraction);
-        map.layers.addLayer(new SimpleLayer({ olLayer: vector, title: "temp" }));
+        map!.olMap.addInteraction(drawInteraction);
+        map!.layers.addLayer(new SimpleLayer({ olLayer: vector, title: "temp" }));
 
         const drawStart = drawInteraction.on("drawstart", () => {
             vector.getSource()?.clear();
@@ -96,7 +117,15 @@ function ExtentSelection(props: ExtentSelectionProps) {
         const drawEnd = drawInteraction.on("drawend", (e) => {
             const feature = e.feature;
             const geom = feature.getGeometry()!.getExtent();
+            
+            const format = new GeoJSON();
+            const ogcFeature = format.writeFeatureObject(feature, {
+                dataProjection: "EPSG:4326",
+                featureProjection: "EPSG:3857" 
+            });
+
             const newExtent = {
+                geometry: ogcFeature,
                 bbox:
                     [
                         geom[0]!,
@@ -107,17 +136,17 @@ function ExtentSelection(props: ExtentSelectionProps) {
             } as SpatialExtent;
             setExtent(newExtent);
             drawInteraction.abortDrawing();
-            props.onBboxChange(newExtent);
+            props.onGeometryChange(newExtent);
         });
     }
 
 
     useEffect(() => {
-        if (props.isVisible) {
-            drawBox();
-            props.onBboxChange(extent);
+        if (props.isVisible && map) {
+            createPolygon();
+            props.onGeometryChange(extent);
         }
-    }, [props.isVisible]);
+    }, [props.isVisible, map]);
 
     // useEffect(() => {
     //     if (props.dialogClosed) {
@@ -130,20 +159,22 @@ function ExtentSelection(props: ExtentSelectionProps) {
             <Text pt="8" pb="2" textStyle="lg">Please select extent:</Text>
             <Box height="60vh" border="1px solid black">
                 <Flex flex="1" height="100%" width="100%" direction="column" overflow="hidden" position="relative">
-                    <MapContainer
-                        mapId={MAP_BOX}
-                        role="boxselection"
-                        aria-label="">
-                        <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
-                            <Text>
-                                Extent Cordinates: <br />
-                                x1: {extent?.bbox[0]}, x2: {extent?.bbox[1]} <br />
-                                x2: {extent?.bbox[2]}, y2: {extent?.bbox[3]}
-                            </Text>
-                        </Box>
-                        <MapInfoControls mapId={MAP_BOX} />
-                        <MapZoomControls mapId={MAP_BOX} />
-                    </MapContainer>
+                    {map &&
+                        <MapContainer
+                            map={map}
+                            role="boxselection"
+                            aria-label="">
+                            <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
+                                <Text>
+                                    Extent Cordinates: <br />
+                                    x1: {extent?.bbox[0]}, x2: {extent?.bbox[1]} <br />
+                                    x2: {extent?.bbox[2]}, y2: {extent?.bbox[3]}
+                                </Text>
+                            </Box>
+                            <MapInfoControls map={map} />
+                            <MapZoomControls map={map} />
+                        </MapContainer>
+                    }
                 </Flex>
             </Box>
         </>
@@ -152,14 +183,15 @@ function ExtentSelection(props: ExtentSelectionProps) {
 
 
 interface CreateTimeseriesProps {
-    eventListener: EventEmitter<Events>;
+    eventListener: EventEmitter<Events>
+    scenario: Site
 }
 
 interface ProcessWithValue extends Process {
     value: string
 }
 
-export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: CreateTimeseriesProps) => {
+export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ scenario }: CreateTimeseriesProps) => {
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
@@ -230,7 +262,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             setNextButtonDisabled(false);
         }
     }, [step]);
-    
+
 
     useEffect(() => {
         if (value.length > 0) {
@@ -331,10 +363,11 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
             title: "Extent Selection",
             description:
                 <ExtentSelection
+                    initialExtent={scenario.bbox}
                     isVisible={step == 2}
                     dialogClosed={expandDialogClosed}
-                    onBboxChange={(ext) => {
-                        //setExtent(ext);
+                    onGeometryChange={(ext) => {
+                        setExtent(ext);
                         setNextButtonDisabled(!ext);
                     }} />,
         },
@@ -366,10 +399,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ eventListener }: C
     ];
 
     /*
-                 - Name
-            - Description
-            - Process
-            - Process Parameters that are shared between all results. E.g. bounding box, algorithm parameters.
+    - Name
+    - Description
+    - Process
+    - Process Parameters that are shared between all results. E.g. bounding box, algorithm parameters.
     */
 
     return (

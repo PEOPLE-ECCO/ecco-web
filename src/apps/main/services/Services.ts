@@ -84,18 +84,13 @@ export const useServices = () => {
     const createTimeseries = async (ts: Timeseries) => {
         console.log("createTimeseries " + ts);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
+        console.log(ts);
         const response = await httpService.fetch(url, {
             "method": "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(
-                {
-                    "name": ts.name,
-                    "description": ts.description,
-                    "process": ts.process?.id
-                }
-            )
+            body: JSON.stringify(ts)
         });
         const responseData = await response.text();
 
@@ -115,16 +110,8 @@ export const useServices = () => {
             },
             body: JSON.stringify(
                 {
-                    "parameters": {
-                        "rangeend": 2022,
-                        "rangestart": 2020,
-                        "spatial_extent": {
-                            "east": 4.659337006068995,
-                            "west": 4.516912902851971,
-                            "north": 52.444633712215875,
-                            "south": 52.38976387918794
-                        }
-                    }
+                    "rangeend": job_parameters.timespan[1].toISOString().substring(0, 10),
+                    "rangestart": job_parameters.timespan[0].toISOString().substring(0, 10)
                 }
             )
         });

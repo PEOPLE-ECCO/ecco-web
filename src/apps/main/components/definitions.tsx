@@ -3,6 +3,8 @@
 
 import { computed, effect, Reactive, reactive, reactiveArray, ReactiveArray, ReactiveMap, reactiveMap, ReadonlyReactive } from "@conterra/reactivity-core";
 import { HttpService } from "@open-pioneer/http";
+import { GeoJSONFeature } from "ol/format/GeoJSON";
+import { features } from "process";
 
 export interface Timeseries {
     readonly id: string;
@@ -10,9 +12,11 @@ export interface Timeseries {
     readonly name: string;
     readonly description: string;
     readonly extent?: SpatialExtent
+    readonly bbox?: number[]
+    readonly geometry?: GeoJSONFeature
     readonly process?: Process
-    readonly jobs: ReactiveArray<Job>
-    readonly results: ReadonlyReactive<Map<string, JobResult[]>>
+    readonly jobs?: ReactiveArray<Job>
+    readonly results?: ReadonlyReactive<Map<string, JobResult[]>>
 }
 
 export class TimeseriesImpl implements Timeseries {
@@ -42,11 +46,15 @@ export class TimeseriesImpl implements Timeseries {
         payload: Timeseries,
         httpService: HttpService
     ) {
+        console.log(payload);
         this.#id = payload.id;
         this.#scenario_id = payload.scenario_id;
         this.#name = payload.name;
         this.#description = payload.description;
-        this.#extent = payload.extent;
+        this.#extent = {
+            "bbox": payload.bbox!,
+            "geometry": payload.geometry!
+        };
         this.#process = payload.process;
         this.#jobs = reactiveArray([]);
         this.#fetchedJobs = false;
@@ -237,10 +245,10 @@ export class JobImpl implements Job {
             this.#httpService.fetch(url)
                 .then(r => r.json())
                 .then(response => {
-                    if (response) {
-                        for (const res of response) {
-                            // Format to JobResponse
-                            this.#results.push(new JobResultData(res));
+                    if (response) {                    
+                        const r = response as STACItemCollection;
+                        for (const feature of r.features) {
+                            this.#results.push(new JobResultData(feature));
                         }
                     } else {
                         throw new Error("Unexpected response: " + JSON.stringify(response));
@@ -291,29 +299,49 @@ export interface Usage {
     sentinelhub: UnitValue
 }
 
-interface RestJobResult {
-    readonly name: string
-    readonly filename: string
-    readonly href: string
-    readonly job: string
-    readonly mime: string
+
+interface STACItemCollection {
     readonly type: string
-    readonly epsg: string
-    readonly style: string
+    readonly features: STACItem[]
+    readonly "flow_run.name": string
 }
 
-export interface JobResult extends RestJobResult {
+interface STACItem {
+    readonly type: string
+    readonly stac_version: string
+    readonly stac_extensions: string[]
+    readonly id: string
+    // readonly geometry: string
+    readonly bbox: number[]
+    readonly properties: Record<string, string>;
+    // readonly links: string
+    readonly assets: Record<string, Asset>;
+}
+
+interface Asset {
+    readonly href: string;
+    readonly type: string;
+}
+
+export interface JobResult extends STACItem {
     visible: Reactive<boolean>
     visibleinoverview: Reactive<boolean>;
 }
 
 class JobResultData implements JobResult {
     // Private class fields (prefixed with #) for all variables
+    #type: string;
+    #stac_version: string;
+    #stac_extensions: string[];
+    #id: string;
+    #bbox: number[];
+    #properties: Record<string, string>;
+    #assets: Record<string, Asset>;
+
     #filename: string;
     #href: string;
     #job: string;
     #mime: string;
-    #type: string;
     #epsg: string;
     #style: string;
     #visible: Reactive<boolean>;
@@ -329,18 +357,25 @@ class JobResultData implements JobResult {
      * @param type The type of the result object.
      */
     constructor(
-        payload: RestJobResult
+        payload: STACItem
     ) {
-        this.#filename = payload.filename;
-        this.#href = payload.href;
-        this.#job = payload.job;
-        this.#mime = payload.mime;
-        this.#type = payload.type;
-        this.#epsg = payload.epsg;
-        this.#style = payload.style;
+        this.#filename = payload.id;
+        this.#href = payload.assets["image"]!.href!;
+        this.#job = payload.id;
+        this.#mime = payload.assets["image"]!.type!;
+        this.#type = payload.properties["type"]!;
+        this.#epsg = payload.properties["epsg"]!;
+        this.#style = payload.properties["style"]!;
 
         this.#visible = reactive(true);
         this.#visibleinoverview = reactive(true);
+
+        this.#stac_version = payload.stac_version;
+        this.#stac_extensions = payload.stac_extensions;
+        this.#id = payload.id;
+        this.#bbox = payload.bbox;
+        this.#properties = payload.properties;
+        this.#assets = payload.assets;
 
         this.#name = computed(() => {
             return this.#filename.split("/").slice(-1)[0]!;
@@ -388,6 +423,30 @@ class JobResultData implements JobResult {
         this.#visibleinoverview.value = state;
     }
 
+    public get stac_version(): string {
+        return this.#stac_version;
+    }
+
+    public get stac_extensions(): string[] {
+        return this.#stac_extensions;
+    }
+
+    public get id(): string {
+        return this.#id;
+    }
+
+    public get bbox(): number[] {
+        return this.#bbox;
+    }
+
+    public get properties(): Record<string, string> {
+        return this.#properties;
+    }
+
+    public get assets(): Record<string, Asset> {
+        return this.#assets;
+    }
+
     public get epsg(): string {
         return this.#epsg;
     }
@@ -403,6 +462,7 @@ export interface STACProperties {
 }
 
 export interface SpatialExtent {
+    geometry: GeoJSONFeature
     bbox: number[]
 }
 
@@ -416,7 +476,7 @@ export interface Extent {
 }
 
 export interface JobParameters {
-    timespan: [Date | null, Date | null]
+    timespan: [Date, Date]
 }
 
 export interface LogLine {

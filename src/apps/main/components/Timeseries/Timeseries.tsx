@@ -24,22 +24,23 @@ import { useService } from "open-pioneer:react-hooks";
 import { MapModel } from "@open-pioneer/map";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
-import { CreateJob } from "./TimeseriesExpandDialog";
 import { Job, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { ResultTree } from "./ResultTree";
-import { ViewDetails, ViewLog } from "./ViewJob";
-import { JobInTree } from "./JobTree";
+import { TimeseriesExpandDialog } from "./TimeseriesExpandDialog";
+import { Site } from "../Dataset/Dataset";
+
 
 
 interface TimeseriesProps {
     map: MapModel
+    scenario: Site
     timeseries?: Timeseries[]
     eventListener: EventEmitter<Events>
 }
 
 
-export function TimeseriesItem({ map, timeseries, eventListener }: TimeseriesProps) {
+export function TimeseriesItem({ map, scenario, timeseries, eventListener }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(true);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
 
@@ -148,7 +149,7 @@ export function TimeseriesItem({ map, timeseries, eventListener }: TimeseriesPro
                                         </Accordion.Item>
                                     ))}
                                 </Accordion.Root>
-                                <CreateTimeseries eventListener={eventListener} />
+                                <CreateTimeseries scenario={scenario} eventListener={eventListener} />
                             </Stack>
                         </Box >
                     </ScrollArea.Content>
@@ -171,7 +172,7 @@ function MenuContent({ ts, el }: MenuContentProps) {
     const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     const handleExpand = (ts: Timeseries) => {
-        console.log("Expand:", ts);
+        console.log("Expand:", ts.id);
     };
 
     const handleViewJobInfo = (jobs: Job[]) => {
@@ -207,16 +208,10 @@ function MenuContent({ ts, el }: MenuContentProps) {
                                         }}>
                                         Expand
                                     </Menu.Item>
-                                    <Menu.Item
-                                        value="viewdetails"
-                                        onClick={() => {
-                                                handleViewJobInfo(ts.jobs.getItems());
-                                        }}>
-                                        View Logs/Details
-                                    </Menu.Item>
                                 </Dialog.Trigger>
                                 <Menu.Item
                                     value="delete"
+                                    disabled
                                     onClick={() => {
                                         handleDelete(ts);
                                         notificationService.notify({
@@ -230,6 +225,7 @@ function MenuContent({ ts, el }: MenuContentProps) {
                                 </Menu.Item>
                                 <Menu.Item
                                     value="archive"
+                                    disabled
                                     onClick={() => {
                                         handleArchive(ts);
                                         notificationService.notify({
@@ -245,23 +241,8 @@ function MenuContent({ ts, el }: MenuContentProps) {
                         </Menu.Positioner>
                     </Portal>
                 </Menu.Root >
-                <Portal>
-                    <Dialog.Backdrop />
-                    <Dialog.Positioner>
-                        <Dialog.Content>
-                            <Dialog.Header>
-                                <Dialog.Title>View Job Information of {ts.name}</Dialog.Title>
-                                <Dialog.CloseTrigger asChild>
-                                    <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                </Dialog.CloseTrigger>
-                            </Dialog.Header>
-                            <Dialog.Body>
-                                <ViewDetails job={ts.jobs.at(0)} />
-                            </Dialog.Body>
-                        </Dialog.Content>
-                    </Dialog.Positioner>
-                </Portal>
-                {/* <CreateJob timeseries={ts} eventListener={el} /> */}
+                
+                <TimeseriesExpandDialog timeseries={ts} eventListener={el} />
             </Dialog.Root >
         </>
     );

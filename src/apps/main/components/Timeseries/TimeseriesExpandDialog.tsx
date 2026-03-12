@@ -39,7 +39,7 @@ interface SelectedDateMeta {
     formattedDate: string;
 }
 
-export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
+export function TimeseriesExpandDialog({ timeseries, eventListener }: CreateJobProps) {
     const { id } = useParams();
     const { createJob } = useServices();
 
@@ -125,7 +125,7 @@ export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
                                                     selected={startDate}
                                                     onChange={(date: Date | null) => setStartDate(date)}
                                                     startDate={startDate}
-                                                    placeholderText="mm/dd/yyy"
+                                                    placeholderText="mm/dd/yyyy"
                                                     onChangeRaw={(
                                                         event:
                                                             | React.MouseEvent<HTMLElement>
@@ -151,7 +151,7 @@ export function CreateJob({ timeseries, eventListener }: CreateJobProps) {
                                                     endDate={endDate}
                                                     startDate={startDate}
                                                     minDate={startDate}
-                                                    placeholderText="mm/dd/yyy" />
+                                                    placeholderText="mm/dd/yyyy" />
                                             </Box>
                                         </Field.Root>
                                     </Stack>

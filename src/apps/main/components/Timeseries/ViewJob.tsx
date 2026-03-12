@@ -74,7 +74,7 @@ export function ViewLog({ job }: ViewLogProps) {
     };
 
     return (
-        <Dialog.Root size="cover" scrollBehavior="inside">
+        <Dialog.Root size="cover" scrollBehavior="inside" open={viewLogVisible}>
             <Dialog.Trigger asChild>
                 <Tooltip content="View Job Logs">
                     <Button
@@ -82,7 +82,9 @@ export function ViewLog({ job }: ViewLogProps) {
                         _hover={{ bg: "teal.50" }}
                         size="xs"
                         variant="ghost"
-                        onClick={() => setViewLogVisible(!viewLogVisible)}>
+                        onClick={() => {
+                            setViewLogVisible(!viewLogVisible);
+                        }}>
                         <LuLogs />
                     </Button>
                 </Tooltip>
@@ -185,6 +187,9 @@ export interface ViewDetailsProps {
     job: Job | undefined
 }
 export function ViewDetails({ job }: ViewDetailsProps) {
+    if (job === undefined) {
+        return <></>;
+    }
     const tabledata = Object.entries(job!).map(([key, value]) => ({
         key: key,
         value: value

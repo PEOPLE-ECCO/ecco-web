@@ -235,10 +235,10 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                                             </Tooltip>
 
                                                             <Tooltip content="View Job Details">
-                                                                <ViewDetails job={timeseries.jobs.get(0)}></ViewDetails>
+                                                                <ViewDetails job={timeseries.jobs?.get(0)}></ViewDetails>
                                                             </Tooltip>
                                                             <Tooltip content="View Job Logs">
-                                                                <ViewLog job={timeseries.jobs.get(0)}></ViewLog>
+                                                                <ViewLog job={timeseries.jobs?.get(0)}></ViewLog>
                                                             </Tooltip>
 
                                                             <Dialog.Root size="xl" scrollBehavior="inside">

@@ -17,6 +17,7 @@ export interface Site {
     description: string;
     id: number;
     name: string;
+    bbox: number[];
 }
 
 export const Site = (site: Site) => {

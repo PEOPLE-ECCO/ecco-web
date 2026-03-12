@@ -136,7 +136,6 @@ export function ResultTreeOverview({ timeseries, eventListener }: ResultTreeProp
                                                 {node.type == "meta" &&
                                                     <>
                                                         <HStack>
-                                                            <MapOpacityControl mapId={MAP_ID} />
                                                             <Tooltip content="View legend">
                                                                 <Button
                                                                     color="black"

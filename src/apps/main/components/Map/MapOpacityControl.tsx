@@ -26,7 +26,7 @@ export const MapOpacityControl = ({ map, responsibleResultType, currentResultTyp
 
     const updateMap = async () => {
         const layer = map?.layers.getLayerById("current") as SimpleLayer;
-        eventListener.emit("layerOpacity", layerOpacity);
+        // eventListener.emit("layerOpacity", layerOpacity);
 
         if (layer) {
             layer.olLayer.setOpacity(layerOpacity / 100);

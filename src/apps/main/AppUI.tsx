@@ -13,7 +13,6 @@ import { DataInventory } from "./views/DataInventory/DataInventory";
 import { Documentation } from "./views/Documentation/Documentation";
 import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
-import CreateTimeseries from "./views/CreateTimeseries/CreateTimeseries";
 import CreateJob from "./views/CreateJob/CreateJobUI";
 import { ForceAuth } from "@open-pioneer/authentication";
 
@@ -39,10 +38,6 @@ const router = createBrowserRouter([
             {
                 path: `dataInventory`,
                 element: <DataInventory />
-            },
-            {
-                path: `sites/:id/createTimeseries`,
-                element: <CreateTimeseries />
             },
             {
                 path: `sites/:id/timeseries/:ts_id/createJob`,

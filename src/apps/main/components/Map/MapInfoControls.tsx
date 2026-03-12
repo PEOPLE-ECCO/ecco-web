@@ -4,13 +4,13 @@
 import { Flex, HStack } from "@chakra-ui/react";
 import { CoordinateViewer } from "@open-pioneer/coordinate-viewer";
 import { ScaleBar } from "@open-pioneer/scale-bar";
-import { MapAnchor } from "@open-pioneer/map";
+import { MapAnchor, MapModel } from "@open-pioneer/map";
 
 interface MapInfoControlsProps {
-    mapId: string;
+    map: MapModel;
 }
 
-export const MapInfoControls = ({ mapId }: MapInfoControlsProps) => {
+export const MapInfoControls = ({ map }: MapInfoControlsProps) => {
     return (
         <MapAnchor position="bottom-left" horizontalGap={15} verticalGap={0}>
             <Flex
@@ -21,8 +21,8 @@ export const MapInfoControls = ({ mapId }: MapInfoControlsProps) => {
                 padding={1}
             >
                 <HStack>
-                    <CoordinateViewer mapId={mapId} precision={2} />
-                    <ScaleBar mapId={mapId} />
+                    <CoordinateViewer map={map} precision={2} />
+                    <ScaleBar map={map} />
                 </HStack>
             </Flex>
         </MapAnchor>

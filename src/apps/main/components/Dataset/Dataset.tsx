@@ -21,13 +21,6 @@ import {
 import { Ellipsis } from "lucide-react";
 import { FiMoreVertical } from "react-icons/fi"; // Vertical ellipsis icon
 
-export interface Site {
-    preview_image: string;
-    description: string;
-    id: number;
-    name: string;
-}
-
 export const Dataset = (site: Site) => {
 
     return (
