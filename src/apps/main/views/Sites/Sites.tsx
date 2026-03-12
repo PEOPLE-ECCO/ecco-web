@@ -42,7 +42,6 @@ export const Sites: FC = () => {
             try {
                 const data = await getScenarios();
                 setSites(data);
-                showScenarios(data);
             } catch (error) {
                 console.error(error);
             }
@@ -50,10 +49,9 @@ export const Sites: FC = () => {
         const getMap = async () => {
             setMap(await mapService.expectMapModel(MAP_SiteView));
         };
-        
-        getMap().then(() => {
-            fetchScenarios();
-        });
+
+        getMap();
+        fetchScenarios();
     }, []);
 
     useEffect(() => {
@@ -67,8 +65,9 @@ export const Sites: FC = () => {
         }
     }, [map]);
 
-    async function showScenarios(sites: [Site]) {
-        if (!map) {
+
+    useEffect(() => {
+        if (!map || !sites) {
             return;
         }
         const geojson = new Projection({ code: "EPSG:4326" });
@@ -79,7 +78,8 @@ export const Sites: FC = () => {
                 new Point([site.bbox[2]!, site.bbox[3]!]).transform(geojson, google)
             ]);
         };
-    };
+    }, [map, sites]);
+
 
     return (
         <>
