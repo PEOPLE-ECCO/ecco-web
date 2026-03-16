@@ -13,7 +13,7 @@ type: Task
 - Category: Terrestrial / Aquatic / BACI
 - Partner: Hatfield / DHI / ITC
 - Algorithm(s): 
-- Early Adopter(s):
+- Early Adopter(s): 
 - Test Site / Region: 
 
 ## Status
@@ -27,4 +27,4 @@ type: Task
 ## Links
 
 - GitHub Repo / branch: 
-- Online documentation (user handbook):
+- Online documentation (user handbook): 
