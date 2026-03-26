@@ -34,43 +34,33 @@ export function LayerOverview({ timeseries, eventListener }: LayerOverviewProps)
 
     return (
         <>
-            <ScrollArea.Root height="44rem" minH="20vh" variant="hover">
-                <ScrollArea.Viewport>
-                    <ScrollArea.Content spaceY="4">
-                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                            <Stack gap="4">
-                                <Text fontWeight="700" fontSize={22}>Layer Overview</Text>
-                                <Text fontSize={14}>View and compare all layers individually.</Text>
-                                <Accordion.Root
-                                    multiple
-                                    onValueChange={(e) => {
-                                        const ts: Timeseries = timeseries![e.value[0]!];
-                                        timeseriesSelection(ts);
-                                    }}
-                                >
-                                    {timeseries?.map((ts, key) => (
-                                        <Accordion.Item value={key} key={key}>
-                                            <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
-                                                <Box as="span" flex="1" textAlign="left" fontWeight="700">
-                                                    {ts.name}
-                                                </Box>
-                                                <Accordion.ItemIndicator />
-                                            </Accordion.ItemTrigger>
-                                            <Accordion.ItemContent pb={4} bg="white">
-                                                <ResultTreeOverview timeseries={ts} eventListener={eventListener} />
-                                            </Accordion.ItemContent>
-                                        </Accordion.Item>
-                                    ))}
-                                </Accordion.Root>
-                            </Stack>
-                        </Box>
-                    </ScrollArea.Content>
-                </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar>
-                    <ScrollArea.Thumb />
-                </ScrollArea.Scrollbar>
-                <ScrollArea.Corner />
-            </ScrollArea.Root >
+            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                <Stack gap="4">
+                    <Text fontWeight="700" fontSize={22}>Layer Overview</Text>
+                    <Text fontSize={14}>View and compare all layers individually.</Text>
+                    <Accordion.Root
+                        multiple
+                        onValueChange={(e) => {
+                            const ts: Timeseries = timeseries![e.value[0]!];
+                            timeseriesSelection(ts);
+                        }}
+                    >
+                        {timeseries?.map((ts, key) => (
+                            <Accordion.Item value={key} key={key}>
+                                <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
+                                    <Box as="span" flex="1" textAlign="left" fontWeight="700">
+                                        {ts.name}
+                                    </Box>
+                                    <Accordion.ItemIndicator />
+                                </Accordion.ItemTrigger>
+                                <Accordion.ItemContent pb={4} bg="white">
+                                    <ResultTreeOverview timeseries={ts} eventListener={eventListener} />
+                                </Accordion.ItemContent>
+                            </Accordion.Item>
+                        ))}
+                    </Accordion.Root>
+                </Stack>
+            </Box>
         </>
     );
 }

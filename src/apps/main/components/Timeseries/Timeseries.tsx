@@ -28,8 +28,7 @@ import { Job, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { ResultTree } from "./ResultTree";
 import { TimeseriesExpandDialog } from "./TimeseriesExpandDialog";
-import { Site } from "../Dataset/Dataset";
-
+import { Site } from "../../views/Sites/Site/Site";
 
 
 interface TimeseriesProps {
@@ -84,81 +83,71 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
 
     return (
         <>
-            <ScrollArea.Root height="44rem" minH="20vh" variant="hover">
-                <ScrollArea.Viewport>
-                    <ScrollArea.Content spaceY="4">
-                        <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                            <Stack gap="4">
-                                <Text fontWeight="700" fontSize={22}>Timeseries</Text>
-                                <Accordion.Root
-                                    collapsible
-                                    onValueChange={(e) => {
-                                        const ts: Timeseries = timeseries![e.value[0]!];
-                                        timeseriesSelection(ts);
-                                    }}>
-                                    {timeseries?.map((ts, key) => (
-                                        <Accordion.Item value={key} key={key}>
-                                            <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
-                                                <Box as="span" flex="1" textAlign="left" fontWeight="700">
-                                                    {ts.name}
-                                                </Box>
-                                                <Accordion.ItemIndicator />
-                                            </Accordion.ItemTrigger>
-                                            <Accordion.ItemContent pb={4} bg="white">
-                                                {ts.id == selectedTimeseries?.id &&
-                                                    <>
-                                                        <Flex pb="2" gap="1" justify="space-between" direction="row">
-                                                            <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
-                                                            <MenuContent ts={ts} el={eventListener} />
-                                                        </Flex>
-                                                        {/* {false &&
-                                                            <Collapsible.Root>
-                                                                <Flex pb="2" gap="1" justify="flex-start" direction="row">
-                                                                    <Collapsible.Trigger>
-                                                                        <Button
-                                                                            size="md"
-                                                                            width="100%"
-                                                                            bg="#2C7D75"
-                                                                            _hover={{ bg: "teal.700" }}
-                                                                            disabled={false}>
-                                                                            View Jobs
-                                                                            <Collapsible.Indicator
-                                                                                transition="transform 0.2s"
-                                                                                _open={{ transform: "rotate(180deg)" }}>
-                                                                                <LuChevronDown />
-                                                                            </Collapsible.Indicator>
-                                                                        </Button>
-                                                                    </Collapsible.Trigger>
-                                                                    <CreateJob timeseries={ts} eventListener={eventListener} />
-                                                                    <MenuContent ts={ts} el={eventListener} />
-                                                                </Flex>
-                                                                <Collapsible.Content>
-                                                                    <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                                        <JobTree jobs={ts.jobs} eventListener={eventListener}></JobTree>
-                                                                    </Box>
-                                                                </Collapsible.Content>
-                                                            </Collapsible.Root>
-                                                        } */}
+            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                <Stack gap="4">
+                    <Text fontWeight="700" fontSize={22}>Timeseries</Text>
+                    <Accordion.Root
+                        collapsible
+                        onValueChange={(e) => {
+                            const ts: Timeseries = timeseries![e.value[0]!];
+                            timeseriesSelection(ts);
+                        }}>
+                        {timeseries?.map((ts, key) => (
+                            <Accordion.Item value={key} key={key}>
+                                <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
+                                    <Box as="span" flex="1" textAlign="left" fontWeight="700">
+                                        {ts.name}
+                                    </Box>
+                                    <Accordion.ItemIndicator />
+                                </Accordion.ItemTrigger>
+                                <Accordion.ItemContent pb={4} bg="white">
+                                    {ts.id == selectedTimeseries?.id &&
+                                        <>
+                                            <Flex pb="2" gap="1" justify="space-between" direction="row">
+                                                <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
+                                                <MenuContent ts={ts} el={eventListener} />
+                                            </Flex>
+                                            {/* {false &&
+                                                <Collapsible.Root>
+                                                    <Flex pb="2" gap="1" justify="flex-start" direction="row">
+                                                        <Collapsible.Trigger>
+                                                            <Button
+                                                                size="md"
+                                                                width="100%"
+                                                                bg="#2C7D75"
+                                                                _hover={{ bg: "teal.700" }}
+                                                                disabled={false}>
+                                                                View Jobs
+                                                                <Collapsible.Indicator
+                                                                    transition="transform 0.2s"
+                                                                    _open={{ transform: "rotate(180deg)" }}>
+                                                                    <LuChevronDown />
+                                                                </Collapsible.Indicator>
+                                                            </Button>
+                                                        </Collapsible.Trigger>
+                                                        <CreateJob timeseries={ts} eventListener={eventListener} />
+                                                        <MenuContent ts={ts} el={eventListener} />
+                                                    </Flex>
+                                                    <Collapsible.Content>
                                                         <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                            <Text fontWeight="bold">Results</Text>
-                                                            <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
+                                                            <JobTree jobs={ts.jobs} eventListener={eventListener}></JobTree>
                                                         </Box>
-                                                    </>
-                                                }
-                                            </Accordion.ItemContent>
-                                        </Accordion.Item>
-                                    ))}
-                                </Accordion.Root>
-                                <CreateTimeseries scenario={scenario} eventListener={eventListener} />
-                            </Stack>
-                        </Box >
-                    </ScrollArea.Content>
-                </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar>
-                    <ScrollArea.Thumb />
-                </ScrollArea.Scrollbar>
-                <ScrollArea.Corner />
-            </ScrollArea.Root >
+                                                    </Collapsible.Content>
+                                                </Collapsible.Root>
+                                            } */}
+                                            <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                <Text fontWeight="bold">Results</Text>
+                                                <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
+                                            </Box>
+                                        </>
+                                    }
+                                </Accordion.ItemContent>
+                            </Accordion.Item>
+                        ))}
+                    </Accordion.Root>
+                    <CreateTimeseries scenario={scenario} eventListener={eventListener} />
+                </Stack>
+            </Box >
         </>
     );
 }

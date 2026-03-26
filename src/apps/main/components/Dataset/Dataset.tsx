@@ -20,6 +20,7 @@ import {
 } from "@chakra-ui/react";
 import { Ellipsis } from "lucide-react";
 import { FiMoreVertical } from "react-icons/fi"; // Vertical ellipsis icon
+import { Site } from "../../views/Sites/Site/Site";
 
 export const Dataset = (site: Site) => {
 

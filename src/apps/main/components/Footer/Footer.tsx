@@ -1,22 +1,32 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container, Text, Flex, Link, HStack } from "@chakra-ui/react";
+import { Box, Container, Image, Text, Flex, Link, HStack, Spacer } from "@chakra-ui/react";
 import { Code } from "lucide-react";
+
+import esa from "../../assets/esa.png";
 
 export const Footer = () => {
     return (
-        <Box bg="#1f2229" color="white" py="6" mt="auto">
-            <Container maxW="80%">
+        <Box bg="#1f2229" color="white" py="3" mt="auto" minH="var(--footer-height)" maxH="var(--footer-height)">
+            <Container maxW="100%">
                 <Flex
                     direction={{ base: "column", md: "row" }}
                     justify="space-between"
                     align="center"
-                    gap="4"
+                    gap="6"
                 >
-                    <Text fontSize="sm">Funded by European Space Agency (ESA)</Text>
+                    <HStack>
+                        <Link href="https://www.esa.int/">
+                            <Image src={esa} height="24px" />
+                        </Link>
+                        <Text fontSize="sm">Funded by the European Space Agency (ESA)</Text>
+                    </HStack>
+
+                    <Spacer />
 
                     <Link
+                        color="white"
                         href="https://github.com/PEOPLE-ECCO"
                         isExternal
                         fontSize="sm"
@@ -29,12 +39,13 @@ export const Footer = () => {
                     </Link>
 
                     <Link
+                        color="white"
                         href="https://www.people-ecco.eu/"
                         isExternal
                         fontSize="sm"
                         _hover={{ textDecoration: "underline" }}
                     >
-                        About People-Ecco
+                        About PEOPLE-ECCO
                     </Link>
                 </Flex>
             </Container>

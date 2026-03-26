@@ -297,12 +297,17 @@ export function SiteDetails() {
     //     }
     // ];
 
-    return (
-        <Flex>
-            {dataViewOpen &&
-                <Box h="90vh" w="500px" p="2" bg="teal.50">
+    const navigationHeight = "55px";
+    const tabListHeight = "45px";
+    const contentHeightCalc = "calc(100vh - var(--header-height) - var(--footer-height))";
+    const tabsHeightCalc = `calc(100vh - var(--header-height) - var(--footer-height) - ${navigationHeight} - ${tabListHeight})`;
 
-                    <Box p="2" colorPalette="teal">
+    return (
+        <Flex minH={contentHeightCalc} maxH={contentHeightCalc}>
+            {dataViewOpen &&
+                <Box w="500px" paddingLeft="2" paddingRight="2" bg="teal.50">
+
+                    <Box p="2" colorPalette="teal" maxH={navigationHeight} minH={navigationHeight}>
                         <HStack>
                             <Button onClick={() => navigate("..")}>
                                 <LuArrowBigLeft />
@@ -321,8 +326,8 @@ export function SiteDetails() {
                             </Tooltip>
                         </HStack>
                     </Box>
-                    <Tabs.Root defaultValue="timeseries" colorPalette="teal" onValueChange={() => setTimeseriesViewActive(!timeseriesViewActive)}>
-                        <Tabs.List>
+                    <Tabs.Root defaultValue="timeseries" colorPalette="teal" onValueChange={() => setTimeseriesViewActive(!timeseriesViewActive)} maxH={tabsHeightCalc} minH={tabsHeightCalc}>
+                        <Tabs.List maxH={tabListHeight} minH={tabListHeight}>
                             <Tabs.Trigger value="timeseries">
                                 <LuMap />
                                 Timeseries View
@@ -342,12 +347,12 @@ export function SiteDetails() {
                                 </Tooltip>
                             </Tabs.Trigger>
                         </Tabs.List>
-                        <Tabs.Content value="timeseries">
+                        <Tabs.Content value="timeseries" overflowX="auto" maxH={tabsHeightCalc} minH={tabsHeightCalc}>
                             {map && scenario &&
                                 <TimeseriesItem scenario={scenario} map={map} timeseries={timeseries} eventListener={emitter} />
                             }
                         </Tabs.Content>
-                        <Tabs.Content value="layeroverview">
+                        <Tabs.Content value="layeroverview" overflowX="auto" maxH={tabsHeightCalc} minH={tabsHeightCalc}>
                             <LayerOverview timeseries={timeseries} eventListener={emitter} />
                             {/* <Box mt="4" bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                                             {map &&
@@ -363,7 +368,7 @@ export function SiteDetails() {
 
                 </Box>
             }
-            <Box h="90vh" flexGrow="1" >
+            <Box minH={contentHeightCalc} maxH={contentHeightCalc} flexGrow="1" >
                 {map && 
                 <MapContainer
                     map={map}
