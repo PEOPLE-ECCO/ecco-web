@@ -5,10 +5,11 @@ import { Box, Container, Image, Text, Flex, Link, HStack, Spacer } from "@chakra
 import { Code } from "lucide-react";
 
 import esa from "../../assets/esa.png";
+import partners from "../../assets/partners.png";
 
 export const Footer = () => {
     return (
-        <Box bg="#1f2229" color="white" py="3" mt="auto" minH="var(--footer-height)" maxH="var(--footer-height)">
+        <Box bg="#1f2229" color="white" py="1" mt="auto" minH="var(--footer-height)" maxH="var(--footer-height)">
             <Container maxW="100%">
                 <Flex
                     direction={{ base: "column", md: "row" }}
@@ -24,6 +25,8 @@ export const Footer = () => {
                     </HStack>
 
                     <Spacer />
+
+                    <Image src={partners} height="36px" />
 
                     <Link
                         color="white"
