@@ -15,7 +15,7 @@ import {
     CloseButton
 } from "@chakra-ui/react";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
 
 import { EventEmitter } from "@open-pioneer/core";
@@ -42,6 +42,11 @@ interface TimeseriesProps {
 export function TimeseriesItem({ map, scenario, timeseries, eventListener }: TimeseriesProps) {
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(true);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
+    const [timeseriesList, setTimeseriesList] = useState<Timeseries[]>([]);
+
+    useEffect(() => {
+        setTimeseriesList(timeseries || []);
+    }, [timeseries]);
 
     useEffect(() => {
         if (!selectedTimeseries || !selectedTimeseries!.jobs) {
@@ -81,6 +86,12 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
     }
     */
 
+    const onTimeseriesCreated = (ts: Timeseries | undefined) => {
+        if (ts && timeseries) {
+            setTimeseriesList(timeseriesList => [...timeseriesList, ts]);
+        }
+    };
+
     return (
         <>
             <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
@@ -89,10 +100,10 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                     <Accordion.Root
                         collapsible
                         onValueChange={(e) => {
-                            const ts: Timeseries = timeseries![e.value[0]!];
+                            const ts: Timeseries = timeseriesList![e.value[0]!];
                             timeseriesSelection(ts);
                         }}>
-                        {timeseries?.map((ts, key) => (
+                        {timeseriesList?.map((ts, key) => (
                             <Accordion.Item value={key} key={key}>
                                 <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
                                     <Box as="span" flex="1" textAlign="left" fontWeight="700">
@@ -145,7 +156,7 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                             </Accordion.Item>
                         ))}
                     </Accordion.Root>
-                    <CreateTimeseries scenario={scenario} eventListener={eventListener} />
+                    <CreateTimeseries scenario={scenario} eventListener={eventListener} resultCallback={onTimeseriesCreated} />
                 </Stack>
             </Box >
         </>

@@ -81,7 +81,7 @@ export const useServices = () => {
     };
 
 
-    const createTimeseries = async (ts: Timeseries) => {
+    const createTimeseries = async (ts: Timeseries) : Promise<string> => {
         console.log("createTimeseries " + ts);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
         console.log(ts);
@@ -95,9 +95,9 @@ export const useServices = () => {
         const responseData = await response.text();
 
         if (responseData) {
-            return responseData;
+            return Promise.resolve(responseData);
         } else {
-            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+            throw Promise.reject("Unexpected response: " + JSON.stringify(responseData));
         }
     };
 

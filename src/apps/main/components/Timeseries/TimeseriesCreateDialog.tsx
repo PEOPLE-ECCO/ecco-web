@@ -25,6 +25,7 @@ import {
     createListCollection,
     ListCollection,
 } from "@chakra-ui/react";
+import { computed, reactiveMap } from "@conterra/reactivity-core";
 
 import { MapContainer, MapModel, MapRegistry, SimpleLayer } from "@open-pioneer/map";
 import { useService } from "open-pioneer:react-hooks";
@@ -34,7 +35,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
 import Draw, { createBox } from "ol/interaction/Draw.js";
 
-import { Extent, Process, SpatialExtent, Timeseries } from "../../components/definitions";
+import { Extent, JobResult, Process, SpatialExtent, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "../../components/Timeseries/ActionButton";
@@ -183,15 +184,16 @@ function ExtentSelection(props: ExtentSelectionProps) {
 
 
 interface CreateTimeseriesProps {
-    eventListener: EventEmitter<Events>
-    scenario: Site
+    resultCallback: (result: Timeseries | undefined) => void;
+    eventListener: EventEmitter<Event>;
+    scenario: Site;
 }
 
 interface ProcessWithValue extends Process {
     value: string
 }
 
-export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ scenario }: CreateTimeseriesProps) => {
+export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, scenario }: CreateTimeseriesProps) => {
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
@@ -239,9 +241,24 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ scenario }: Create
         };
         const created = await createTimeseries(timeseries);
         handleExitClick();
+
+        // callback the results to the timeseries component
+        const result = {
+            id: created,
+            scenario_id: id!.toString(),
+            name: name,
+            description: description,
+            jobs: undefined,
+            extent: extent,
+            process: selectedProcess,
+            results: computed(() => new Map<string, JobResult[]>())
+        };
+        resultCallback(result);
+
+        // also notify the user
         notificationService.notify({
             title: "Timeseries created:",
-            message: created,
+            message: JSON.stringify(created),
             level: "info",
             displayDuration: 5000,
         });
