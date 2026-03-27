@@ -9,7 +9,7 @@ import partners from "../../assets/partners.png";
 
 export const Footer = () => {
     return (
-        <Box bg="#1f2229" color="white" py="1" mt="auto" minH="var(--footer-height)" maxH="var(--footer-height)">
+        <Box bg="#1f2229" color="white" py="1" mt="auto" minH="var(--footer-height)" maxH="var(--footer-height)" overflow="hidden">
             <Container maxW="100%">
                 <Flex
                     direction={{ base: "column", md: "row" }}
@@ -18,21 +18,21 @@ export const Footer = () => {
                     gap="6"
                 >
                     <HStack>
-                        <Link href="https://www.esa.int/">
-                            <Image src={esa} height="24px" />
+                        <Link href="https://www.esa.int/" target="_blank">
+                            <Image src={esa} height="22px" />
                         </Link>
                         <Text fontSize="sm">Funded by the European Space Agency (ESA)</Text>
                     </HStack>
 
                     <Spacer />
 
-                    <Image src={partners} height="36px" />
 
                     <Link
                         color="white"
                         href="https://github.com/PEOPLE-ECCO"
                         isExternal
                         fontSize="sm"
+                        target="_blank"
                         _hover={{ textDecoration: "underline" }}
                     >
                         <HStack spacing="2" align="center">
@@ -46,6 +46,7 @@ export const Footer = () => {
                         href="https://www.people-ecco.eu/"
                         isExternal
                         fontSize="sm"
+                        target="_blank"
                         _hover={{ textDecoration: "underline" }}
                     >
                         About PEOPLE-ECCO

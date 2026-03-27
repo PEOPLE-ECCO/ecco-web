@@ -32,7 +32,7 @@ export default function Header() {
             <Box>
                 <Flex
                     bg={"#2C7D75"}
-                    color={"gray.600"}
+                    color={"#d0ffff"}
                     minH="var(--header-height)"
                     maxH="var(--header-height)"
                     py={0}
@@ -60,7 +60,11 @@ export default function Header() {
                         <Box onClick={() => navigate("/")} cursor="pointer">
                             <Image src={logo} htmlWidth="198px" height="74px" />
                         </Box>
+                        <Box fontSize={"28px"} fontWeight={"bold"}>
+                            PEOPLE-ECCO Solutions Platform
+                        </Box>
                     </Flex>
+                    
 
                     <Flex
                         display={{ base: "none", md: "flex" }}
