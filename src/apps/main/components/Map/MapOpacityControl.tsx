@@ -3,8 +3,7 @@
 
 import { Box, Flex, Slider } from "@chakra-ui/react";
 import { EventEmitter } from "@open-pioneer/core";
-import { MapModel, MapRegistry, SimpleLayer } from "@open-pioneer/map";
-import { useService } from "open-pioneer:react-hooks";
+import { MapModel, SimpleLayer } from "@open-pioneer/map";
 import { useEffect, useState } from "react";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
@@ -15,7 +14,7 @@ interface MapOpacityControlsProps {
     eventListener: EventEmitter<Events>;
 }
 
-export const MapOpacityControl = ({ map, responsibleResultType, currentResultType, eventListener }: MapOpacityControlsProps) => {
+export const MapOpacityControl = ({ map, responsibleResultType, currentResultType }: MapOpacityControlsProps) => {
     const [layerOpacity, setLayerOpacity] = useState<number>(100);
 
     useEffect(() => {
