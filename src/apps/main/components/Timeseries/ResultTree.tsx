@@ -68,7 +68,6 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
 
     const treeCollection = useReactiveSnapshot(
         () => {
-
             const children = [];
             for (const [type, results] of timeseries.results.value.entries()) {
                 const withMeta = [{
@@ -229,7 +228,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                                                     _hover={{ bg: "teal.50" }}
                                                                     size="xs"
                                                                     variant="ghost"
-                                                                    onClick={() => { downloadCurrentResult(node.name); }}>
+                                                                    onClick={() => { downloadCurrentResult(node.href); }}>
                                                                     <LuDownload />
                                                                 </Button>
                                                             </Tooltip>
