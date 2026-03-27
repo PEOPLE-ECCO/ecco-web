@@ -26,15 +26,15 @@ import { EventEmitter } from "@open-pioneer/core";
 import { useService } from "open-pioneer:react-hooks";
 import { Measurement } from "@open-pioneer/measurement";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
-import { Toc } from "@open-pioneer/toc";
-import { SidebarItem, Sidebar } from "@open-pioneer/experimental-layout-sidebar";
 
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
 import { GeoTIFF } from "ol/source";
 import TileLayer from "ol/layer/WebGLTile.js";
 import { Fill, Stroke, Style } from "ol/style";
-import { Extent } from "ol/extent";
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+import GeoJSON from "ol/format/GeoJSON";
 
 import { useServices } from "../../../services/Services";
 import { MAP_ID } from "../../../services";
@@ -44,10 +44,11 @@ import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { JobResult, SpatialExtent, Timeseries } from "../../../components/definitions";
+import { SpatialExtent, Timeseries } from "../../../components/definitions";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
 import { LayerOverview } from "../../../components/Timeseries/LayerOverview";
+import Overlay from "ol/Overlay";
 
 
 export interface Events {
@@ -72,7 +73,7 @@ export function SiteDetails() {
     const [scenario, setScenario] = useState<Site>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
     const [expandedResultType, setExpandedResultType] = useState<string>();
-    const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
+    const [viewableJobResults, setViewableJobResults] = useState<JobResultData[]>([]);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [dataViewOpen, setDataViewOpen] = useState<boolean>(true);
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
@@ -156,7 +157,7 @@ export function SiteDetails() {
         () => {
             for (const job of selectedTimeseries?.jobs ?? []) {
                 const allTimeseriesResults = job.results.filter((
-                    (val, i) => val.visible.value
+                    (val, _) => val.visible.value
                 ));
                 const resultsOfExpandedType = [];
                 for (const result of allTimeseriesResults) {
@@ -224,6 +225,8 @@ export function SiteDetails() {
 
     async function showSelectedJobResult(id: number, opacity: number) {
         console.log(viewableJobResults);
+
+        debugger; // eslint-disable-line no-debugger
         const jobResult = viewableJobResults[id];
         if (!jobResult) {
             console.log("result not yet available");
@@ -231,39 +234,176 @@ export function SiteDetails() {
         }
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
-        const image = new GeoTIFF({
-            normalize: false,
-            interpolate: false,
-            sources: [
-                {
-                    url: jobResult.href,
-                },
-            ],
-        });
-        console.log(jobResult);
-        //TODO: this is really really bad
-        const style = JSON.parse(jobResult.style);
-        const layer = new SimpleLayer({
-            id: "current",
-            title: "current",
-            olLayer: new TileLayer({
-                source: image,
-                style: style
-            }),
-        });
-        layer.olLayer.setOpacity(opacity / 100);
-        map.layers.addLayer(layer);
-        const stacproj = new Projection({ code: jobResult.epsg });
-        const bbox = (await image.getView()).extent;
-        if (bbox) {
-            map.highlight(
-                [
-                    new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
-                    new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-                ]
-            );
+
+        if (jobResult.type == "geojson") {
+            // Define the projection based on your jobResult
+            const stacproj = new Projection({ code: "EPSG:" + jobResult.epsg });
+
+
+            // 1. Create the Styles based on your specifications
+            const defaultStyle = new Style({
+                fill: new Fill({ color: "rgba(0, 128, 0, 0.5)" }),     // Green, 50% opacity
+                stroke: new Stroke({ color: "#006400", width: 1.5 }),  // Dark Green
+                zIndex: 0
+            });
+
+            const neighborStyle = new Style({
+                fill: new Fill({ color: "rgba(0, 128, 0, 0.5)" }),
+                stroke: new Stroke({ color: "red", width: 3 }),        // Red boundary, thicker
+                zIndex: 1                                              // Equivalent to bringToFront()
+            });
+
+            const clickedStyle = new Style({
+                fill: new Fill({ color: "rgba(255, 0, 0, 0.8)" }),     // Red, 80% opacity
+                stroke: new Stroke({ color: "#8B0000", width: 4 }),    // Dark Red, thickest
+                zIndex: 2                                              // Always on top
+            });
+
+            // 1. Create the source, explicitly setting the expected data projection
+            const vectorSource = new VectorSource({
+                url: jobResult.href,
+                format: new GeoJSON({
+                    dataProjection: stacproj
+                }),
+            });
+
+            // 2. Create the Vector Layer (no style defined, so default is used)
+            const vectorLayer = new VectorLayer({
+                source: vectorSource,
+            });
+
+            // 3. Wrap in your custom SimpleLayer class
+            const layer = new SimpleLayer({
+                id: "current",
+                title: "current",
+                olLayer: vectorLayer,
+            });
+
+            // 4. Set opacity and add to the map
+            layer.olLayer.setOpacity(opacity / 100);
+            map.layers.addLayer(layer);
+
+            // 2. Set up the Popup HTML and Overlay
+            const popupContainer = document.createElement("div");
+            // Basic inline styling for the popup so it looks nice immediately
+            popupContainer.style.backgroundColor = "white";
+            popupContainer.style.padding = "10px";
+            popupContainer.style.border = "1px solid #ccc";
+            popupContainer.style.borderRadius = "5px";
+            popupContainer.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+
+            const popupContent = document.createElement("div");
+            popupContainer.appendChild(popupContent);
+
+            const popupOverlay = new Overlay({
+                element: popupContainer,
+                positioning: "bottom-center",
+                stopEvent: false,
+                offset: [0, -10] // Shifts the popup slightly above the clicked pixel
+            });
+            map.olMap.addOverlay(popupOverlay);
+
+            map.olMap.on("singleclick", function (evt) {
+
+                // Reset all features to the default layer style by clearing specific styles
+                vectorSource.getFeatures().forEach(f => f.setStyle(undefined));
+                
+                const clickedFeature = map.olMap.forEachFeatureAtPixel(evt.pixel, function (feature, clickedLayer) {
+                    // Only interact if the click was on our specific vectorLayer
+                    if (clickedLayer === vectorLayer) {
+                        return feature;
+                    }
+                });
+
+                if (clickedFeature) {
+                    // In OpenLayers, we use .get() to read GeoJSON properties
+                    const neighbors = clickedFeature.get("neighbors") || [];
+
+                    // Loop through all features in this layer to style the neighbors
+                    vectorSource.getFeatures().forEach(f => {
+                        const featureId = f.get("id");
+                        if (neighbors.includes(featureId)) {
+                            f.setStyle(neighborStyle);
+                        }
+                    });
+
+                    // Finally, style the clicked feature itself
+                    clickedFeature.setStyle(clickedStyle);
+
+                    // --- Popup Logic ---
+                    // Get all properties from the GeoJSON feature
+                    const properties = clickedFeature.getProperties();
+                    let htmlString = "";
+
+                    for (const key in properties) {
+                        // We skip the 'geometry' property because it is a complex OpenLayers object, not text
+                        if (key !== "geometry" && key !== "fid") {
+                            htmlString += "<b>" + key + ":</b> " + properties[key] + "<br/>";
+                        }
+                    }
+
+                    // Update the HTML inside the popup and move it to where the user clicked
+                    popupContent.innerHTML = htmlString;
+                    popupOverlay.setPosition(evt.coordinate);
+                } else {
+                    // Hide the popup if the user clicks somewhere empty on the map
+                    popupOverlay.setPosition(undefined);
+                }
+            });
+
+            // 5. Wait for the source to be fully available before highlighting
+            vectorSource.once("change", () => {
+                if (vectorSource.getState() === "ready") {
+                    // OpenLayers vector sources automatically transform coordinates to the map"s 
+                    // view projection during load. Because of this, the extent is already 
+                    // transformed, unlike the GeoTIFF extent.
+                    const extent = vectorSource.getExtent();
+
+                    if (extent) {
+                        // We simply pass the Points directly without an extra .transform() step
+                        map.highlight([
+                            new Point([extent[0]!, extent[1]!]),
+                            new Point([extent[2]!, extent[3]!])
+                        ]);
+                        console.log("geojson highlight done");
+                    }
+                }
+            });
+        } else {
+            const image = new GeoTIFF({
+                normalize: false,
+                interpolate: false,
+                sources: [
+                    {
+                        url: jobResult.href,
+                    },
+                ],
+            });
+            console.log(jobResult);
+            //TODO: this is really really bad
+            const style = JSON.parse(jobResult.style);
+            const layer = new SimpleLayer({
+                id: "current",
+                title: "current",
+                olLayer: new TileLayer({
+                    source: image,
+                    style: style
+                }),
+            });
+            layer.olLayer.setOpacity(opacity / 100);
+            map.layers.addLayer(layer);
+            const stacproj = new Projection({ code: "EPSG:" + jobResult.epsg });
+            const bbox = (await image.getView()).extent;
+            if (bbox) {
+                map.highlight(
+                    [
+                        new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
+                        new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
+                    ]
+                );
+            }
+            console.log("highlight done");
         }
-        console.log("highlight done");
     };
 
     const BLACK_STYLE = new Style({
@@ -369,117 +509,117 @@ export function SiteDetails() {
                 </Box>
             }
             <Box minH={contentHeightCalc} maxH={contentHeightCalc} flexGrow="1" >
-                {map && 
-                <MapContainer
-                    map={map}
-                    role="main"
-                    aria-label=""
-                >
-                    <MapInfoControls map={map} />
-                    {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
-                    <MapZoomControls map={map} position="top-right" horizontalGap={10} verticalGap={60} />
-                    <MapAnchor position="top-right" horizontalGap={0} verticalGap={10}>
-                        <Flex
-                            role="top-right"
-                            bottom="3%"
-                            aria-label="Data View controls"
-                            direction="column"
-                            colorPalette="teal"
-                        >
-                            <Button onClick={() => { setInfoViewOpen(!infoViewOpen); }} >
-                                <LuInfo />
-                            </Button>
-                        </Flex>
-                    </MapAnchor>
-                    <MapAnchor position="top-left" horizontalGap={0} verticalGap={10}>
-                        <Flex
-                            role="top-left"
-                            bottom="3%"
-                            aria-label="Info controls"
-                            direction="column"
-                            colorPalette="teal"
-                        >
-                            <Button onClick={() => { setDataViewOpen(!dataViewOpen); }} >
-                                <LuFolderTree />
-                            </Button>
-                        </Flex>
-                    </MapAnchor>
-                    <Box>
-                        {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 0 &&
-                            <Box
-                                position="absolute"
-                                bottom="14"
-                                left="55%"
-                                transform="translateX(-50%)"
-                                width="90%"
-                                zIndex="10"
-                                pointerEvents="auto"
+                {map &&
+                    <MapContainer
+                        map={map}
+                        role="main"
+                        aria-label=""
+                    >
+                        <MapInfoControls map={map} />
+                        {/* <MapSwitcherControls isChecked={shouldHighlightAndZoom} onToggle={setShouldHighlightAndZoom} /> */}
+                        <MapZoomControls map={map} position="top-right" horizontalGap={10} verticalGap={60} />
+                        <MapAnchor position="top-right" horizontalGap={0} verticalGap={10}>
+                            <Flex
+                                role="top-right"
+                                bottom="3%"
+                                aria-label="Data View controls"
+                                direction="column"
+                                colorPalette="teal"
                             >
-                                {viewableJobResults.length == 1 && (
-                                    <Slider.Root
-                                        size="lg"
-                                        colorPalette="teal"
-                                        w="90%"
-                                        step={1}
-                                        max={viewableJobResults.length - 1}
-                                        defaultValue={[0]}
-                                        onValueChangeEnd={(val) => {
-                                            console.log("onValueChangeEnd", val.value[0]!);
-                                            showSelectedJobResult(val.value[0]!, layerOpacity);
-                                        }}
-                                    >
-                                        <Slider.Control>
-                                            {viewableJobResults.map((jobResult, index) => (
-                                                <>
-                                                    <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
-                                                        <Circle h="3" w="3" bg="teal"></Circle>
-                                                        <Text>{jobResult.name}</Text>
-                                                    </Slider.Marker>
-                                                </>
-                                            ))}
-                                            <Slider.Track>
-                                                <Slider.Range />
-                                            </Slider.Track>
-                                            <SliderCircle />
-                                        </Slider.Control>
-                                    </Slider.Root>
-                                )}
-                                {viewableJobResults.length > 1 && (
-                                    <Slider.Root
-                                        size="lg"
-                                        colorPalette="teal"
-                                        w="90%"
-                                        step={1}
-                                        max={viewableJobResults.length - 1}
-                                        defaultValue={[0]}
-                                        onValueChangeEnd={(val) => {
-                                            console.log("onValueChangeEnd", val.value[0]!);
-                                            showSelectedJobResult(val.value[0]!, layerOpacity);
-                                        }}
-                                    >
-                                        <Slider.Control>
-                                            {viewableJobResults.map((jobResult, index) => (
-                                                <>
-                                                    <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
-                                                        <Circle h="3" w="3" bg="teal"></Circle>
-                                                        <Text>{jobResult.name}</Text>
-                                                    </Slider.Marker>
-                                                </>
-                                            ))}
-                                            <Slider.Track bg="teal">
-                                                <Slider.Range bg="teal" />
-                                            </Slider.Track>
-                                            <SliderCircle />
-                                        </Slider.Control>
-                                    </Slider.Root>
-                                )}
-                                {/* <TimeseriesControl
+                                <Button onClick={() => { setInfoViewOpen(!infoViewOpen); }} >
+                                    <LuInfo />
+                                </Button>
+                            </Flex>
+                        </MapAnchor>
+                        <MapAnchor position="top-left" horizontalGap={0} verticalGap={10}>
+                            <Flex
+                                role="top-left"
+                                bottom="3%"
+                                aria-label="Info controls"
+                                direction="column"
+                                colorPalette="teal"
+                            >
+                                <Button onClick={() => { setDataViewOpen(!dataViewOpen); }} >
+                                    <LuFolderTree />
+                                </Button>
+                            </Flex>
+                        </MapAnchor>
+                        <Box>
+                            {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 0 &&
+                                <Box
+                                    position="absolute"
+                                    bottom="14"
+                                    left="55%"
+                                    transform="translateX(-50%)"
+                                    width="90%"
+                                    zIndex="10"
+                                    pointerEvents="auto"
+                                >
+                                    {viewableJobResults.length == 1 && (
+                                        <Slider.Root
+                                            size="lg"
+                                            colorPalette="teal"
+                                            w="90%"
+                                            step={1}
+                                            max={viewableJobResults.length - 1}
+                                            defaultValue={[0]}
+                                            onValueChangeEnd={(val) => {
+                                                console.log("onValueChangeEnd", val.value[0]!);
+                                                showSelectedJobResult(val.value[0]!, layerOpacity);
+                                            }}
+                                        >
+                                            <Slider.Control>
+                                                {viewableJobResults.map((jobResult, index) => (
+                                                    <>
+                                                        <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
+                                                            <Circle h="3" w="3" bg="teal"></Circle>
+                                                            <Text>{jobResult.name}</Text>
+                                                        </Slider.Marker>
+                                                    </>
+                                                ))}
+                                                <Slider.Track>
+                                                    <Slider.Range />
+                                                </Slider.Track>
+                                                <SliderCircle />
+                                            </Slider.Control>
+                                        </Slider.Root>
+                                    )}
+                                    {viewableJobResults.length > 1 && (
+                                        <Slider.Root
+                                            size="lg"
+                                            colorPalette="teal"
+                                            w="90%"
+                                            step={1}
+                                            max={viewableJobResults.length - 1}
+                                            defaultValue={[0]}
+                                            onValueChangeEnd={(val) => {
+                                                console.log("onValueChangeEnd", val.value[0]!);
+                                                showSelectedJobResult(val.value[0]!, layerOpacity);
+                                            }}
+                                        >
+                                            <Slider.Control>
+                                                {viewableJobResults.map((jobResult, index) => (
+                                                    <>
+                                                        <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
+                                                            <Circle h="3" w="3" bg="teal"></Circle>
+                                                            <Text>{jobResult.name}</Text>
+                                                        </Slider.Marker>
+                                                    </>
+                                                ))}
+                                                <Slider.Track bg="teal">
+                                                    <Slider.Range bg="teal" />
+                                                </Slider.Track>
+                                                <SliderCircle />
+                                            </Slider.Control>
+                                        </Slider.Root>
+                                    )}
+                                    {/* <TimeseriesControl
                                     Timeseries={selectedTimeseries!}
                                 /> */}
-                            </Box>
-                        }
-                    </Box>
-                </MapContainer>
+                                </Box>
+                            }
+                        </Box>
+                    </MapContainer>
                 }
             </Box>
             {/* <Box h="90vh" w="100px" bg="teal.50" p="2" borderRadius="md" boxShadow="md">
