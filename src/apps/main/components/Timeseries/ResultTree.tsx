@@ -38,6 +38,8 @@ interface ResultTreeProps {
 interface ResultType {
     name: string
     type: string
+    startMonth: string;
+    endMonth: string;
     children?: JobResult[]
 }
 interface ResultInTree {
@@ -50,6 +52,11 @@ export interface JobInTree {
     job: Job
     name: string
     children: ResultInTree[]
+}
+
+interface ResultMetricMetadata {
+    startDate: Date;
+    endDate: Date;
 }
 
 export interface TreeNode {
@@ -65,20 +72,47 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
     useEffect(() => {
         eventListener.emit("expandedResultType", expandedResultType!);
     }, [expandedResultType]);
+    console.log(timeseries);
+
+    const extractDateFromJob = (job: Job): Date | undefined => {
+        if (job.results?.length > 0) {
+            if (job.results.get(0)!.id?.length > 10 && job.results.get(0)!.id.includes("_")) {
+                return new Date(`${ job.results.get(0)!.id.substring(0, 10)}`);
+            }
+        }
+    };
 
     const treeCollection = useReactiveSnapshot(
         () => {
-            const children = [];
-            for (const [type, results] of timeseries.results.value.entries()) {
-                const withMeta = [{
-                    name: type,
-                    type: "meta"
-                }] as JobResult[];
+            const actualTypes: Record<string, ResultMetricMetadata> = {};
+
+            for (const job of timeseries.jobs?.getItems() || []) {
+                for (const result of job.results?.getItems() || []) {
+                    const dt = extractDateFromJob(job);
+                    if (dt) {
+                        if (!actualTypes[result.type]) {
+                            actualTypes[result.type] = {
+                                startDate: dt,
+                                endDate: dt,
+                            };
+                        } else {
+                            actualTypes[result.type]!.startDate = actualTypes[result.type]!.startDate! < dt ? actualTypes[result.type]!.startDate! : dt;
+                            actualTypes[result.type]!.endDate = actualTypes[result.type]!.endDate! > dt ? actualTypes[result.type]!.endDate! : dt;
+                        }
+                    }
+                }
+            };
+            const children: ResultType[] = [];
+
+            for (const at of Object.keys(actualTypes)) {
+                const metadata = actualTypes[at];
                 children.push(
                     {
-                        name: type,
-                        type: type,
-                        children: withMeta.concat(results)
+                        name: at,
+                        type: "result",
+                        startMonth: metadata!.startDate.toISOString().slice(0, 7),
+                        endMonth: metadata!.endDate.toISOString().slice(0, 7),
+                        children: []
                     }
                 );
             };
@@ -92,7 +126,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                 },
             });
         },
-        [timeseries, timeseries.results]
+        [timeseries, timeseries.jobs]
     );
 
     /*
@@ -204,8 +238,12 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                                 }
                                                 {node.type != "meta" &&
                                                     <VStack>
-                                                        {node.name}
-                                                        <HStack>
+                                                        <HStack justify="start" width="100%">
+                                                            <div>
+                                                                {node.name} ({node.startMonth} - {node.endMonth})
+                                                            </div>
+                                                        </HStack>
+                                                        <HStack justify="start" width="100%">
                                                             <TreeView.NodeCheckbox pl="2" aria-label="check node">
                                                                 <Switch.Root colorPalette="teal" size="md" pr="4"
                                                                     checked={nodeState.checked === false}
@@ -221,24 +259,6 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                                                     </Switch.Control>
                                                                 </Switch.Root>
                                                             </TreeView.NodeCheckbox>
-
-                                                            <Tooltip content="Download current result">
-                                                                <Button
-                                                                    color="black"
-                                                                    _hover={{ bg: "teal.50" }}
-                                                                    size="xs"
-                                                                    variant="ghost"
-                                                                    onClick={() => { downloadCurrentResult(node.href); }}>
-                                                                    <LuDownload />
-                                                                </Button>
-                                                            </Tooltip>
-
-                                                            <Tooltip content="View Job Details">
-                                                                <ViewDetails job={timeseries.jobs?.get(0)}></ViewDetails>
-                                                            </Tooltip>
-                                                            <Tooltip content="View Job Logs">
-                                                                <ViewLog job={timeseries.jobs?.get(0)}></ViewLog>
-                                                            </Tooltip>
 
                                                             <Dialog.Root size="xl" scrollBehavior="inside">
                                                                 <Dialog.Trigger asChild>

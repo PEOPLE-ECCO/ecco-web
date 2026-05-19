@@ -67,16 +67,15 @@ export function ResultTreeOverview({ timeseries, eventListener }: ResultTreeProp
     const treeCollection = useReactiveSnapshot(
         () => {
             const children = [];
-            for (const [type, results] of timeseries.results.value.entries()) {
+            for (const job of timeseries.jobs?.getItems() || []) {
                 const withMeta = [{
-                    name: "name",
                     type: "meta"
                 }] as JobResult[];
                 children.push(
                     {
-                        name: type,
-                        type: type,
-                        children: withMeta.concat(results)
+                        name: "type",
+                        type: "type",
+                        children: []
                     }
                 );
             };
@@ -96,7 +95,7 @@ export function ResultTreeOverview({ timeseries, eventListener }: ResultTreeProp
                 },
             });
         },
-        [timeseries, timeseries.results]
+        [timeseries, timeseries.jobs]
     );
 
     function downloadCurrentResult(href: string) {

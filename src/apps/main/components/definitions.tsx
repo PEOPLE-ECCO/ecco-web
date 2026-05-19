@@ -16,7 +16,6 @@ export interface Timeseries {
     readonly geometry?: GeoJSONFeature
     readonly process?: Process
     readonly jobs?: ReactiveArray<Job>
-    readonly results?: ReadonlyReactive<Map<string, JobResult[]>>
 }
 
 export class TimeseriesImpl implements Timeseries {
@@ -27,7 +26,6 @@ export class TimeseriesImpl implements Timeseries {
     #extent?: SpatialExtent;
     #process?: Process;
     #jobs: ReactiveArray<Job>;
-    #results: ReadonlyReactive<Map<string, JobResult[]>>;
 
     #httpService: HttpService;
 
@@ -58,19 +56,6 @@ export class TimeseriesImpl implements Timeseries {
         this.#process = payload.process;
         this.#jobs = reactiveArray([]);
         this.#fetchedJobs = false;
-        this.#results = computed(() => {
-            const byType = new Map<string, JobResult[]>();
-            for (const job of this.#jobs) {
-                for (const v of job.results) {
-                    if (!byType.has(v.type)) {
-                        byType.set(v.type, [v]);
-                    } else {
-                        byType.set(v.type, byType.get(v.type)!.concat(v));
-                    }
-                };
-            };
-            return byType;
-        });
 
         this.#httpService = httpService;
     }
@@ -99,11 +84,6 @@ export class TimeseriesImpl implements Timeseries {
     public get process(): Process | undefined {
         return this.#process;
     }
-
-    public get results(): ReadonlyReactive<Map<string, JobResult[]>> {
-        return this.#results;
-    }
-
 
     public get jobs(): ReactiveArray<Job> {
         // TODO: allow refetching

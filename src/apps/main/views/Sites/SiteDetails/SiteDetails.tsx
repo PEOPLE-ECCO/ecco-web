@@ -477,7 +477,7 @@ export function SiteDetails() {
                                     </Button>
                                 </Tooltip>
                             </Tabs.Trigger>
-                            <Tabs.Trigger value="layeroverview">
+                            {/* <Tabs.Trigger value="layeroverview">
                                 <LuDatabase />
                                 Layer View
                                 <Tooltip content="This view shows all results in a tree and enables comparisons between results and timeseries">
@@ -485,25 +485,17 @@ export function SiteDetails() {
                                         <LuInfo />
                                     </Button>
                                 </Tooltip>
-                            </Tabs.Trigger>
+                            </Tabs.Trigger> */}
                         </Tabs.List>
                         <Tabs.Content value="timeseries" overflowX="auto" maxH={tabsHeightCalc} minH={tabsHeightCalc}>
                             {map && scenario &&
                                 <TimeseriesItem scenario={scenario} map={map} timeseries={timeseries} eventListener={emitter} />
                             }
                         </Tabs.Content>
-                        <Tabs.Content value="layeroverview" overflowX="auto" maxH={tabsHeightCalc} minH={tabsHeightCalc}>
+                        {/* <Tabs.Content value="layeroverview" overflowX="auto" maxH={tabsHeightCalc} minH={tabsHeightCalc}>
                             <LayerOverview timeseries={timeseries} eventListener={emitter} />
-                            {/* <Box mt="4" bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                                            {map &&
-                                                <Toc map={map} showTools={true} showBasemapSwitcher={false} collapsibleGroups={true} initiallyCollapsed={false} />
-                                            }
-                                            {timeseries?.map((element) =>
-                                                <HStack key={element.name} gap="6">
-                                                </HStack>
-                                            )}
-                                        </Box> */}
-                        </Tabs.Content>
+
+                        </Tabs.Content> */}
                     </Tabs.Root>
 
                 </Box>
