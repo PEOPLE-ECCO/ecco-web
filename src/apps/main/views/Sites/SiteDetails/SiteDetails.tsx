@@ -13,6 +13,7 @@ import {
     Slider,
     Stack,
     Tabs,
+    Tag,
     Text,
     useCollapsible
 } from "@chakra-ui/react";
@@ -156,14 +157,18 @@ export function SiteDetails() {
     useReactiveSnapshot(
         () => {
             for (const job of selectedTimeseries?.jobs ?? []) {
-                const allTimeseriesResults = job.results.filter((
-                    (val, _) => val.visible.value
-                ));
                 const resultsOfExpandedType = [];
-                for (const result of allTimeseriesResults) {
+                for (const result of job.results) {
                     if (result.type == expandedResultType)
                         resultsOfExpandedType.push(result);
                 }
+
+                // Sort resultsOfExpandedType by resultTime ascending
+                resultsOfExpandedType.sort((a, b) => {
+                    const dateA = new Date(a.resultTime);
+                    const dateB = new Date(b.resultTime);
+                    return dateA.getTime() - dateB.getTime();
+                });
                 setViewableJobResults(resultsOfExpandedType);
             };
         }, [selectedTimeseries, selectedTimeseries?.jobs, expandedResultType]
@@ -226,7 +231,6 @@ export function SiteDetails() {
     async function showSelectedJobResult(id: number, opacity: number) {
         console.log(viewableJobResults);
 
-        debugger; // eslint-disable-line no-debugger
         const jobResult = viewableJobResults[id];
         if (!jobResult) {
             console.log("result not yet available");
@@ -565,7 +569,9 @@ export function SiteDetails() {
                                                     <>
                                                         <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
                                                             <Circle h="3" w="3" bg="teal"></Circle>
-                                                            <Text>{jobResult.name}</Text>
+                                                            <Tag.Root>
+                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.resultTime}</Tag.Label>
+                                                            </Tag.Root>
                                                         </Slider.Marker>
                                                     </>
                                                 ))}
@@ -594,7 +600,9 @@ export function SiteDetails() {
                                                     <>
                                                         <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
                                                             <Circle h="3" w="3" bg="teal"></Circle>
-                                                            <Text>{jobResult.name}</Text>
+                                                            <Tag.Root>
+                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.resultTime}</Tag.Label>
+                                                            </Tag.Root>
                                                         </Slider.Marker>
                                                     </>
                                                 ))}

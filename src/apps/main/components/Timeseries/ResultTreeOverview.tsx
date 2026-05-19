@@ -84,7 +84,7 @@ export function ResultTreeOverview({ timeseries, eventListener }: ResultTreeProp
                 nodeToValue: (node) => node.name,
                 nodeToString: (node) => node.name,
                 rootNode: {
-                    name: "Results",
+                    name: "Metrics",
                     children: children 
                     // [
                     // {

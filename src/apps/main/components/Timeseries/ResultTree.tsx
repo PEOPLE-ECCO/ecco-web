@@ -74,11 +74,12 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
     }, [expandedResultType]);
     console.log(timeseries);
 
-    const extractDateFromJob = (job: Job): Date | undefined => {
-        if (job.results?.length > 0) {
-            if (job.results.get(0)!.id?.length > 10 && job.results.get(0)!.id.includes("_")) {
-                return new Date(`${ job.results.get(0)!.id.substring(0, 10)}`);
-            }
+    const extractDateFromJobResult = (result: JobResult): Date | undefined => {
+        if (result.resultTime) {
+            return new Date(result.resultTime);
+        }
+        else if (result.id?.length > 10 && result.id.includes("_")) {
+            return new Date(`${result.id.substring(0, 10)}`);
         }
     };
 
@@ -88,7 +89,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
 
             for (const job of timeseries.jobs?.getItems() || []) {
                 for (const result of job.results?.getItems() || []) {
-                    const dt = extractDateFromJob(job);
+                    const dt = extractDateFromJobResult(result);
                     if (dt) {
                         if (!actualTypes[result.type]) {
                             actualTypes[result.type] = {
@@ -105,23 +106,32 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
             const children: ResultType[] = [];
 
             for (const at of Object.keys(actualTypes)) {
+               const withMeta = [{
+                    name: at,
+                    type: "meta"
+                }] as JobResult[];
                 const metadata = actualTypes[at];
                 children.push(
                     {
                         name: at,
-                        type: "result",
+                        type: at,
                         startMonth: metadata!.startDate.toISOString().slice(0, 7),
                         endMonth: metadata!.endDate.toISOString().slice(0, 7),
-                        children: []
+                        children: withMeta.concat([])
                     }
                 );
             };
+            
+            // set the first metric type visible
+            if (children && children.length > 0) {
+                setExpandedResultType(children[0]!.name);
+            }
 
             return createTreeCollection<TreeNode>({
                 nodeToValue: (node) => node.name,
                 nodeToString: (node) => node.name,
                 rootNode: {
-                    name: "Results",
+                    name: "Metrics",
                     children: children
                 },
             });
@@ -186,9 +196,27 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                 nodeState.isBranch ? (
                                     <TreeView.BranchControl>
                                         <>
-                                            <LuFolder />
+                                            <Switch.Root colorPalette="teal" size="md" pr="4"
+                                                checked={expandedResultType === node.name}
+                                                onCheckedChange={() => { node.visible.value = !node.visible.value; }}>
+                                                <Switch.HiddenInput />
+                                                <Switch.Label />
+                                                <Switch.Control>
+                                                    <Switch.Thumb >
+                                                        <Switch.ThumbIndicator fallback={<LuMap />}>
+                                                            <LuMap />
+                                                        </Switch.ThumbIndicator>
+                                                    </Switch.Thumb>
+                                                </Switch.Control>
+                                            </Switch.Root>
                                             <TreeView.BranchText fontWeight="bold">
-                                                {node.name}
+                                                <VStack>
+                                                    <div>{node.name} ({node.startMonth} - {node.endMonth})</div>
+                                                    <HStack>
+                                                        <MapOpacityControl map={map} responsibleResultType={node.name} currentResultType={expandedResultType!} eventListener={eventListener} />
+
+                                                    </HStack>
+                                                </VStack>
                                             </TreeView.BranchText>
                                             {/* <TreeView.Item>
                                                 <Tooltip content="View legend">
@@ -206,99 +234,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                         </>
                                     </TreeView.BranchControl>
                                 ) : (
-                                    <TreeView.Item>
-                                        <>
-                                            <TreeView.ItemText>
-                                                {node.type == "meta" &&
-                                                    <>
-                                                        <HStack>
-                                                            <MapOpacityControl map={map} responsibleResultType={node.name} currentResultType={expandedResultType!} eventListener={eventListener}/>
-                                                            <Tooltip content="View legend">
-                                                                <Button
-                                                                    color="black"
-                                                                    _hover={{ bg: "teal.50" }}
-                                                                    size="xs"
-                                                                    variant="ghost"
-                                                                    onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
-                                                                    <LuLayers />
-                                                                </Button>
-                                                            </Tooltip>
-                                                            <Tooltip content="Zoom back to Extent">
-                                                                <Button
-                                                                    color="black"
-                                                                    _hover={{ bg: "teal.50" }}
-                                                                    size="xs"
-                                                                    variant="ghost"
-                                                                    onClick={() => { eventListener.emit("zoomBackToExtent"); }}>
-                                                                    <LuMapPinned />
-                                                                </Button>
-                                                            </Tooltip>
-                                                        </HStack>
-                                                    </>
-                                                }
-                                                {node.type != "meta" &&
-                                                    <VStack>
-                                                        <HStack justify="start" width="100%">
-                                                            <div>
-                                                                {node.name} ({node.startMonth} - {node.endMonth})
-                                                            </div>
-                                                        </HStack>
-                                                        <HStack justify="start" width="100%">
-                                                            <TreeView.NodeCheckbox pl="2" aria-label="check node">
-                                                                <Switch.Root colorPalette="teal" size="md" pr="4"
-                                                                    checked={nodeState.checked === false}
-                                                                    onCheckedChange={() => { node.visible.value = !node.visible.value; }}>
-                                                                    <Switch.HiddenInput />
-                                                                    <Switch.Label />
-                                                                    <Switch.Control>
-                                                                        <Switch.Thumb >
-                                                                            <Switch.ThumbIndicator fallback={<LuMap />}>
-                                                                                <LuMap />
-                                                                            </Switch.ThumbIndicator>
-                                                                        </Switch.Thumb>
-                                                                    </Switch.Control>
-                                                                </Switch.Root>
-                                                            </TreeView.NodeCheckbox>
-
-                                                            <Dialog.Root size="xl" scrollBehavior="inside">
-                                                                <Dialog.Trigger asChild>
-                                                                    <Tooltip content="View current result file">
-                                                                        <Button
-                                                                            color="black"
-                                                                            _hover={{ bg: "teal.50" }}
-                                                                            size="xs"
-                                                                            variant="ghost"
-                                                                            onClick={() => { console.log("TODO: zoom to layer"); }}
-                                                                            disabled={true}
-                                                                        >
-                                                                            <LuEye />
-                                                                        </Button>
-                                                                    </Tooltip>
-                                                                </Dialog.Trigger>
-                                                                <Portal>
-                                                                    <Dialog.Backdrop />
-                                                                    <Dialog.Positioner>
-                                                                        <Dialog.Content>
-                                                                            <Dialog.Header>
-                                                                                <Dialog.Title>View Result {node.filename}</Dialog.Title>
-                                                                                <Dialog.CloseTrigger asChild>
-                                                                                    <CloseButton height="10" variant="outline" order="2" size="md" color="black" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }} />
-                                                                                </Dialog.CloseTrigger>
-                                                                            </Dialog.Header>
-                                                                            <Dialog.Body>
-                                                                                <Image rounded="md" src={node.filename} />
-                                                                            </Dialog.Body>
-                                                                            <Dialog.Footer />
-                                                                        </Dialog.Content>
-                                                                    </Dialog.Positioner>
-                                                                </Portal>
-                                                            </Dialog.Root>
-                                                        </HStack>
-                                                    </VStack>
-                                                }
-                                            </TreeView.ItemText>
-                                        </>
-                                    </TreeView.Item>
+                                    <div/>
                                 )
                             }
                         />

@@ -147,7 +147,7 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                                                 </Collapsible.Root>
                                             } */}
                                             <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                <Text fontWeight="bold">Results</Text>
+                                                <Text fontWeight="bold">Metrics</Text>
                                                 <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
                                             </Box>
                                         </>
