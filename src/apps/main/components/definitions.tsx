@@ -293,7 +293,7 @@ interface STACItem {
     readonly id: string
     // readonly geometry: string
     readonly bbox: number[]
-    readonly resultTime: string;
+    readonly phenomenonTime: string;
     readonly properties: Record<string, string>;
     // readonly links: string
     readonly assets: Record<string, Asset>;
@@ -316,7 +316,7 @@ class JobResultData implements JobResult {
     #stac_extensions: string[];
     #id: string;
     #bbox: number[];
-    #resultTime: string;
+    #phenomenonTime: string;
     #properties: Record<string, string>;
     #assets: Record<string, Asset>;
 
@@ -363,10 +363,11 @@ class JobResultData implements JobResult {
             return this.#filename.split("/").slice(-1)[0]!;
         });
 
-        if (payload.properties && payload.properties["resultTime"]) {
-            this.#resultTime = new Date(payload.properties["resultTime"]).toISOString().substring(0, 10);
+        if (payload.properties && payload.properties["datetime"]) {
+            this.#phenomenonTime = new Date(payload.properties["datetime"]).toISOString().substring(0, 10);
+        } else {
+            this.#phenomenonTime = "";
         }
-        
     }
 
     // Public getters
@@ -442,8 +443,8 @@ class JobResultData implements JobResult {
         return this.#style;
     }
 
-    public get resultTime(): string {
-        return this.#resultTime;
+    public get phenomenonTime(): string {
+        return this.#phenomenonTime;
     }
 }
 

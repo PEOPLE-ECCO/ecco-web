@@ -163,10 +163,10 @@ export function SiteDetails() {
                         resultsOfExpandedType.push(result);
                 }
 
-                // Sort resultsOfExpandedType by resultTime ascending
+                // Sort resultsOfExpandedType by phenomenonTime ascending
                 resultsOfExpandedType.sort((a, b) => {
-                    const dateA = new Date(a.resultTime);
-                    const dateB = new Date(b.resultTime);
+                    const dateA = new Date(a.phenomenonTime);
+                    const dateB = new Date(b.phenomenonTime);
                     return dateA.getTime() - dateB.getTime();
                 });
                 setViewableJobResults(resultsOfExpandedType);
@@ -570,7 +570,7 @@ export function SiteDetails() {
                                                         <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
                                                             <Circle h="3" w="3" bg="teal"></Circle>
                                                             <Tag.Root>
-                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.resultTime}</Tag.Label>
+                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.phenomenonTime}</Tag.Label>
                                                             </Tag.Root>
                                                         </Slider.Marker>
                                                     </>
@@ -601,7 +601,7 @@ export function SiteDetails() {
                                                         <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
                                                             <Circle h="3" w="3" bg="teal"></Circle>
                                                             <Tag.Root>
-                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.resultTime}</Tag.Label>
+                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.phenomenonTime}</Tag.Label>
                                                             </Tag.Root>
                                                         </Slider.Marker>
                                                     </>

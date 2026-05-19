@@ -75,8 +75,8 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
     console.log(timeseries);
 
     const extractDateFromJobResult = (result: JobResult): Date | undefined => {
-        if (result.resultTime) {
-            return new Date(result.resultTime);
+        if (result.phenomenonTime) {
+            return new Date(result.phenomenonTime);
         }
         else if (result.id?.length > 10 && result.id.includes("_")) {
             return new Date(`${result.id.substring(0, 10)}`);
