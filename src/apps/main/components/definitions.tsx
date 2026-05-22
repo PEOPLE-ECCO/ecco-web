@@ -297,6 +297,8 @@ interface STACItem {
     readonly properties: Record<string, string>;
     // readonly links: string
     readonly assets: Record<string, Asset>;
+    readonly epsg: string;
+    readonly href: string;
 }
 
 interface Asset {
@@ -307,6 +309,8 @@ interface Asset {
 export interface JobResult extends STACItem {
     visible: Reactive<boolean>
     visibleinoverview: Reactive<boolean>;
+    readonly style: string;
+    readonly name: string;
 }
 
 class JobResultData implements JobResult {

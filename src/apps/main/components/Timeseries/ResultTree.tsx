@@ -2,20 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    Button,
     HStack,
-    Portal,
-    Dialog,
-    CloseButton,
     Switch,
     createTreeCollection,
     TreeView,
-    Image,
-    VStack
+    VStack,
+    Box
 } from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
-import { LuDownload, LuEye, LuFolder, LuLayers, LuMap, LuMapPinned } from "react-icons/lu";
+import { LuMap } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { useReactiveSnapshot } from "@open-pioneer/reactivity";
@@ -23,10 +19,7 @@ import { useReactiveSnapshot } from "@open-pioneer/reactivity";
 import { Job, JobResult, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { MapOpacityControl } from "../Map/MapOpacityControl";
-import { MAP_ID } from "../../services";
-import { ViewDetails, ViewLog } from "./ViewJob";
-import { Tooltip } from "../../components/tooltip";
-import { MapModel } from "@open-pioneer/map";
+import { MapModel, SimpleLayer } from "@open-pioneer/map";
 
 
 interface ResultTreeProps {
@@ -38,10 +31,11 @@ interface ResultTreeProps {
 interface ResultType {
     name: string
     type: string
-    startMonth: string;
-    endMonth: string;
+    startMonth: string
+    endMonth: string
     children?: JobResult[]
 }
+
 interface ResultInTree {
     result: JobResult
     name: string
@@ -69,10 +63,32 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
     const [expandedResultType, setExpandedResultType] = useState<string>("");
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
 
+    // Store all opacity values in a single object keyed by resultType name
+    const [opacityValues, setOpacityValues] = useState<Record<string, number>>({
+    });
+
     useEffect(() => {
-        eventListener.emit("expandedResultType", expandedResultType!);
+        eventListener.emit("expandedResultType", {
+            name: expandedResultType,
+            opacity: opacityValues[expandedResultType] || 100
+        });
     }, [expandedResultType]);
-    console.log(timeseries);
+
+    function handleOpacityChange(resultType:string, value: number) {
+        setOpacityValues({
+            ...opacityValues,
+            [resultType]: value
+        });
+
+        if (resultType === expandedResultType) {
+            const layer = map?.layers.getLayerById("current") as SimpleLayer;
+            // eventListener.emit("layerOpacity", layerOpacity);
+
+            if (layer) {
+                layer.olLayer.setOpacity(value / 100);
+            }
+        }
+    }
 
     const extractDateFromJobResult = (result: JobResult): Date | undefined => {
         if (result.phenomenonTime) {
@@ -120,10 +136,16 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                         children: withMeta.concat([])
                     }
                 );
+                if (!opacityValues[at]) {
+                    opacityValues[at] = 100;
+                }
+                
             };
+
+            setOpacityValues(opacityValues);
             
             // set the first metric type visible
-            if (children && children.length > 0) {
+            if (children && children.length > 0 && expandedResultType?.length === 0) {
                 setExpandedResultType(children[0]!.name);
             }
 
@@ -136,7 +158,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                 },
             });
         },
-        [timeseries, timeseries.jobs]
+        [timeseries, timeseries.jobs, opacityValues]
     );
 
     /*
@@ -180,59 +202,63 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                     defaultCheckedValue={[]}
                     expandedValue={[expandedResultType!]}
                     onExpandedChange={(e) => {
-                        if (e.expandedValue.length == 0) {
+                        if (e.expandedValue.length === 0) {
                             setExpandedResultType("");
                         } else {
                             setExpandedResultType(e.focusedValue!);
                         };
-                        console.log(expandedResultType);
+                        console.log(`onExpandedChange ${expandedResultType}`);
                         console.log("TODO: close all previously expanded results via Event");
                     }}
                     animateContent>
                     <TreeView.Tree>
                         <TreeView.Node
+
                             indentGuide={<TreeView.BranchIndentGuide />}
                             render={({ node, nodeState }) =>
                                 nodeState.isBranch ? (
-                                    <TreeView.BranchControl>
-                                        <>
-                                            <Switch.Root colorPalette="teal" size="md" pr="4"
-                                                checked={expandedResultType === node.name}
-                                                onCheckedChange={() => { node.visible.value = !node.visible.value; }}>
-                                                <Switch.HiddenInput />
-                                                <Switch.Label />
-                                                <Switch.Control>
-                                                    <Switch.Thumb >
-                                                        <Switch.ThumbIndicator fallback={<LuMap />}>
-                                                            <LuMap />
-                                                        </Switch.ThumbIndicator>
-                                                    </Switch.Thumb>
-                                                </Switch.Control>
-                                            </Switch.Root>
-                                            <TreeView.BranchText fontWeight="bold">
-                                                <VStack>
-                                                    <div>{node.name} ({node.startMonth} - {node.endMonth})</div>
-                                                    <HStack>
-                                                        <MapOpacityControl map={map} responsibleResultType={node.name} currentResultType={expandedResultType!} eventListener={eventListener} />
+                                    <TreeView.Branch>
+                                        <TreeView.BranchControl>
+                                            <>
+                                                <Switch.Root colorPalette="teal" size="md" pr="4"
+                                                    checked={expandedResultType === node.name}
+                                                    
+                                                >
+                                                    <Switch.HiddenInput />
+                                                    <Switch.Label />
+                                                    <Switch.Control>
+                                                        <Switch.Thumb >
+                                                            <Switch.ThumbIndicator fallback={<LuMap />}>
+                                                                <LuMap />
+                                                            </Switch.ThumbIndicator>
+                                                        </Switch.Thumb>
+                                                    </Switch.Control>
+                                                </Switch.Root>
+                                                <Box fontWeight={expandedResultType === node.name ? "bold": "normal"}>{node.name} ({node.startMonth} - {node.endMonth})</Box>
 
-                                                    </HStack>
-                                                </VStack>
-                                            </TreeView.BranchText>
-                                            {/* <TreeView.Item>
-                                                <Tooltip content="View legend">
-                                                    <Button
-                                                        color="black"
-                                                        _hover={{ bg: "teal.50" }}
-                                                        size="xs"
-                                                        variant="ghost"
-                                                        onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
-                                                        <LuLayers />
-                                                    </Button>
-                                                </Tooltip>
-                                            </TreeView.Item> */}
+                                                {/* <TreeView.Item>
+                                                    <Tooltip content="View legend">
+                                                        <Button
+                                                            color="black"
+                                                            _hover={{ bg: "teal.50" }}
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            onClick={() => { setInfoViewOpen(!infoViewOpen); eventListener.emit("infoViewOpen", !infoViewOpen); }}>
+                                                            <LuLayers />
+                                                        </Button>
+                                                    </Tooltip>
+                                                </TreeView.Item> */}
 
-                                        </>
-                                    </TreeView.BranchControl>
+                                            </>
+                                        </TreeView.BranchControl>
+                                        <TreeView.BranchText>
+                                            <VStack>
+                                                <HStack>
+                                                    <MapOpacityControl responsibleResultType={node.name} onChange={handleOpacityChange} value={opacityValues[node.name] || 77}/>
+                                                </HStack>
+                                            </VStack>
+                                        </TreeView.BranchText>
+                                    </TreeView.Branch>
                                 ) : (
                                     <div/>
                                 )

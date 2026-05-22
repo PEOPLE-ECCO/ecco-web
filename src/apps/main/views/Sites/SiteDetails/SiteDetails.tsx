@@ -45,20 +45,29 @@ import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
-import { SpatialExtent, Timeseries } from "../../../components/definitions";
+import { JobResult, SpatialExtent, Timeseries } from "../../../components/definitions";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
 import { LayerOverview } from "../../../components/Timeseries/LayerOverview";
 import Overlay from "ol/Overlay";
+
+export interface ResultTypeMeta {
+    name: string;
+    opacity: number;
+    legend?: string;
+}
 
 
 export interface Events {
     selectedTimeseries: Timeseries;
     toggleJobWithId: string;
     infoViewOpen: boolean;
-    expandedResultType: string;
+    expandedResultType: ResultTypeMeta;
     zoomBackToExtent: undefined;
-    layerOpacity: number;
+    layerOpacity: {
+        resultType: string;
+        opacity: number;
+    };
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -73,14 +82,13 @@ export function SiteDetails() {
     const [timeseries, setTimeseries] = useState<Timeseries[]>();
     const [scenario, setScenario] = useState<Site>();
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries | undefined>();
-    const [expandedResultType, setExpandedResultType] = useState<string>();
-    const [viewableJobResults, setViewableJobResults] = useState<JobResultData[]>([]);
+    const [expandedResultType, setExpandedResultType] = useState<ResultTypeMeta>();
+    const [viewableJobResults, setViewableJobResults] = useState<JobResult[]>([]);
     const mapService = useService<MapRegistry>("map.MapRegistry");
     const [dataViewOpen, setDataViewOpen] = useState<boolean>(true);
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
     const [map, setMap] = useState<MapModel>();
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
-    const [layerOpacity, setLayerOpacity] = useState<number>(100);
 
     const timeseriesExtent = (() => {
         console.log(selectedTimeseries!.extent!);
@@ -102,13 +110,12 @@ export function SiteDetails() {
         (value: boolean) => (setInfoViewOpen(value))
     );
     emitter.on("expandedResultType",
-        (value: string) => (setExpandedResultType(value))
+        (value: ResultTypeMeta) => {
+            setExpandedResultType(value);
+        }
     );
     emitter.on("zoomBackToExtent",
         () => (ZoomToTimeseriesExtent(timeseriesExtent()))
-    );
-    emitter.on("layerOpacity",
-        (value) => (setLayerOpacity(value), console.log("Layeropacity changed: ", value))
     );
 
     useEffect(() => {
@@ -138,7 +145,7 @@ export function SiteDetails() {
             remove_current_item();
         }
         if (expandedResultType) {
-            showSelectedJobResult(0, layerOpacity);
+            showSelectedJobResult(0, expandedResultType.opacity || 100);
             ZoomToTimeseriesExtent(timeseriesExtent());
         }
     }, [expandedResultType]);
@@ -156,11 +163,14 @@ export function SiteDetails() {
 
     useReactiveSnapshot(
         () => {
+            const resultsOfExpandedType = [];
             for (const job of selectedTimeseries?.jobs ?? []) {
-                const resultsOfExpandedType = [];
+                
                 for (const result of job.results) {
-                    if (result.type == expandedResultType)
+                    if (result.type === expandedResultType?.name) {
                         resultsOfExpandedType.push(result);
+                    }
+                        
                 }
 
                 // Sort resultsOfExpandedType by phenomenonTime ascending
@@ -169,8 +179,9 @@ export function SiteDetails() {
                     const dateB = new Date(b.phenomenonTime);
                     return dateA.getTime() - dateB.getTime();
                 });
-                setViewableJobResults(resultsOfExpandedType);
+                
             };
+            setViewableJobResults(resultsOfExpandedType);
         }, [selectedTimeseries, selectedTimeseries?.jobs, expandedResultType]
     );
 
@@ -561,7 +572,7 @@ export function SiteDetails() {
                                             defaultValue={[0]}
                                             onValueChangeEnd={(val) => {
                                                 console.log("onValueChangeEnd", val.value[0]!);
-                                                showSelectedJobResult(val.value[0]!, layerOpacity);
+                                                showSelectedJobResult(val.value[0]!, expandedResultType.opacity || 100);
                                             }}
                                         >
                                             <Slider.Control>
@@ -592,7 +603,7 @@ export function SiteDetails() {
                                             defaultValue={[0]}
                                             onValueChangeEnd={(val) => {
                                                 console.log("onValueChangeEnd", val.value[0]!);
-                                                showSelectedJobResult(val.value[0]!, layerOpacity);
+                                                showSelectedJobResult(val.value[0]!, expandedResultType.opacity || 100);
                                             }}
                                         >
                                             <Slider.Control>
@@ -653,7 +664,7 @@ export function SiteDetails() {
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="legend">
-                                        <Legend process={expandedResultType} />
+                                        <Legend process={expandedResultType?.name} />
                                     </Tabs.Content>
                                     <Tabs.Content value="tools">
                                         Use Map Tools

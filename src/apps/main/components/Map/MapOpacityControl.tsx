@@ -8,29 +8,12 @@ import { useEffect, useState } from "react";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
 interface MapOpacityControlsProps {
-    map: MapModel;
-    currentResultType: string;
     responsibleResultType: string;
-    eventListener: EventEmitter<Events>;
+    value: number;
+    onChange: (resultType: string, opacity: number) => void;
 }
 
-export const MapOpacityControl = ({ map, responsibleResultType, currentResultType }: MapOpacityControlsProps) => {
-    const [layerOpacity, setLayerOpacity] = useState<number>(100);
-
-    useEffect(() => {
-        if (responsibleResultType == currentResultType) {
-            updateMap();
-        }
-    }, [map, layerOpacity, responsibleResultType, currentResultType]);
-
-    const updateMap = async () => {
-        const layer = map?.layers.getLayerById("current") as SimpleLayer;
-        // eventListener.emit("layerOpacity", layerOpacity);
-
-        if (layer) {
-            layer.olLayer.setOpacity(layerOpacity / 100);
-        }
-    };
+export const MapOpacityControl = ({ responsibleResultType, value, onChange }: MapOpacityControlsProps) => {
 
     return (
         <Flex
@@ -45,10 +28,9 @@ export const MapOpacityControl = ({ map, responsibleResultType, currentResultTyp
                 <Slider.Root
                     width="250px"
                     orientation="horizontal"
-                    defaultValue={[layerOpacity]}
-                    value={[layerOpacity]}
-                    onValueChange={(e) => setLayerOpacity(e.value[0]!)}
-                //onValueChangeEnd={(e) => setLayerOpacity(e.value[0]!)}
+                    defaultValue={[value]}
+                    value={[value]}
+                    onValueChange={(e) => onChange(responsibleResultType, e.value[0]!)}
                 >
                     <Flex align="center" gap="4" justify="space-between">
                         <Slider.Label>Opacity:</Slider.Label>
@@ -58,7 +40,7 @@ export const MapOpacityControl = ({ map, responsibleResultType, currentResultTyp
                             </Slider.Track>
                             <Slider.Thumbs />
                         </Slider.Control>
-                        <Slider.Label>{[layerOpacity]}%</Slider.Label>
+                        <Slider.Label>{[value]}%</Slider.Label>
                     </Flex>
                 </Slider.Root>
             </Box>
