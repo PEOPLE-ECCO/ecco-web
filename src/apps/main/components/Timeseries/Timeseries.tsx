@@ -11,12 +11,13 @@ import {
     Accordion,
     Portal,
     Dialog,
-    ScrollArea,
-    CloseButton
+    HStack,
+    Button
 } from "@chakra-ui/react";
 
 import { useCallback, useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
+import { LuDownload } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -24,11 +25,12 @@ import { useService } from "open-pioneer:react-hooks";
 import { MapModel } from "@open-pioneer/map";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
-import { Job, Timeseries } from "../definitions";
+import { Job, JobResult, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { ResultTree } from "./ResultTree";
 import { TimeseriesExpandDialog } from "./TimeseriesExpandDialog";
 import { Site } from "../../views/Sites/Site/Site";
+import { Tooltip } from "../tooltip";
 
 
 interface TimeseriesProps {
@@ -43,6 +45,7 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
     const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(true);
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [timeseriesList, setTimeseriesList] = useState<Timeseries[]>([]);
+    const [currentResultForDownload, setCurrentResultForDownload] = useState<JobResult | undefined>(undefined);
 
     useEffect(() => {
         setTimeseriesList(timeseries || []);
@@ -91,6 +94,22 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
             setTimeseriesList(timeseriesList => [...timeseriesList, ts]);
         }
     };
+
+    // listen for updates on the selected job result
+    eventListener.on("currentResult", (result: JobResult) => {
+        setCurrentResultForDownload(result);
+    });
+
+    function downloadCurrentResult() {
+        if (!currentResultForDownload)
+            return;
+        const link = document.createElement("a");
+        link.href = currentResultForDownload.href;
+        link.download = link.href.split("/").pop() || "download.tiff"; // or a fixed name if needed
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     return (
         <>
@@ -147,7 +166,21 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                                                 </Collapsible.Root>
                                             } */}
                                             <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
-                                                <Text fontWeight="bold">Metrics</Text>
+                                                <Flex>
+                                                    <Text fontWeight="bold">Metrics</Text>
+                                                    <Box ml="auto"></Box>
+                                                    <Tooltip content="Download current result">
+                                                        <Button
+                                                            color="black"
+                                                            _hover={{ bg: "teal.50" }}
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            disabled={!currentResultForDownload}
+                                                            onClick={() => { downloadCurrentResult(); }}>
+                                                            <LuDownload />
+                                                        </Button>
+                                                    </Tooltip>
+                                                </Flex>
                                                 <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
                                             </Box>
                                         </>
@@ -187,6 +220,18 @@ function MenuContent({ ts, el }: MenuContentProps) {
     const handleArchive = (ts: Timeseries) => {
         console.log("Archive:", ts.name);
     };
+
+    const initiateDownload = (ts: Timeseries) => {
+        const href = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts.id + "/download";
+
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = `timeseries_${ts.id}_results.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
 
     return (
         <>
@@ -236,6 +281,19 @@ function MenuContent({ ts, el }: MenuContentProps) {
                                         });
                                     }}>
                                     Archive
+                                </Menu.Item>
+                                <Menu.Item
+                                    value="download"
+                                    onClick={() => {
+                                        initiateDownload(ts);
+                                        notificationService.notify({
+                                            title: "Download initiated",
+                                            message: ts.name,
+                                            level: "info",
+                                            displayDuration: 5000,
+                                        });
+                                    }}>
+                                    Download results
                                 </Menu.Item>
                             </Menu.Content>
                         </Menu.Positioner>

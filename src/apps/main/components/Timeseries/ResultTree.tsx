@@ -183,16 +183,6 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
     );
     */
 
-    function downloadCurrentResult(href: string) {
-        if (!href)
-            return;
-        const link = document.createElement("a");
-        link.href = href;
-        link.download = href.split("/").pop() || "download.tiff"; // or a fixed name if needed
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
 
     return (
         <>

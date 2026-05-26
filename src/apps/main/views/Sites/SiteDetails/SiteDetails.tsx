@@ -48,7 +48,6 @@ import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { JobResult, SpatialExtent, Timeseries } from "../../../components/definitions";
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
-import { LayerOverview } from "../../../components/Timeseries/LayerOverview";
 import Overlay from "ol/Overlay";
 
 export interface ResultTypeMeta {
@@ -68,6 +67,7 @@ export interface Events {
         resultType: string;
         opacity: number;
     };
+    currentResult: JobResult;
 }
 
 const _proj3857 = new Projection({ code: "EPSG:3857" });
@@ -239,14 +239,17 @@ export function SiteDetails() {
         }
     };
 
-    async function showSelectedJobResult(id: number, opacity: number) {
+    async function showSelectedJobResult(idx: number, opacity: number) {
         console.log(viewableJobResults);
 
-        const jobResult = viewableJobResults[id];
+        const jobResult = viewableJobResults[idx];
         if (!jobResult) {
             console.log("result not yet available");
             return;
         }
+
+        emitter.emit("currentResult", jobResult);
+
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
 
