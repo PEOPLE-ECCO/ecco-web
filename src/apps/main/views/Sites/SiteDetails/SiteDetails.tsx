@@ -253,7 +253,7 @@ export function SiteDetails() {
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
 
-        if (jobResult.type == "geojson") {
+        if (jobResult.type == "geojson" || jobResult.type == "geojson-sav" || jobResult.type == "geojson-coral") {
             // Define the projection based on your jobResult
             const stacproj = new Projection({ code: "EPSG:" + jobResult.epsg });
 
