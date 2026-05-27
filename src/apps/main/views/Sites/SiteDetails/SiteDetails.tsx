@@ -394,6 +394,7 @@ export function SiteDetails() {
                 sources: [
                     {
                         url: jobResult.href,
+                        nodata: NaN
                     },
                 ],
             });
