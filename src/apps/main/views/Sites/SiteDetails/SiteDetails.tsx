@@ -339,7 +339,7 @@ export function SiteDetails() {
 
                     // Loop through all features in this layer to style the neighbors
                     vectorSource.getFeatures().forEach(f => {
-                        const featureId = f.getProperties()["patch_id"];
+                        const featureId = f.getProperties()["patch_id"] - 1;
                         if (neighbors.includes(featureId)) {
                             f.setStyle(neighborStyle);
                         }
