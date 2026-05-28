@@ -1,0 +1,7 @@
+node_modules
+caddy.Dockerfile
+docker-compose.yml
+.env
+dist
+.github
+.husky

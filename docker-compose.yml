@@ -1,0 +1,74 @@
+services:
+  cadddy:
+    image: people-ecco/proxy:latest
+    build:
+      context: .
+      dockerfile: caddy.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    configs:
+      - source: caddy_config
+        target: /etc/caddy/Caddyfile
+
+configs:
+  caddy_config:
+    content: |
+      (cors) {
+        @cors_preflight method OPTIONS
+
+        header {
+          Access-Control-Allow-Origin "{header.origin}"
+          Vary Origin
+          Access-Control-Expose-Headers "Authorization"
+          Access-Control-Allow-Credentials "true"
+        }
+
+        handle @cors_preflight {
+          header {
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE"
+            Access-Control-Max-Age "3600"
+          }
+          respond "" 204
+        }
+      }
+
+      localhost {
+        encode gzip
+
+          handle /auth* {
+              reverse_proxy "https://keycloak:8443" {
+                  header_up Host {upstream_hostport}
+                  transport http {
+                      tls_insecure_skip_verify
+                  }
+              }
+          }
+
+          handle_path /api* {
+              reverse_proxy "http://api:5000" {
+                  header_up Host {upstream_hostport}
+              }
+          }
+
+          handle_path /s3-console* {
+              reverse_proxy "http://garage:3902" {
+                  header_up Host {upstream_hostport}
+                  health_uri /health
+                  health_port 3903
+              }
+          }
+
+          handle /assets/* {
+              root * /srv/web
+              file_server
+          }
+
+          handle {
+              root * /srv/web/sites/main
+              try_files {path} /index.html
+              file_server
+          }
+      }
