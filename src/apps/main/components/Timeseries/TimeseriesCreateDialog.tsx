@@ -55,6 +55,7 @@ interface ExtentSelectionProps {
     onGeometryChange: (extent?: SpatialExtent) => void
     isVisible: boolean
     dialogClosed: boolean
+    extentValid: boolean
 }
 
 function ExtentSelection(props: ExtentSelectionProps) {
@@ -165,13 +166,30 @@ function ExtentSelection(props: ExtentSelectionProps) {
                             map={map}
                             role="boxselection"
                             aria-label="">
-                            <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
-                                <Text>
-                                    Extent Cordinates: <br />
-                                    x1: {extent?.bbox[0]}, x2: {extent?.bbox[1]} <br />
-                                    x2: {extent?.bbox[2]}, y2: {extent?.bbox[3]}
-                                </Text>
-                            </Box>
+                            {!extent &&
+                                <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
+                                    <Text>
+                                        Please select an area of interest. It´s bounding box must be between 0.05° and 2.5° latitude and longitude.
+                                    </Text>
+                                </Box>
+                            }
+                            {extent && props.extentValid &&
+                                <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
+                                    <Text>
+                                        Extent Cordinates: <br />
+                                        x1: {extent?.bbox[0]}, x2: {extent?.bbox[1]} <br />
+                                        x2: {extent?.bbox[2]}, y2: {extent?.bbox[3]}
+                                    </Text>
+                                </Box>
+                            }
+                            {!props.extentValid &&
+                                <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
+                                    <Text>
+                                        Invalid extent: too large or too small. It´s bounding box must be between 0.05° and 2.5° latitude and longitude.
+                                    </Text>
+                                </Box>
+                            }
+                            
                             <MapInfoControls map={map} />
                             <MapZoomControls map={map} />
                         </MapContainer>
@@ -203,6 +221,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
     const [expandDialogClosed, setExpandDialogClosed] = useState<boolean>(false);
     const notificationService = useService<NotificationService>("notifier.NotificationService");
+    const [extentValid, setExtentValid] = useState<boolean>(true);
 
     const [value, setValue] = useState<string[]>([]);
     const [processes, setProcesses] = useState<ProcessWithValue[]>([]);
@@ -298,6 +317,34 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         setProcessTable(listCollection);
     }, [processes]);
 
+    const checkExtent = (xt?: SpatialExtent) => {
+        if (xt) {
+            const format = new GeoJSON();
+
+            const olGeometry = format.readGeometry(xt.geometry.geometry);
+
+            const xtGeom = olGeometry.getExtent();
+
+            const minX = xtGeom[0]; // West Longitude
+            const minY = xtGeom[1]; // South Latitude
+            const maxX = xtGeom[2]; // East Longitude
+            const maxY = xtGeom[3]; // North Latitude
+
+            const lonDelta = maxX! - minX!;
+            const latDelta = maxY! - minY!;
+
+            const minDegrees = 0.05;
+            const maxDegrees = 2.2;
+
+            if (lonDelta > maxDegrees || latDelta > maxDegrees) {
+                return false;
+            }
+
+            return lonDelta > minDegrees && latDelta > minDegrees;
+        }
+        return true;
+    };
+
 
     const steps = [
         {
@@ -383,9 +430,18 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                     initialExtent={scenario.bbox}
                     isVisible={step == 2}
                     dialogClosed={expandDialogClosed}
+                    extentValid={extentValid}
                     onGeometryChange={(ext) => {
-                        setExtent(ext);
-                        setNextButtonDisabled(!ext);
+                        if (checkExtent(ext)) {
+                            setExtentValid(true);
+                            setExtent(ext);
+                            setNextButtonDisabled(!ext);
+                        } else {
+                            console.log("Extent not valid");
+                            setExtentValid(false);
+                            setExtent(undefined);
+                            setNextButtonDisabled(true);
+                        }
                     }} />,
         },
         {
@@ -531,4 +587,3 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         </>
     );
 };
-
