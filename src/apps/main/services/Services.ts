@@ -4,8 +4,9 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job, JobParameters, JobResult, Timeseries, TimeseriesImpl } from "../components/definitions";
+import { Job, JobParameters, JobResult, LegendAndDescription, Timeseries, TimeseriesImpl } from "../components/definitions";
 import { useState } from "react";
+import { LegendProvider, SolutionNames } from "./LegendProvider";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
@@ -123,5 +124,16 @@ export const useServices = () => {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
-    return { getUser, getScenarios, getScenario, getTimeseries, getProcesses, createTimeseries, createJob };
+
+    const getLegend = async (outputType: string, timeseries?: Timeseries) : Promise<LegendAndDescription> => {
+        return new Promise((resolve, reject) => {
+            const prov = new LegendProvider();
+
+            // TODO resolve solution somehow from timeseries
+            const result = prov.resolveLegend(outputType, SolutionNames.SAV);
+            resolve(result!);
+        });
+    };
+
+    return { getUser, getScenarios, getScenario, getTimeseries, getProcesses, createTimeseries, createJob, getLegend };
 };
