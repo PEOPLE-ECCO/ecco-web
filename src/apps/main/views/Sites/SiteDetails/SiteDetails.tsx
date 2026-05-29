@@ -660,7 +660,7 @@ export function SiteDetails() {
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="legend">
-                                        <Legend process={expandedResultType?.name} />
+                                        <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
                                     </Tabs.Content>
                                     <Tabs.Content value="tools">
                                         Use Map Tools
