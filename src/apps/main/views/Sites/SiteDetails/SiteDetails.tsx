@@ -91,8 +91,12 @@ export function SiteDetails() {
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
 
     const timeseriesExtent = (() => {
-        console.log(selectedTimeseries!.extent!);
-        return selectedTimeseries!.extent!;
+        if (selectedTimeseries?.extent) {
+            console.log(selectedTimeseries!.extent!);
+            return selectedTimeseries!.extent!;
+        }
+        return undefined;
+        
     });
     const google = new Projection({ code: "EPSG:3857" });
     const geojson = new Projection({ code: "EPSG:4326" });
@@ -135,7 +139,8 @@ export function SiteDetails() {
         }
         if (selectedTimeseries) {
             // Extent and EPSG should be from TS data later
-            ZoomToTimeseriesExtent(selectedTimeseries.extent!);
+
+            ZoomToTimeseriesExtent(selectedTimeseries?.extent);
         }
     }, [selectedTimeseries]);
 
@@ -219,7 +224,7 @@ export function SiteDetails() {
         }
     };
 
-    async function ZoomToTimeseriesExtent(extent: SpatialExtent) {
+    async function ZoomToTimeseriesExtent(extent: SpatialExtent | undefined) {
         // There might be no extent (when no job has run yet)
         if (map && extent) {
             map.zoom(
@@ -542,7 +547,7 @@ export function SiteDetails() {
                                 </Button>
                             </Flex>
                         </MapAnchor>
-                        <MapAnchor position="top-left" horizontalGap={0} verticalGap={10}>
+                        {/* <MapAnchor position="top-left" horizontalGap={0} verticalGap={10}>
                             <Flex
                                 role="top-left"
                                 bottom="3%"
@@ -554,7 +559,7 @@ export function SiteDetails() {
                                     <LuFolderTree />
                                 </Button>
                             </Flex>
-                        </MapAnchor>
+                        </MapAnchor> */}
                         <Box>
                             {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 0 &&
                                 <Box
