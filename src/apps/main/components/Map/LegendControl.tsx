@@ -4,11 +4,12 @@
 import { Box, HStack, Stack, Text, useEditable } from "@chakra-ui/react";
 import { useServices } from "../../services/Services";
 import { useEffect, useState } from "react";
-import { LegendElement, Process } from "../definitions";
+import { LegendElement, Process, LegendAndDescription } from "../definitions";
 
 interface LegendControlProps {
     process?: string;
 }
+
 
 export const Legend = ({ process }: LegendControlProps) => {
     const DHILegend = [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }];
@@ -26,24 +27,107 @@ export const Legend = ({ process }: LegendControlProps) => {
         setContent();
     }, [process]);
 
-    const setContent = () => {
-        if (process == "DHI") {
-            setCurrentLegend(DHILegend);
-            setCurrentDescription(DHIDescription);
-        }
-        if (process == "R80P") {
-            setCurrentLegend(R80PLegend);
-            setCurrentDescription(R80PDescription);
-        }
-        if (process == "deltaIR") {
-            setCurrentLegend(deltaIRLegend);
-            setCurrentDescription(deltaIRDescription);
-        }
-        if (process == undefined) {
-            setCurrentLegend([]);
-            setCurrentDescription("");
-        }
+    const fetchLegendDummy = async (process: string) : Promise<LegendAndDescription> => {
+        return new Promise((resolve, reject) => {
+            let result : LegendAndDescription | undefined = undefined;
+            const lowered = process?.trim().toLowerCase();
+            switch (lowered) {
+                case "openeo raw files":
+                    console.log("Handling OpenEO Raw Files...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "Red", color: "red" }, { value: "Green", color: "green" }, { value: "Blue", color: "blue " }],
+                        description: "Raw openEO scenes"
+                    };
+                    break;
+
+                case "overall probability":
+                    console.log("Handling Overall Probability...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "High probability", color: "black" }, { value: "Low probability", color: "white" }],
+                        description: "Probabilities for single scenes"
+                    };
+                    break;
+
+                case "aggregated probability":
+                    console.log("Handling Aggregated Probability...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "High probability", color: "black" }, { value: "Low probability", color: "white" }],
+                        description: "Probabilities aggregated over all scenes"
+                    };
+                    break;
+
+                case "sav probability":
+                    console.log("Handling SAV Probability...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "No SAV", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }],
+                        description: "Submerged aquatic vegetation probabilities aggregated over all scenes"
+                    };
+                    break;
+
+                case "coral probability":
+                    console.log("Handling Coral Probability...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "No Corals", color: "red" }, { value: "Corals", color: "green" }, { value: "No Data", color: "white" }],
+                        description: "Coral probabilities aggregated over all scenes"
+                    };
+                    break;
+
+                case "prediction":
+                    console.log("Handling Prediction...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }],
+                        description: "Prediction results"
+                    };
+                    break;
+            }
+
+            if (!result) {
+                reject("No legend found for process: " + process);
+            }
+            
+            resolve(result!);
+        });
     };
+
+
+    const setContent = async () => {
+        console.log("LEGEND: "+process);
+        if (process) {
+            const legendData = await fetchLegendDummy(process!);
+            console.log(legendData);
+            if (legendData) {
+                setCurrentLegend(legendData.entries);
+                setCurrentDescription(legendData.description);
+            }
+        }
+        
+
+        // if (process == "DHI") {
+        //     setCurrentLegend(DHILegend);
+        //     setCurrentDescription(DHIDescription);
+        // }
+        // if (process == "R80P") {
+        //     setCurrentLegend(R80PLegend);
+        //     setCurrentDescription(R80PDescription);
+        // }
+        // if (process == "deltaIR") {
+        //     setCurrentLegend(deltaIRLegend);
+        //     setCurrentDescription(deltaIRDescription);
+        // }
+        // if (process == undefined) {
+        //     setCurrentLegend([]);
+        //     setCurrentDescription("");
+        // }
+
+
+    };
+
 
     return (
         <>
@@ -51,7 +135,7 @@ export const Legend = ({ process }: LegendControlProps) => {
                 <>
                     <Box bg="white" p="6" borderWidth="1px" borderRadius="md" boxShadow="sm">
                         <Stack gap="2">
-                            <Text fontWeight="semibold">Legend {process}</Text>
+                            <Text fontWeight="semibold">Legend <span style={{fontStyle: "italic"}}>{process}</span></Text>
                             {currentLegend.map((element) =>
                                 <HStack key={element.value} gap="6">
                                     <Box w="6" bg={element.color} pt="4" borderWidth="1px" color="black" />
@@ -61,9 +145,8 @@ export const Legend = ({ process }: LegendControlProps) => {
                         </Stack>
                     </Box>
                     <Box bg="white" p="6" mt="2" borderWidth="1px" borderRadius="md" boxShadow="sm">
-                        <Text fontWeight="semibold">Description {process}</Text>
+                        <Text fontWeight="semibold">Description</Text>
                         <Text>{currentDescription}</Text>
-
                     </Box>
                 </>
             )}

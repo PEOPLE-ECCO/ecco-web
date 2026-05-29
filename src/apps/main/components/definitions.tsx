@@ -498,3 +498,9 @@ export interface LegendElement {
     value: string
     color: string
 }
+
+export interface LegendAndDescription {
+    processName: string;
+    entries: LegendElement[];
+    description: string;
+}
