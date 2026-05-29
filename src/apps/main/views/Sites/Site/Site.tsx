@@ -43,7 +43,8 @@ export const Site = (site: Site) => {
                     src={site.preview_image}
                     alt={site.name}
                     borderRadius="lg"
-                    boxSize="250px"
+                    height={"175px"}
+                    width={"255px"}
                     objectFit="cover"
                     _hover={{
                         transform: "scale(1.02)",

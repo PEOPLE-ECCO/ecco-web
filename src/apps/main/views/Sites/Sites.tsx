@@ -80,10 +80,11 @@ export const Sites: FC = () => {
         };
     }, [map, sites]);
 
+    const contentHeightCalc = "calc(100vh - var(--header-height) - var(--footer-height))";
 
     return (
         <>
-            <Flex gap="4" p="4" direction="row">
+            <Flex gap="4" p="4" direction="row" maxHeight={contentHeightCalc}>
                 <Box overflow={"auto"}>
                     <Flex gap="4" direction="row" wrap="wrap" justify="center">
                         {sites && sites.map((site) =>
