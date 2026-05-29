@@ -55,6 +55,7 @@ interface ResultMetricMetadata {
 
 export interface TreeNode {
     name: string
+    type: string
     children?: ResultType[]
 }
 
@@ -103,6 +104,25 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
         () => {
             const actualTypes: Record<string, ResultMetricMetadata> = {};
 
+            const orderMap: Record<string, number> = {
+                "Aggregated probability": 1,
+                "Coral probability": 2,
+                "SAV probability": 3,
+                "Prediction": 4,
+                "geojson-coral": 5,
+                "geojson-sav": 6,
+                "Overall probability": 7,
+                "OpenEO Raw Files": 8
+            };
+            const nameDictionary: Record<string, string> = {
+                "Aggregated probability": "Marine Habitats (aggregated)",
+                "geojson-coral": "Coral Vector",
+                "geojson-sav": "SAV Vector",
+                "Overall probability": "Marine Habitats (individual)",
+                "OpenEO Raw Files": "Sentinel-2 Pseudocolor"
+            };
+
+
             for (const job of timeseries.jobs?.getItems() || []) {
                 for (const result of job.results?.getItems() || []) {
                     const dt = extractDateFromJobResult(result);
@@ -129,7 +149,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                 const metadata = actualTypes[at];
                 children.push(
                     {
-                        name: at,
+                        name: nameDictionary[at] || at,
                         type: at,
                         startMonth: metadata!.startDate.toISOString().slice(0, 7),
                         endMonth: metadata!.endDate.toISOString().slice(0, 7),
@@ -143,18 +163,27 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
             };
 
             setOpacityValues(opacityValues);
-            
+
+            const sorted = children.sort((a, b) => {
+                // Get the weight from the map, default to Infinity if it doesn't exist
+                const weightA = orderMap[a.type] || Infinity;
+                const weightB = orderMap[b.type] || Infinity;
+
+                return weightA - weightB;
+            });
+
             // set the first metric type visible
             if (children && children.length > 0 && expandedResultType?.length === 0) {
-                setExpandedResultType(children[0]!.name);
+                setExpandedResultType(sorted[0]!.type);
             }
 
             return createTreeCollection<TreeNode>({
-                nodeToValue: (node) => node.name,
-                nodeToString: (node) => node.name,
+                nodeToValue: (node) => node.type,
+                nodeToString: (node) => nameDictionary[node.type] || node.name,
                 rootNode: {
+                    type: "root",
                     name: "Metrics",
-                    children: children
+                    children: sorted
                 },
             });
         },
@@ -197,7 +226,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                         } else {
                             setExpandedResultType(e.focusedValue!);
                         };
-                        console.log(`onExpandedChange ${expandedResultType}`);
+                        console.log(`onExpandedChange ${e.focusedValue}`);
                         console.log("TODO: close all previously expanded results via Event");
                     }}
                     animateContent>
@@ -211,8 +240,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                         <TreeView.BranchControl>
                                             <>
                                                 <Switch.Root colorPalette="teal" size="md" pr="4"
-                                                    checked={expandedResultType === node.name}
-                                                    
+                                                    checked={expandedResultType === node.type}
                                                 >
                                                     <Switch.HiddenInput />
                                                     <Switch.Label />
@@ -224,7 +252,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                                         </Switch.Thumb>
                                                     </Switch.Control>
                                                 </Switch.Root>
-                                                <Box fontWeight={expandedResultType === node.name ? "bold": "normal"}>{node.name} ({node.startMonth} - {node.endMonth})</Box>
+                                                <Box fontWeight={expandedResultType === node.type ? "bold": "normal"}>{node.name} ({node.startMonth} - {node.endMonth})</Box>
 
                                                 {/* <TreeView.Item>
                                                     <Tooltip content="View legend">
@@ -244,7 +272,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                                         <TreeView.BranchText>
                                             <VStack>
                                                 <HStack>
-                                                    <MapOpacityControl responsibleResultType={node.name} onChange={handleOpacityChange} value={opacityValues[node.name] || 77}/>
+                                                    <MapOpacityControl responsibleResultType={node.type} onChange={handleOpacityChange} value={opacityValues[node.type] || 77}/>
                                                 </HStack>
                                             </VStack>
                                         </TreeView.BranchText>

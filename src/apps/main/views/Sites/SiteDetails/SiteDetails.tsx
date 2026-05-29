@@ -92,7 +92,6 @@ export function SiteDetails() {
 
     const timeseriesExtent = (() => {
         if (selectedTimeseries?.extent) {
-            console.log(selectedTimeseries!.extent!);
             return selectedTimeseries!.extent!;
         }
         return undefined;
@@ -139,7 +138,6 @@ export function SiteDetails() {
         }
         if (selectedTimeseries) {
             // Extent and EPSG should be from TS data later
-
             ZoomToTimeseriesExtent(selectedTimeseries?.extent);
         }
     }, [selectedTimeseries]);
@@ -264,20 +262,14 @@ export function SiteDetails() {
 
 
             // 1. Create the Styles based on your specifications
-            const defaultStyle = new Style({
-                fill: new Fill({ color: "rgba(0, 128, 0, 0.5)" }),     // Green, 50% opacity
-                stroke: new Stroke({ color: "#006400", width: 1.5 }),  // Dark Green
-                zIndex: 0
-            });
-
             const neighborStyle = new Style({
-                fill: new Fill({ color: "rgba(0, 128, 0, 0.5)" }),
-                stroke: new Stroke({ color: "red", width: 3 }),        // Red boundary, thicker
+                fill: new Fill({ color: "#cea2fd" }),
+                stroke: new Stroke({ color: "red", width: 2 }),        // Red boundary, thicker
                 zIndex: 1                                              // Equivalent to bringToFront()
             });
 
             const clickedStyle = new Style({
-                fill: new Fill({ color: "rgba(255, 0, 0, 0.8)" }),     // Red, 80% opacity
+                fill: new Fill({ color: "#cea2fd" }),     // Red, 80% opacity
                 stroke: new Stroke({ color: "#8B0000", width: 4 }),    // Dark Red, thickest
                 zIndex: 2                                              // Always on top
             });
@@ -358,12 +350,11 @@ export function SiteDetails() {
                     const properties = clickedFeature.getProperties();
                     let htmlString = "";
 
-                    for (const key in properties) {
-                        // We skip the 'geometry' property because it is a complex OpenLayers object, not text
-                        if (key !== "geometry" && key !== "fid") {
-                            htmlString += "<b>" + key + ":</b> " + properties[key] + "<br/>";
-                        }
-                    }
+                    htmlString += "<h3><b>Habitat Metrics</b></h3><b>Area</b>: "
+                    + properties["area_ha"] 
+                    + "ha<br/><b>Total area of connected habitats:</b> "
+                    + properties["neigh_area_ha"] 
+                    + "ha<br/>";
 
                     // Update the HTML inside the popup and move it to where the user clicked
                     popupContent.innerHTML = htmlString;
@@ -388,7 +379,6 @@ export function SiteDetails() {
                             new Point([extent[0]!, extent[1]!]),
                             new Point([extent[2]!, extent[3]!])
                         ]);
-                        console.log("geojson highlight done");
                     }
                 }
             });
@@ -398,12 +388,10 @@ export function SiteDetails() {
                 interpolate: false,
                 sources: [
                     {
-                        url: jobResult.href,
-                        nodata: NaN
+                        url: jobResult.href
                     },
                 ],
             });
-            console.log(jobResult);
             //TODO: this is really really bad
             const style = JSON.parse(jobResult.style);
             const layer = new SimpleLayer({
@@ -426,7 +414,6 @@ export function SiteDetails() {
                     ]
                 );
             }
-            console.log("highlight done");
         }
     };
 

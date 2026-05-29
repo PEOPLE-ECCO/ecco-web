@@ -44,7 +44,6 @@ export class TimeseriesImpl implements Timeseries {
         payload: Timeseries,
         httpService: HttpService
     ) {
-        console.log(payload);
         this.#id = payload.id;
         this.#scenario_id = payload.scenario_id;
         this.#name = payload.name;
