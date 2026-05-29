@@ -96,7 +96,7 @@ export class LegendProvider {
                 console.log("Handling SAV Probability...");
                 result = {
                     processName: lowered,
-                    entries: [{ value: "No SAV", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }],
+                    entries: [{ value: "Corals", color: "white" }],
                     description: "Submerged aquatic vegetation probabilities aggregated over all scenes"
                 };
                 break;
@@ -105,7 +105,7 @@ export class LegendProvider {
                 console.log("Handling Coral Probability...");
                 result = {
                     processName: lowered,
-                    entries: [{ value: "No Corals", color: "red" }, { value: "Corals", color: "green" }, { value: "No Data", color: "white" }],
+                    entries: [{ value: "Corals", color: "white" }],
                     description: "Coral probabilities aggregated over all scenes"
                 };
                 break;
