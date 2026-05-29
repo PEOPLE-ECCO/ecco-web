@@ -559,7 +559,7 @@ export function SiteDetails() {
                             {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 0 &&
                                 <Box
                                     position="absolute"
-                                    bottom="14"
+                                    bottom="135px"
                                     left="55%"
                                     transform="translateX(-50%)"
                                     width="90%"
@@ -567,7 +567,7 @@ export function SiteDetails() {
                                     pointerEvents="auto"
                                 >
                                     {viewableJobResults.length == 1 && (
-                                        <Slider.Root
+                                        <Slider.Root background={"#ccccccee"} padding={"5px"} border={"solid"} borderRadius={"15px"} borderColor={"#444444"}
                                             size="lg"
                                             colorPalette="teal"
                                             w="90%"
@@ -584,8 +584,8 @@ export function SiteDetails() {
                                                     <>
                                                         <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
                                                             <Circle h="3" w="3" bg="teal"></Circle>
-                                                            <Tag.Root>
-                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.phenomenonTime}</Tag.Label>
+                                                            <Tag.Root transform="rotate(-90deg) translate(-45px);">
+                                                                <Tag.Label fontWeight={700} fontSize={"120%"} fontFamily={"monospace"}>{jobResult.phenomenonTime}</Tag.Label>
                                                             </Tag.Root>
                                                         </Slider.Marker>
                                                     </>
@@ -598,7 +598,7 @@ export function SiteDetails() {
                                         </Slider.Root>
                                     )}
                                     {viewableJobResults.length > 1 && (
-                                        <Slider.Root
+                                        <Slider.Root background={"#ccccccee"} padding={"5px"} border={"solid"} borderRadius={"15px"} borderColor={"#444444"}
                                             size="lg"
                                             colorPalette="teal"
                                             w="90%"
@@ -613,10 +613,10 @@ export function SiteDetails() {
                                             <Slider.Control>
                                                 {viewableJobResults.map((jobResult, index) => (
                                                     <>
-                                                        <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
+                                                        <Slider.Marker zIndex="9" pt="7" key={index} value={index} w={"100%"}>
                                                             <Circle h="3" w="3" bg="teal"></Circle>
-                                                            <Tag.Root>
-                                                                <Tag.Label fontWeight={700} fontSize={"150%"}>{jobResult.phenomenonTime}</Tag.Label>
+                                                            <Tag.Root transform="rotate(-90deg) translate(-45px);">
+                                                                <Tag.Label fontWeight={700} fontSize={"120%"} fontFamily={"monospace"}>{jobResult.phenomenonTime}</Tag.Label>
                                                             </Tag.Root>
                                                         </Slider.Marker>
                                                     </>

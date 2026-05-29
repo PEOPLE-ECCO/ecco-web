@@ -84,7 +84,7 @@ export const Sites: FC = () => {
     return (
         <>
             <Flex gap="4" p="4" direction="row">
-                <Box>
+                <Box overflow={"auto"}>
                     <Flex gap="4" direction="row" wrap="wrap" justify="center">
                         {sites && sites.map((site) =>
                             <>

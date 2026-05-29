@@ -34,8 +34,7 @@ export const Site = (site: Site) => {
             onClick={handleClick}
             _hover={{
                 bg: "teal.50", // light teal
-                transform: "scale(1.02)",
-                transition: "all 0.2s ease-in-out"
+                transition: "all 0.2s ease-in-out",
             }}
             transition="all 0.2s ease-in-out"
         >
@@ -46,6 +45,10 @@ export const Site = (site: Site) => {
                     borderRadius="lg"
                     boxSize="250px"
                     objectFit="cover"
+                    _hover={{
+                        transform: "scale(1.02)",
+                        transition: "all 0.2s ease-in-out"
+                    }}
                 />
             </Center>
             <Center >
