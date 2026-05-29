@@ -12,12 +12,6 @@ interface LegendControlProps {
 
 
 export const Legend = ({ process }: LegendControlProps) => {
-    const DHILegend = [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }];
-    const R80PLegend = [{ value: "much vegetation", color: "black" }, { value: "some vegetation", color: "gray" }, { value: "no vegetation", color: "white" }];
-    const deltaIRLegend = [{ value: "much plant health", color: "black" }, { value: "some plant health", color: "gray" }, { value: "no plant health", color: "white" }];
-    const DHIDescription = "Algorithm for Corals";
-    const R80PDescription = "Algorithm for vegetation";
-    const deltaIRDescription = "Algorithm for plant health";
 
     const [currentLegend, setCurrentLegend] = useState<LegendElement[]>([]);
     const [currentDescription, setCurrentDescription] = useState<string>();
@@ -37,7 +31,7 @@ export const Legend = ({ process }: LegendControlProps) => {
                     result = {
                         processName: lowered,
                         entries: [{ value: "Red", color: "red" }, { value: "Green", color: "green" }, { value: "Blue", color: "blue " }],
-                        description: "Raw openEO scenes"
+                        description: "Raw openEO scenes, rendered as pseudo-color composites for visualisation pruposes."
                     };
                     break;
 
@@ -45,8 +39,8 @@ export const Legend = ({ process }: LegendControlProps) => {
                     console.log("Handling Overall Probability...");
                     result = {
                         processName: lowered,
-                        entries: [{ value: "High probability", color: "black" }, { value: "Low probability", color: "white" }],
-                        description: "Probabilities for single scenes"
+                        entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "Water/other", color: "blue" }],
+                        description: "Probabilities for single scenes. The coloring follows a gradient: e.g. intensive red shows a high coral probability, light red a lower value."
                     };
                     break;
 
@@ -54,8 +48,8 @@ export const Legend = ({ process }: LegendControlProps) => {
                     console.log("Handling Aggregated Probability...");
                     result = {
                         processName: lowered,
-                        entries: [{ value: "High probability", color: "black" }, { value: "Low probability", color: "white" }],
-                        description: "Probabilities aggregated over all scenes"
+                        entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "Water/other", color: "blue" }],
+                        description: "Probabilities aggregated over all scenes. The coloring follows a gradient: e.g. intensive red shows a high coral probability, light red a lower value."
                     };
                     break;
 
@@ -82,13 +76,35 @@ export const Legend = ({ process }: LegendControlProps) => {
                     result = {
                         processName: lowered,
                         entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }],
-                        description: "Prediction results"
+                        description: "Prediction results, following a binary classifcation."
+                    };
+                    break;
+
+                case "geojson-sav":
+                    console.log("Handling GeoJSON SAV...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "SAV patch", color: "lightcyan" }, { value: "Selected patch", color: "red" }, { value: "Neighour patch", color: "green" }],
+                        description: "Patches of SAV classification, including information on topology. Selecting a patch also marks its neighbours."
+                    };
+                    break;
+
+                case "geojson-coral":
+                    console.log("Handling GeoJSON Coral...");
+                    result = {
+                        processName: lowered,
+                        entries: [{ value: "Coral patch", color: "lightcyan" }, { value: "Selected patch", color: "red" }, { value: "Neighour patch", color: "green" }],
+                        description: "Patches of Coral classification, including information on topology. Selecting a patch also marks its neighbours."
                     };
                     break;
             }
 
             if (!result) {
-                reject("No legend found for process: " + process);
+                result = {
+                    processName: lowered,
+                    entries: [],
+                    description: "No legend available"
+                };
             }
             
             resolve(result!);
