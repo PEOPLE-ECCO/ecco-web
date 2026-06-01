@@ -254,6 +254,8 @@ export function SiteDetails() {
 
                 // Append the layer directly to the OpenLayers map instance
                 map.olMap.addLayer(siteLayer);
+            } else {
+                siteSource.clear();
             }
 
             const bboxPolygon = fromExtent(bboxExtent).transform(geojson, google);
@@ -300,6 +302,7 @@ export function SiteDetails() {
                     targetSource = tsSource;
                 } else {
                     targetSource = vectorLayer.getSource() as VectorSource;
+                    targetSource.clear();
                 }
             } else {
                 tsSource.clear();
