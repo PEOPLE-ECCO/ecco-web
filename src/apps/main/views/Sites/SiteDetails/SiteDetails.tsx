@@ -49,6 +49,10 @@ import { JobResult, SpatialExtent, Timeseries } from "../../../components/defini
 import { Tooltip } from "../../../components/tooltip";
 import { Legend } from "../../../components/Map/LegendControl";
 import Overlay from "ol/Overlay";
+import { fromExtent } from "ol/geom/Polygon";
+import Feature from "ol/Feature";
+import { Layer } from "ol/layer";
+import BaseLayer from "ol/layer/Base";
 
 export interface ResultTypeMeta {
     name: string;
@@ -210,6 +214,11 @@ export function SiteDetails() {
         }
     };
 
+    let bboxSource : VectorSource | undefined = undefined;
+    let bboxLayer : VectorLayer | undefined = undefined;
+    let tsSource : VectorSource | undefined = undefined;
+    let tsLayer : VectorLayer | undefined = undefined;
+
     async function zoomToInitialView(scenario: Site | undefined) {
         if (scenario && map) {
             map!.zoom(
@@ -219,6 +228,31 @@ export function SiteDetails() {
                 ],
                 { pointZoom: 12 }
             );
+
+            const bboxExtent = [scenario.bbox[0]!, scenario.bbox[1]!, scenario.bbox[2]!, scenario.bbox[3]!];
+
+            if (!bboxSource) {
+                bboxSource = new VectorSource();
+                bboxLayer = new VectorLayer({
+                    source: bboxSource,
+                    properties: { id: "site-details-overlay-layer" },
+                    style: new Style({
+                        fill: new Fill({ color: [0, 0, 0, 0] }),
+                        stroke: new Stroke({ color: [0, 150, 150, 1.0], width: 4, lineDash: [8, 8] })
+                    })
+                });
+
+                // Append the layer directly to the OpenLayers map instance
+                map.olMap.addLayer(bboxLayer);
+            }
+
+            const bboxPolygon = fromExtent(bboxExtent).transform(geojson, google);
+            const bboxFeature = new Feature({
+                geometry: bboxPolygon,
+            });
+            bboxFeature.setId(scenario.id);
+
+            bboxSource.addFeature(bboxFeature);
         }
     };
 
@@ -232,7 +266,45 @@ export function SiteDetails() {
                 ],
                 { viewPadding: { top: 50, bottom: 100 } }
             );
+
+            const tsExtent = [extent.bbox[0]!, extent.bbox[1]!, extent.bbox[2]!, extent.bbox[3]!];
+
+            let targetSource : VectorSource | undefined = undefined;
+            if (!tsSource) {
+                const allLayers = map.olMap.getAllLayers();
+                const vectorLayer = allLayers.find(layer => layer instanceof Layer && layer.get("id") === "timeseries-details-overlay-layer") as Layer;
+
+                if (!vectorLayer) {
+                    tsSource = new VectorSource();
+                    tsLayer = new VectorLayer({
+                        source: tsSource,
+                        properties: { id: "timeseries-details-overlay-layer" },
+                        style: new Style({
+                            fill: new Fill({ color: [0, 0, 0, 0] }),
+                            stroke: new Stroke({ color: [0, 150, 150, 1.0], width: 4, lineDash: [8, 8] })
+                        })
+                    });
+
+                    // Append the layer directly to the OpenLayers map instance
+                    map.olMap.addLayer(tsLayer);
+                    targetSource = tsSource;
+                } else {
+                    targetSource = vectorLayer.getSource() as VectorSource;
+                }
+            } else {
+                tsSource.clear();
+                targetSource = tsSource;
+            }
+
+            const tsPolygon = fromExtent(tsExtent);
+            const tsFeature = new Feature({
+                geometry: tsPolygon,
+            });
+
+            targetSource?.addFeature(tsFeature);
+            console.log("ALL LAYERS: " + map.olMap.getAllLayers().length);
         }
+
     };
 
     async function remove_current_item() {
@@ -365,23 +437,6 @@ export function SiteDetails() {
                 }
             });
 
-            // 5. Wait for the source to be fully available before highlighting
-            vectorSource.once("change", () => {
-                if (vectorSource.getState() === "ready") {
-                    // OpenLayers vector sources automatically transform coordinates to the map"s 
-                    // view projection during load. Because of this, the extent is already 
-                    // transformed, unlike the GeoTIFF extent.
-                    const extent = vectorSource.getExtent();
-
-                    if (extent) {
-                        // We simply pass the Points directly without an extra .transform() step
-                        map.highlight([
-                            new Point([extent[0]!, extent[1]!]),
-                            new Point([extent[2]!, extent[3]!])
-                        ]);
-                    }
-                }
-            });
         } else {
             const image = new GeoTIFF({
                 normalize: false,
@@ -404,16 +459,6 @@ export function SiteDetails() {
             });
             layer.olLayer.setOpacity(opacity / 100);
             map.layers.addLayer(layer);
-            const stacproj = new Projection({ code: "EPSG:" + jobResult.epsg });
-            const bbox = (await image.getView()).extent;
-            if (bbox) {
-                map.highlight(
-                    [
-                        new Point([bbox[0]!, bbox[1]!]).transform(stacproj, google),
-                        new Point([bbox[2]!, bbox[3]!]).transform(stacproj, google)
-                    ]
-                );
-            }
         }
     };
 
