@@ -96,7 +96,7 @@ export class LegendProvider {
                 console.log("Handling SAV Probability...");
                 result = {
                     processName: lowered,
-                    entries: [{ value: "Corals", color: "white" }],
+                    entries: [{ value: "SAV", color: "white" }],
                     description: "Submerged aquatic vegetation probabilities aggregated over all scenes"
                 };
                 break;
