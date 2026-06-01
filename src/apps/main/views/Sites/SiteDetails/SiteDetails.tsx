@@ -197,6 +197,7 @@ export function SiteDetails() {
             return;
         try {
             const data = await getTimeseries(id);
+            clearSiteAndTimeseriesLayers();
             setTimeseries(data);
         } catch (error) {
             console.error(error);
@@ -214,10 +215,19 @@ export function SiteDetails() {
         }
     };
 
-    let bboxSource : VectorSource | undefined = undefined;
-    let bboxLayer : VectorLayer | undefined = undefined;
+    let siteSource : VectorSource | undefined = undefined;
+    let siteLayer : VectorLayer | undefined = undefined;
     let tsSource : VectorSource | undefined = undefined;
     let tsLayer : VectorLayer | undefined = undefined;
+
+    async function clearSiteAndTimeseriesLayers() {
+        const map = await mapService.expectMapModel(MAP_ID);
+        const allLayers = map.olMap.getAllLayers();
+        const tsLayer = allLayers.find(layer => layer instanceof Layer && layer.get("id") === "timeseries-details-overlay-layer") as Layer;
+        const sitesLayer = allLayers.find(layer => layer instanceof Layer && layer.get("id") === "site-details-overlay-layer") as Layer;
+        tsLayer && map.olMap.removeLayer(tsLayer);
+        sitesLayer && map.olMap.removeLayer(sitesLayer);
+    };
 
     async function zoomToInitialView(scenario: Site | undefined) {
         if (scenario && map) {
@@ -231,10 +241,10 @@ export function SiteDetails() {
 
             const bboxExtent = [scenario.bbox[0]!, scenario.bbox[1]!, scenario.bbox[2]!, scenario.bbox[3]!];
 
-            if (!bboxSource) {
-                bboxSource = new VectorSource();
-                bboxLayer = new VectorLayer({
-                    source: bboxSource,
+            if (!siteSource) {
+                siteSource = new VectorSource();
+                siteLayer = new VectorLayer({
+                    source: siteSource,
                     properties: { id: "site-details-overlay-layer" },
                     style: new Style({
                         fill: new Fill({ color: [0, 0, 0, 0] }),
@@ -243,7 +253,7 @@ export function SiteDetails() {
                 });
 
                 // Append the layer directly to the OpenLayers map instance
-                map.olMap.addLayer(bboxLayer);
+                map.olMap.addLayer(siteLayer);
             }
 
             const bboxPolygon = fromExtent(bboxExtent).transform(geojson, google);
@@ -252,7 +262,7 @@ export function SiteDetails() {
             });
             bboxFeature.setId(scenario.id);
 
-            bboxSource.addFeature(bboxFeature);
+            siteSource.addFeature(bboxFeature);
         }
     };
 
