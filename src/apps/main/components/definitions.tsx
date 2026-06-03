@@ -122,6 +122,7 @@ export interface Job {
     readonly state_name: string;
     readonly results: ReactiveArray<JobResult>;
     readonly logs: ReactiveArray<LogLine>;
+    toString(): string;
 }
 
 export class JobImpl implements Job {
@@ -263,6 +264,21 @@ export class JobImpl implements Job {
         }
 
         return this.#logs;
+    }
+
+    toString() {
+        return JSON.stringify({
+            id: this.#id,
+            name: this.#name,
+            timeseries_id: this.#timeseries_id,
+            state_name: this.#state_name,
+            created: this.#created,
+            start_time: this.#start_time,
+            end_time: this.#end_time,
+            total_run_time: this.#total_run_time,
+            results_count: this.#results?.length ?? 0,
+            logs_count: this.#logs?.length ?? 0
+        });
     }
 }
 

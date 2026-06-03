@@ -31,6 +31,7 @@ import { ResultTree } from "./ResultTree";
 import { TimeseriesExpandDialog } from "./TimeseriesExpandDialog";
 import { Site } from "../../views/Sites/Site/Site";
 import { Tooltip } from "../tooltip";
+import { ViewDetails, ViewLog } from "./ViewJob";
 
 
 interface TimeseriesProps {
@@ -135,6 +136,13 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                                         <>
                                             <Flex pb="2" gap="1" justify="space-between" direction="row">
                                                 <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
+                                                <Box flex="1" />
+                                                <Tooltip content="View Timeseries Details">
+                                                    <ViewDetails timeseries={selectedTimeseries}></ViewDetails>
+                                                </Tooltip>
+                                                <Tooltip content="View Job Logs">
+                                                    <ViewLog timeseries={selectedTimeseries}></ViewLog>
+                                                </Tooltip>
                                                 <MenuContent ts={ts} el={eventListener} />
                                             </Flex>
                                             {/* {false &&
