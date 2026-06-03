@@ -169,7 +169,7 @@ function ExtentSelection(props: ExtentSelectionProps) {
                             {!extent &&
                                 <Box bg="white" width="40%" p="2" m="1" borderRadius="md" boxShadow="sm">
                                     <Text>
-                                        Please select an area of interest. It´s bounding box must be between 0.05° and 2.5° latitude and longitude.
+                                        Please select an area of interest. It´s bounding box must be between 0.05° and 1.5° latitude and longitude.
                                     </Text>
                                 </Box>
                             }
@@ -334,7 +334,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             const latDelta = maxY! - minY!;
 
             const minDegrees = 0.05;
-            const maxDegrees = 2.2;
+            const maxDegrees = 1.5;
 
             if (lonDelta > maxDegrees || latDelta > maxDegrees) {
                 return false;

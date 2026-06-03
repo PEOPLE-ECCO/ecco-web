@@ -105,21 +105,23 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
             const actualTypes: Record<string, ResultMetricMetadata> = {};
 
             const orderMap: Record<string, number> = {
-                "Aggregated probability": 1,
-                "Coral probability": 2,
-                "SAV probability": 3,
-                "Prediction": 4,
+                "aggregated probability": 1,
+                "coral probability": 2,
+                "sav probability": 3,
+                "prediction": 4,
                 "geojson-coral": 5,
                 "geojson-sav": 6,
-                "Overall probability": 7,
-                "OpenEO Raw Files": 8
+                "overall probability": 7,
+                "single probability": 7,
+                "openeo raw files": 8
             };
             const nameDictionary: Record<string, string> = {
-                "Aggregated probability": "Marine Habitats (aggregated)",
+                "aggregated probability": "Marine Habitats (aggregated)",
                 "geojson-coral": "Coral Vector",
                 "geojson-sav": "SAV Vector",
-                "Overall probability": "Marine Habitats (individual)",
-                "OpenEO Raw Files": "Sentinel-2 Pseudocolor"
+                "overall probability": "Marine Habitats (individual)",
+                "single probability": "Marine Habitats (individual)",
+                "openeo raw files": "Sentinel-2 Pseudocolor"
             };
 
 
@@ -149,7 +151,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
                 const metadata = actualTypes[at];
                 children.push(
                     {
-                        name: nameDictionary[at] || at,
+                        name: nameDictionary[at.toLowerCase()] || at,
                         type: at,
                         startMonth: metadata!.startDate.toISOString().slice(0, 7),
                         endMonth: metadata!.endDate.toISOString().slice(0, 7),
@@ -166,8 +168,8 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
 
             const sorted = children.sort((a, b) => {
                 // Get the weight from the map, default to Infinity if it doesn't exist
-                const weightA = orderMap[a.type] || Infinity;
-                const weightB = orderMap[b.type] || Infinity;
+                const weightA = orderMap[a.type.toLowerCase()] || Infinity;
+                const weightB = orderMap[b.type.toLowerCase()] || Infinity;
 
                 return weightA - weightB;
             });
@@ -179,7 +181,7 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
 
             return createTreeCollection<TreeNode>({
                 nodeToValue: (node) => node.type,
-                nodeToString: (node) => nameDictionary[node.type] || node.name,
+                nodeToString: (node) => nameDictionary[node.type.toLowerCase()] || node.name,
                 rootNode: {
                     type: "root",
                     name: "Metrics",
