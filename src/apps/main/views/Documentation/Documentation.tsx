@@ -13,6 +13,7 @@ export const Documentation: FC = () => {
                 type="application/pdf"
                 width="100%"
                 height="800"
+                aria-label="docs"
             />
             {/* <GridItem colSpan={12} rowSpan={8} borderWidth="1px" margin="1%" padding="1%">
                 <Box borderWidth="1px">
