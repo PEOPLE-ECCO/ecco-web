@@ -568,11 +568,6 @@ export function SiteDetails() {
                             <Tabs.Trigger value="timeseries">
                                 <LuMap />
                                 Timeseries View
-                                <Tooltip content="This view shows different timestamps of one process and area and provides a time-slider to swicht the results">
-                                    <Button size="xs" variant="ghost">
-                                        <LuInfo />
-                                    </Button>
-                                </Tooltip>
                             </Tabs.Trigger>
                             {/* <Tabs.Trigger value="layeroverview">
                                 <LuDatabase />
