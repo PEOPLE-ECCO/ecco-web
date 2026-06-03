@@ -724,7 +724,7 @@ export function SiteDetails() {
                                         Use Map Tools
                                         <Box pt="4" h="80vh">
                                             <MapContainer
-                                                mapId={MAP_ID}
+                                                map={map}
                                                 role="main"
                                                 aria-label=""
                                             >
@@ -743,7 +743,7 @@ export function SiteDetails() {
                                                             <Collapsible.RootProvider value={collapsible}>
                                                                 <Collapsible.Content>
                                                                     {collapsible.open &&
-                                                                        <Measurement mapId={MAP_ID} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE} />
+                                                                        <Measurement map={map} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE} />
                                                                     }
                                                                 </Collapsible.Content>
                                                             </Collapsible.RootProvider>

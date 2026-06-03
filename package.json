@@ -23,6 +23,7 @@
         "prepare": "husky"
     },
     "devDependencies": {
+        "@eslint/js": "catalog:",
         "@open-pioneer/build-package-cli": "catalog:",
         "@open-pioneer/build-support": "catalog:",
         "@open-pioneer/check-pnpm-duplicates": "catalog:",
@@ -35,13 +36,13 @@
         "@types/node": "catalog:",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
-        "@typescript-eslint/eslint-plugin": "catalog:",
-        "@typescript-eslint/parser": "catalog:",
         "@vitejs/plugin-react-swc": "catalog:",
+        "@typescript-eslint/parser": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
         "eslint": "catalog:",
         "eslint-config-prettier": "catalog:",
         "eslint-import-resolver-typescript": "catalog:",
-        "eslint-plugin-header": "catalog:",
+        "eslint-plugin-headers": "catalog:",
         "eslint-plugin-import": "catalog:",
         "eslint-plugin-jsx-a11y": "catalog:",
         "eslint-plugin-react": "catalog:",
@@ -61,6 +62,7 @@
         "tsx": "catalog:",
         "typedoc": "catalog:",
         "typescript": "catalog:",
+        "typescript-eslint": "catalog:",
         "vite": "catalog:",
         "vite-plugin-eslint": "catalog:",
         "vitest": "catalog:"
@@ -69,8 +71,5 @@
         "node": ">= 20",
         "pnpm": ">= 10"
     },
-    "packageManager": "pnpm@10.14.0",
-    "dependencies": {
-        "@chakra-ui/cli": "catalog:"
-    }
+    "packageManager": "pnpm@10.14.0"
 }
