@@ -73,8 +73,7 @@ export function ViewLog({ timeseries }: ViewLogProps) {
             const namesCollection = createListCollection({
                 items: [...new Set(names)].map(n => {return {label: `${n} - ${dates[n]}`, value: n};}),
             });
-            console.log("JOB LENGTH: " + timeseries?.jobs?.length);
-            console.log("JOB NAMES: " + [...new Set(names)]);
+
             setJobNames(namesCollection);
             setSelectedJobName([job.name]);
             

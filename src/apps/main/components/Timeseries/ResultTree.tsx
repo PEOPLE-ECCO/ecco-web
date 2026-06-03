@@ -82,13 +82,22 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
         });
 
         if (resultType === expandedResultType) {
-            const layer = map?.layers.getLayerById("current") as SimpleLayer;
-            // eventListener.emit("layerOpacity", layerOpacity);
-
-            if (layer) {
-                layer.olLayer.setOpacity(value / 100);
+            const layerUniqueId = `TSLAYER_${timeseries?.name}_${expandedResultType}`;
+            const candidates = map?.layers.getLayers().filter(l => l.id.startsWith(layerUniqueId));
+            if (candidates && candidates.length > 0) {
+                candidates.forEach(c => {
+                    c.olLayer.setOpacity(value / 100);
+                });
             }
+            
+            // we need to propagate the opacity, otherwise
+            // it will not be considered if the time slider markers are clicked
+            eventListener.emit("expandedResultType", {
+                name: expandedResultType,
+                opacity: value
+            });
         }
+
     }
 
     const extractDateFromJobResult = (result: JobResult): Date | undefined => {

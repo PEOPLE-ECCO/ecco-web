@@ -59,6 +59,19 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
         viewResultsDisabling(selectedTimeseries!);
     }, [selectedTimeseries?.jobs]);
 
+    useEffect(() => {
+        // the map layers need to get cleaned up, otherwise it might
+        // slow down the browser
+        console.log(`Timeseries changed: ${selectedTimeseries?.name}`);
+
+        // all TS related layers have the prefix "TSLAYER_"
+        const removalLayers = map?.layers.getLayers().filter(l => l.id.startsWith("TSLAYER_"));
+        console.log(`Garbage collecting layers: ${removalLayers.map(l => l.id)}`);
+        removalLayers.forEach(l => {
+            map.layers.removeLayerById(l.id);
+        });
+    }, [selectedTimeseries]);
+
     const timeseriesSelection = (ts: Timeseries) => {
         setViewResultsButtonDisabled(true);
         eventListener.emit("selectedTimeseries", ts);

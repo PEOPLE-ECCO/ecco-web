@@ -93,6 +93,7 @@ export function SiteDetails() {
     const [infoViewOpen, setInfoViewOpen] = useState<boolean>(false);
     const [map, setMap] = useState<MapModel>();
     const [timeseriesViewActive, setTimeseriesViewActive] = useState<boolean>(true);
+    const [visibleLayerState, setVisibleLayerState] = useState<string>();
 
     const timeseriesExtent = (() => {
         if (selectedTimeseries?.extent) {
@@ -322,14 +323,19 @@ export function SiteDetails() {
 
     async function remove_current_item() {
         if (map) {
-            map.layers.removeLayerById("current");
+            if (visibleLayerState) {
+                // since we no longer replace layers but keep loaded data in memory,
+                // we need to set the previous layer to not visible
+                const previous = map.layers.getLayerById(visibleLayerState);
+                if (previous) {
+                    previous.setVisible(false);
+                }
+            }
             map.removeHighlights();
         }
     };
 
     async function showSelectedJobResult(idx: number, opacity: number) {
-        console.log(viewableJobResults);
-
         const jobResult = viewableJobResults[idx];
         if (!jobResult) {
             console.log("result not yet available");
@@ -340,6 +346,23 @@ export function SiteDetails() {
 
         const map = await mapService.expectMapModel(MAP_ID);
         await remove_current_item();
+
+        const layerUniqueId = `TSLAYER_${selectedTimeseries?.name}_${jobResult.type}_${jobResult.phenomenonTime}`;
+        setVisibleLayerState(layerUniqueId);
+
+        // search all OL layers, it might have been created already
+        const layerCandidates = map?.layers?.getLayers().filter(l => {
+            return l.id === layerUniqueId;
+        });
+        if (layerCandidates && layerCandidates.length > 0) {
+            (layerCandidates[0] as SimpleLayer).olLayer.setVisible(true);
+            (layerCandidates[0] as SimpleLayer).olLayer.setOpacity(opacity / 100);
+
+            console.log(`FOUND THE LAYER: ${layerUniqueId} ${opacity}`);
+            //quick return
+            return;
+        }
+
 
         if (jobResult.type == "geojson" || jobResult.type == "geojson-sav" || jobResult.type == "geojson-coral") {
             // Define the projection based on your jobResult
@@ -374,8 +397,8 @@ export function SiteDetails() {
 
             // 3. Wrap in your custom SimpleLayer class
             const layer = new SimpleLayer({
-                id: "current",
-                title: "current",
+                id: layerUniqueId,
+                title: layerUniqueId,
                 olLayer: vectorLayer,
             });
 
@@ -451,6 +474,7 @@ export function SiteDetails() {
             });
 
         } else {
+            // not yet loaded, creat it
             const image = new GeoTIFF({
                 normalize: false,
                 interpolate: false,
@@ -462,16 +486,20 @@ export function SiteDetails() {
             });
             //TODO: this is really really bad
             const style = JSON.parse(jobResult.style);
+
+            
             const layer = new SimpleLayer({
-                id: "current",
-                title: "current",
+                id: layerUniqueId,
+                title: layerUniqueId,
                 olLayer: new TileLayer({
                     source: image,
-                    style: style
+                    style: style,
                 }),
             });
             layer.olLayer.setOpacity(opacity / 100);
             map.layers.addLayer(layer);
+        
+
         }
     };
 
