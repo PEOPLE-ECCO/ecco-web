@@ -153,7 +153,7 @@ export function SiteDetails() {
         }
         if (expandedResultType) {
             showSelectedJobResult(0, expandedResultType.opacity || 100);
-            ZoomToTimeseriesExtent(timeseriesExtent());
+            // ZoomToTimeseriesExtent(timeseriesExtent());
         }
     }, [expandedResultType]);
 
