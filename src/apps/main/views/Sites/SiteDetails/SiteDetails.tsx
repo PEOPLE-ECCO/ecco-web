@@ -752,7 +752,7 @@ export function SiteDetails() {
                                                 aria-label=""
                                             >
                                                 <Flex gap="4" direction="column">
-                                                    <MapSidebarControls mapId={MAP_ID} position={"top-left"} verticalGap={0} />
+                                                    <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                     <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                                                         <Stack >
                                                             <Button

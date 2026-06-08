@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { OverviewMap } from "@open-pioneer/overview-map";
 import { BasemapSwitcher } from "@open-pioneer/basemap-switcher";
-import { MapAnchor, MapAnchorPosition } from "@open-pioneer/map";
+import { MapAnchor, MapAnchorPosition, MapModel } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
 
@@ -24,14 +24,14 @@ import { useMemo, useState } from "react";
 import { LuChevronDown, LuMap } from "react-icons/lu";
 
 interface MapSidebarControlsProps {
-    mapId: string;
+    map: MapModel | undefined;
     position?: MapAnchorPosition | "top-right";
     horizontalGap?: number | 10;
     verticalGap?: number | 60;
     
 }
 
-export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
+export const MapSidebarControls = ({ map }: MapSidebarControlsProps) => {
 
     const overviewMapLayer = useMemo(
         () =>
@@ -67,16 +67,16 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
                             </Collapsible.Indicator>
                         </IconButton>
                     </Collapsible.Trigger>
-                    <Collapsible.Content>
-                        <OverviewMap mapId={mapId} olLayer={overviewMapLayer} ></OverviewMap>
+                    {map && <Collapsible.Content>
+                        <OverviewMap map={map} olLayer={overviewMapLayer} ></OverviewMap>
                         <Separator mt={2} colorPalette="gray" />
                         <Field.Root>
                             <Field.Label mt={1}>
                                 <Text as="b">Select basemap:</Text>
                             </Field.Label>
-                            <BasemapSwitcher mapId={mapId} allowSelectingEmptyBasemap />
+                            <BasemapSwitcher map={map} allowSelectingEmptyBasemap />
                         </Field.Root>
-                    </Collapsible.Content>
+                    </Collapsible.Content>}
                 </Collapsible.Root>
             </Box>
     );
