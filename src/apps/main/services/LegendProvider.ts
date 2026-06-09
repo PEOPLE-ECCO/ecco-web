@@ -120,19 +120,21 @@ export class LegendProvider {
                 break;
 
             case "geojson-sav":
+            case "geojsonsav":
                 console.log("Handling GeoJSON SAV...");
                 result = {
                     processName: lowered,
-                    entries: [{ value: "SAV patch", color: "lightcyan" }, { value: "Selected patch", color: "red" }, { value: "Neighour patch", color: "green" }],
+                    entries: [{ value: "SAV patch", color: "lightcyan" }, { value: "Selected patch", color: "#8b0000" }, { value: "Neighour patch", color: "#ff0000" }],
                     description: "Patches of SAV classification, including information on topology. Selecting a patch also marks its neighbours."
                 };
                 break;
 
             case "geojson-coral":
+            case "geojsoncoral":
                 console.log("Handling GeoJSON Coral...");
                 result = {
                     processName: lowered,
-                    entries: [{ value: "Coral patch", color: "lightcyan" }, { value: "Selected patch", color: "red" }, { value: "Neighour patch", color: "green" }],
+                    entries: [{ value: "Coral patch", color: "lightcyan" }, { value: "Selected patch", color: "#8b0000" }, { value: "Neighour patch", color: "#ff0000" }],
                     description: "Patches of Coral classification, including information on topology. Selecting a patch also marks its neighbours."
                 };
                 break;
