@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { FC, use, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { FC, useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router";
 import { FiPlus } from "react-icons/fi";
 import {
     Heading,
@@ -22,11 +22,10 @@ import {
     IconButton,
     HStack,
     Listbox,
-    Switch,
     createListCollection,
     ListCollection,
 } from "@chakra-ui/react";
-import { computed, reactiveMap } from "@conterra/reactivity-core";
+import { computed } from "@conterra/reactivity-core";
 
 import { MapContainer, MapModel, MapRegistry, SimpleLayer } from "@open-pioneer/map";
 import { useService } from "open-pioneer:react-hooks";
@@ -34,17 +33,18 @@ import { NotificationService } from "@open-pioneer/notifier";
 
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector.js";
-import Draw, { createBox } from "ol/interaction/Draw.js";
+import Draw from "ol/interaction/Draw.js";
 
-import { Extent, JobResult, Process, SpatialExtent, Timeseries } from "../../components/definitions";
+import { JobResult, Process, SpatialExtent, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { PARAMETER_WIDGETS } from "./ParameterWidgets/registry";
+import { ParameterWidgetValue, SerializedParams } from "./ParameterWidgets/types";
 
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
 import { EventEmitter } from "@open-pioneer/core";
-import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
 import { Site } from "../../views/Sites/Site/Site";
@@ -52,232 +52,20 @@ import GeoJSON from "ol/format/GeoJSON";
 
 // Parameters
 
-const MONTHS = [
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
-    { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
-];
-
-export interface BapSensSlopeParams {
-    yearFrom: number;
-    yearTo: number;
-    monthFrom: number;
-    monthTo: number;
-    includeReflectanceBands: boolean;
-    maxCloudCover: number;
-    distanceToCloudPixels: number;
-    cloudBufferPixels: number;
-    distanceToCloudWeight: number;
-    dateWeight: number;
-    coverageWeight: number;
-}
-
-function serializeBapSensSlopeParams(p: BapSensSlopeParams): Record<string, unknown> {
-    return {
-        years: Array.from({ length: p.yearTo - p.yearFrom + 1 }, (_, i) => p.yearFrom + i),
-        month: Array.from({ length: p.monthTo - p.monthFrom + 1 }, (_, i) => p.monthFrom + i),
-        include_reflectance_bands: p.includeReflectanceBands,
-        max_cloud_cover: p.maxCloudCover,
-        dtc_max_distance: p.distanceToCloudPixels,
-        cloud_buffer_px: p.cloudBufferPixels,
-        score_weight_dtc: p.distanceToCloudWeight,
-        score_weight_date: p.dateWeight,
-        score_weight_coverage: p.coverageWeight,
-    };
-}
-
-function serializeProcessParams(
-    process: Process | undefined,
-    bapParams: BapSensSlopeParams
-): Record<string, unknown> | undefined {
-    if (process?.name === "BAP Sens Slope") return serializeBapSensSlopeParams(bapParams);
-    return undefined;
-}
-
-export const DEFAULT_BAP_PARAMS: BapSensSlopeParams = {
-    yearFrom: 2020,
-    yearTo: 2022,
-    monthFrom: 1,
-    monthTo: 12,
-    includeReflectanceBands: false,
-    maxCloudCover: 30,
-    distanceToCloudPixels: 30,
-    cloudBufferPixels: 2,
-    distanceToCloudWeight: 1.0,
-    dateWeight: 0.8,
-    coverageWeight: 0.0,
-};
-
-const selectStyle: React.CSSProperties = {
-    border: "1px solid #CBD5E0",
-    borderRadius: "6px",
-    padding: "8px 12px",
-    minWidth: "150px",
-    fontSize: "14px",
-};
-
-function BapSensSlopeParametersWidget({
-    params,
-    onChange,
-}: {
-    params: BapSensSlopeParams;
-    onChange: (p: BapSensSlopeParams) => void;
-}) {
-    const set = (partial: Partial<BapSensSlopeParams>) => onChange({ ...params, ...partial });
-
-    return (
-        <Stack pt="4" gap="5" maxW="lg">
-            {/* Year range */}
-            <HStack gap="4" align="flex-end">
-                <Field.Root>
-                    <Field.Label>Year from</Field.Label>
-                    <Input
-                        type="number" w="120px"
-                        value={params.yearFrom} min={2000} max={params.yearTo}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearFrom: v }); }}
-                    />
-                </Field.Root>
-                <Field.Root>
-                    <Field.Label>Year to</Field.Label>
-                    <Input
-                        type="number" w="120px"
-                        value={params.yearTo} min={params.yearFrom} max={2030}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearTo: v }); }}
-                    />
-                </Field.Root>
-            </HStack>
-
-            {/* Month range */}
-            <HStack gap="4" align="flex-end">
-                <Field.Root>
-                    <Field.Label>Month from</Field.Label>
-                    <select
-                        value={params.monthFrom}
-                        style={selectStyle}
-                        onChange={(e) => {
-                            const v = parseInt(e.target.value);
-                            set({ monthFrom: v, monthTo: Math.max(params.monthTo, v) });
-                        }}
-                    >
-                        {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
-                </Field.Root>
-                <Field.Root>
-                    <Field.Label>Month to</Field.Label>
-                    <select
-                        value={params.monthTo}
-                        style={selectStyle}
-                        onChange={(e) => set({ monthTo: parseInt(e.target.value) })}
-                    >
-                        {MONTHS.filter((m) => m.value >= params.monthFrom).map((m) => (
-                            <option key={m.value} value={m.value}>{m.label}</option>
-                        ))}
-                    </select>
-                </Field.Root>
-            </HStack>
-
-            {/* Boolean */}
-            <Switch.Root
-                colorPalette="teal"
-                checked={params.includeReflectanceBands}
-                onCheckedChange={(e) => set({ includeReflectanceBands: e.checked })}
-            >
-                <Switch.HiddenInput />
-                <Switch.Control>
-                    <Switch.Thumb />
-                </Switch.Control>
-                <Switch.Label>Include reflectance bands</Switch.Label>
-            </Switch.Root>
-
-            {/* Integers */}
-            <Flex gap="4" wrap="wrap" align="flex-end">
-                <Field.Root maxW="160px">
-                    <Field.Label>Max cloud cover (%)</Field.Label>
-                    <Input
-                        type="number"
-                        value={params.maxCloudCover} min={0} max={100}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ maxCloudCover: Math.min(100, Math.max(0, v)) }); }}
-                    />
-                </Field.Root>
-                <Field.Root maxW="170px">
-                    <Field.Label>Distance to cloud (px)</Field.Label>
-                    <Input
-                        type="number"
-                        value={params.distanceToCloudPixels} min={0}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ distanceToCloudPixels: v }); }}
-                    />
-                </Field.Root>
-                <Field.Root maxW="160px">
-                    <Field.Label>Cloud buffer (px)</Field.Label>
-                    <Input
-                        type="number"
-                        value={params.cloudBufferPixels} min={0}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ cloudBufferPixels: v }); }}
-                    />
-                </Field.Root>
-            </Flex>
-
-            {/* Floats 0–1 */}
-            <Flex gap="4" wrap="wrap" align="flex-end">
-                <Field.Root maxW="175px">
-                    <Field.Label>Distance-to-cloud weight</Field.Label>
-                    <Input
-                        type="number"
-                        value={params.distanceToCloudWeight} min={0} max={1} step={0.1}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) set({ distanceToCloudWeight: Math.min(1, Math.max(0, v)) }); }}
-                    />
-                </Field.Root>
-                <Field.Root maxW="175px">
-                    <Field.Label>Date weight</Field.Label>
-                    <Input
-                        type="number"
-                        value={params.dateWeight} min={0} max={1} step={0.1}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) set({ dateWeight: Math.min(1, Math.max(0, v)) }); }}
-                    />
-                </Field.Root>
-                <Field.Root maxW="175px">
-                    <Field.Label>Coverage weight</Field.Label>
-                    <Input
-                        type="number"
-                        value={params.coverageWeight} min={0} max={1} step={0.1}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) set({ coverageWeight: Math.min(1, Math.max(0, v)) }); }}
-                    />
-                </Field.Root>
-            </Flex>
-        </Stack>
-    );
-}
-
 interface ProcessParametersWidgetProps {
     selectedProcess: Process | undefined;
-    bapParams: BapSensSlopeParams;
-    onBapParamsChange: (params: BapSensSlopeParams) => void;
+    onChange: (value: ParameterWidgetValue) => void;
 }
 
-function ProcessParametersWidget({ selectedProcess, bapParams, onBapParamsChange }: ProcessParametersWidgetProps) {
+function ProcessParametersWidget({ selectedProcess, onChange }: ProcessParametersWidgetProps) {
     if (!selectedProcess) {
-        return <Text pt="8" color="fg.muted">No process selected.</Text>;
+        return <></>;
     }
 
-    if (selectedProcess.name === "BAP Sens Slope") {
-        return <BapSensSlopeParametersWidget params={bapParams} onChange={onBapParamsChange} />;
+    const Widget = PARAMETER_WIDGETS[selectedProcess.name];
+    if (Widget) {
+        // Remount on process change so each widget starts from its own defaults.
+        return <Widget key={selectedProcess.name} process={selectedProcess} onChange={onChange} />;
     }
 
     return (
@@ -358,11 +146,11 @@ function ExtentSelection(props: ExtentSelectionProps) {
         const drawEnd = drawInteraction.on("drawend", (e) => {
             const feature = e.feature;
             const geom = feature.getGeometry()!.getExtent();
-            
+
             const format = new GeoJSON();
             const ogcFeature = format.writeFeatureObject(feature, {
                 dataProjection: "EPSG:4326",
-                featureProjection: "EPSG:3857" 
+                featureProjection: "EPSG:3857"
             });
 
             const newExtent = {
@@ -428,7 +216,7 @@ function ExtentSelection(props: ExtentSelectionProps) {
                                     </Text>
                                 </Box>
                             }
-                            
+
                             <MapInfoControls map={map} />
                             <MapZoomControls map={map} />
                         </MapContainer>
@@ -466,7 +254,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const [processes, setProcesses] = useState<ProcessWithValue[]>([]);
     const [processTable, setProcessTable] = useState<ListCollection<ProcessWithValue>>();
     const [selectedProcess, setSelectedProcess] = useState<Process | undefined>();
-    const [bapParams, setBapParams] = useState<BapSensSlopeParams>(DEFAULT_BAP_PARAMS);
+    const [params, setParams] = useState<SerializedParams | undefined>();
+    const [paramsValid, setParamsValid] = useState<boolean>(true);
+
+    const handleParamsChange = useCallback((value: ParameterWidgetValue) => {
+        setParams(value.params);
+        setParamsValid(value.valid);
+    }, []);
 
     const fetchProcesses = async () => {
         if (!id)
@@ -497,7 +291,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             jobs: undefined,
             extent: extent,
             process: selectedProcess,
-            parameters: serializeProcessParams(selectedProcess, bapParams),
+            parameters: params,
         };
         const created = await createTimeseries(timeseries);
         handleExitClick();
@@ -511,7 +305,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             jobs: undefined,
             extent: extent,
             process: selectedProcess,
-            parameters: serializeProcessParams(selectedProcess, bapParams),
+            parameters: params,
             results: computed(() => new Map<string, JobResult[]>())
         };
         resultCallback(result);
@@ -535,9 +329,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         }
     }, [name, description]);
 
+    // Process step (index 1) requires a selected process whose parameter widget
+    // (if any) reports its current selection as valid.
+    const processStepValid = value.length > 0 && paramsValid;
+
     useEffect(() => {
-        if (step == 1 && value.length > 0) {
-            setNextButtonDisabled(false);
+        if (step == 1) {
+            setNextButtonDisabled(!processStepValid);
         }
         if (step == 3) {
             // Parameters step always has valid defaults
@@ -547,11 +345,19 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
 
 
     useEffect(() => {
-        if (value.length > 0) {
-            setNextButtonDisabled(false);
+        if (step == 1) {
+            setNextButtonDisabled(!processStepValid);
         }
-        else { setNextButtonDisabled(true); }
-    }, [value]);
+    }, [value, selectedProcess, paramsValid]);
+
+    // Reset parameters when the process changes. A widget (if the process has one)
+    // re-reports its own params/validity on mount; processes without a widget have
+    // no parameters and are valid by default.
+    useEffect(() => {
+        const hasWidget = selectedProcess != null && PARAMETER_WIDGETS[selectedProcess.name] != null;
+        setParams(undefined);
+        setParamsValid(!hasWidget);
+    }, [selectedProcess]);
 
     useEffect(() => {
         const listCollection = createListCollection({
@@ -579,7 +385,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             const lonDelta = maxX! - minX!;
             const latDelta = maxY! - minY!;
 
-            const minDegrees = 0.05;
+            const minDegrees = 0;
             const maxDegrees = 1.5;
 
             if (lonDelta > maxDegrees || latDelta > maxDegrees) {
@@ -634,7 +440,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                 width="full"
                                 gap="4"
                             >
-                                <Listbox.Label><Text fontSize="md">Filter Levels:</Text></Listbox.Label>
+                                <Listbox.Label><Text fontSize="md">Available Algorithms:</Text></Listbox.Label>
                                 <Listbox.Content>
                                     {processTable.items.map((item) => (
                                         <Listbox.Item
@@ -663,8 +469,11 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                             </Listbox.Root>
                         }
                     </Box>
-                    <Box>
-                        <Text>Selected Process Number: {value}</Text>
+                    <Box pl="2%">
+                        <ProcessParametersWidget
+                            selectedProcess={selectedProcess}
+                            onChange={handleParamsChange}
+                        />
                     </Box>
                 </Flex>
             </>,
@@ -691,14 +500,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                     }} />,
         },
         {
-            title: "Parameters",
-            description: <ProcessParametersWidget
-                    selectedProcess={selectedProcess}
-                    bapParams={bapParams}
-                    onBapParamsChange={setBapParams}
-                />,
-        },
-        {
             title: "Check Data",
             description: <>
                 <Text pt="8" pb="2" textStyle="lg">Summary of inputs</Text>
@@ -719,7 +520,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                             <Table.Cell>description</Table.Cell>
                             <Table.Cell>{description}</Table.Cell>
                         </Table.Row>
-                        {Object.entries(serializeProcessParams(selectedProcess, bapParams) ?? {}).map(([k, v]) => (
+                        {Object.entries(params ?? {}).map(([k, v]) => (
                             <Table.Row key={k}>
                                 <Table.Cell>{k}</Table.Cell>
                                 <Table.Cell>{Array.isArray(v) ? v.join(", ") : String(v)}</Table.Cell>

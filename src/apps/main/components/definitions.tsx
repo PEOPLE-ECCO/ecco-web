@@ -503,11 +503,20 @@ export interface LogLine {
     updated: string
 }
 
+export interface PreprocessOption {
+    id: number
+    name: string
+}
+
+export interface ProcessParameters {
+    preprocess_options?: PreprocessOption[]
+}
+
 export interface Process {
     description: string
     id: number
     name: string
-    parameters: object
+    parameters: ProcessParameters
 }
 
 export interface LegendElement {
