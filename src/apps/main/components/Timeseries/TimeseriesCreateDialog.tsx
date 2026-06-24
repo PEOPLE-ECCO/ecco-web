@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, use, useEffect, useState } from "react";
+import React, { FC, use, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { FiPlus } from "react-icons/fi";
 import {
@@ -22,6 +22,7 @@ import {
     IconButton,
     HStack,
     Listbox,
+    Switch,
     createListCollection,
     ListCollection,
 } from "@chakra-ui/react";
@@ -48,6 +49,222 @@ import { Projection } from "ol/proj";
 import { Point } from "ol/geom";
 import { Site } from "../../views/Sites/Site/Site";
 import GeoJSON from "ol/format/GeoJSON";
+
+// Parameters
+
+const MONTHS = [
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
+];
+
+export interface BapSensSlopeParams {
+    yearFrom: number;
+    yearTo: number;
+    monthFrom: number;
+    monthTo: number;
+    includeReflectanceBands: boolean;
+    maxCloudCover: number;
+    distanceToCloudPixels: number;
+    cloudBufferPixels: number;
+    distanceToCloudWeight: number;
+    dateWeight: number;
+    coverageWeight: number;
+}
+
+export const DEFAULT_BAP_PARAMS: BapSensSlopeParams = {
+    yearFrom: 2018,
+    yearTo: 2023,
+    monthFrom: 4,
+    monthTo: 9,
+    includeReflectanceBands: false,
+    maxCloudCover: 70,
+    distanceToCloudPixels: 10,
+    cloudBufferPixels: 5,
+    distanceToCloudWeight: 0.5,
+    dateWeight: 0.5,
+    coverageWeight: 0.5,
+};
+
+const selectStyle: React.CSSProperties = {
+    border: "1px solid #CBD5E0",
+    borderRadius: "6px",
+    padding: "8px 12px",
+    minWidth: "150px",
+    fontSize: "14px",
+};
+
+function BapSensSlopeParametersWidget({
+    params,
+    onChange,
+}: {
+    params: BapSensSlopeParams;
+    onChange: (p: BapSensSlopeParams) => void;
+}) {
+    const set = (partial: Partial<BapSensSlopeParams>) => onChange({ ...params, ...partial });
+
+    return (
+        <Stack pt="4" gap="5" maxW="lg">
+            {/* Year range */}
+            <HStack gap="4" align="flex-end">
+                <Field.Root>
+                    <Field.Label>Year from</Field.Label>
+                    <Input
+                        type="number" w="120px"
+                        value={params.yearFrom} min={2000} max={params.yearTo}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearFrom: v }); }}
+                    />
+                </Field.Root>
+                <Field.Root>
+                    <Field.Label>Year to</Field.Label>
+                    <Input
+                        type="number" w="120px"
+                        value={params.yearTo} min={params.yearFrom} max={2030}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearTo: v }); }}
+                    />
+                </Field.Root>
+            </HStack>
+
+            {/* Month range */}
+            <HStack gap="4" align="flex-end">
+                <Field.Root>
+                    <Field.Label>Month from</Field.Label>
+                    <select
+                        value={params.monthFrom}
+                        style={selectStyle}
+                        onChange={(e) => {
+                            const v = parseInt(e.target.value);
+                            set({ monthFrom: v, monthTo: Math.max(params.monthTo, v) });
+                        }}
+                    >
+                        {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                </Field.Root>
+                <Field.Root>
+                    <Field.Label>Month to</Field.Label>
+                    <select
+                        value={params.monthTo}
+                        style={selectStyle}
+                        onChange={(e) => set({ monthTo: parseInt(e.target.value) })}
+                    >
+                        {MONTHS.filter((m) => m.value >= params.monthFrom).map((m) => (
+                            <option key={m.value} value={m.value}>{m.label}</option>
+                        ))}
+                    </select>
+                </Field.Root>
+            </HStack>
+
+            {/* Boolean */}
+            <Switch.Root
+                colorPalette="teal"
+                checked={params.includeReflectanceBands}
+                onCheckedChange={(e) => set({ includeReflectanceBands: e.checked })}
+            >
+                <Switch.HiddenInput />
+                <Switch.Control>
+                    <Switch.Thumb />
+                </Switch.Control>
+                <Switch.Label>Include reflectance bands</Switch.Label>
+            </Switch.Root>
+
+            {/* Integers */}
+            <Flex gap="4" wrap="wrap" align="flex-end">
+                <Field.Root maxW="160px">
+                    <Field.Label>Max cloud cover (%)</Field.Label>
+                    <Input
+                        type="number"
+                        value={params.maxCloudCover} min={0} max={100}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ maxCloudCover: Math.min(100, Math.max(0, v)) }); }}
+                    />
+                </Field.Root>
+                <Field.Root maxW="170px">
+                    <Field.Label>Distance to cloud (px)</Field.Label>
+                    <Input
+                        type="number"
+                        value={params.distanceToCloudPixels} min={0}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ distanceToCloudPixels: v }); }}
+                    />
+                </Field.Root>
+                <Field.Root maxW="160px">
+                    <Field.Label>Cloud buffer (px)</Field.Label>
+                    <Input
+                        type="number"
+                        value={params.cloudBufferPixels} min={0}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ cloudBufferPixels: v }); }}
+                    />
+                </Field.Root>
+            </Flex>
+
+            {/* Floats 0–1 */}
+            <Flex gap="4" wrap="wrap" align="flex-end">
+                <Field.Root maxW="175px">
+                    <Field.Label>Distance-to-cloud weight</Field.Label>
+                    <Input
+                        type="number"
+                        value={params.distanceToCloudWeight} min={0} max={1} step={0.1}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) set({ distanceToCloudWeight: Math.min(1, Math.max(0, v)) }); }}
+                    />
+                </Field.Root>
+                <Field.Root maxW="175px">
+                    <Field.Label>Date weight</Field.Label>
+                    <Input
+                        type="number"
+                        value={params.dateWeight} min={0} max={1} step={0.1}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) set({ dateWeight: Math.min(1, Math.max(0, v)) }); }}
+                    />
+                </Field.Root>
+                <Field.Root maxW="175px">
+                    <Field.Label>Coverage weight</Field.Label>
+                    <Input
+                        type="number"
+                        value={params.coverageWeight} min={0} max={1} step={0.1}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) set({ coverageWeight: Math.min(1, Math.max(0, v)) }); }}
+                    />
+                </Field.Root>
+            </Flex>
+        </Stack>
+    );
+}
+
+interface ProcessParametersWidgetProps {
+    selectedProcess: Process | undefined;
+    bapParams: BapSensSlopeParams;
+    onBapParamsChange: (params: BapSensSlopeParams) => void;
+}
+
+function ProcessParametersWidget({ selectedProcess, bapParams, onBapParamsChange }: ProcessParametersWidgetProps) {
+    if (!selectedProcess) {
+        return <Text pt="8" color="fg.muted">No process selected.</Text>;
+    }
+
+    if (selectedProcess.name === "BAP Sens Slope") {
+        return <BapSensSlopeParametersWidget params={bapParams} onChange={onBapParamsChange} />;
+    }
+
+    return (
+        <Stack pt="8" gap="4" align="flex-start" maxW="md">
+            <Text textStyle="lg">Parameters for: <strong>{selectedProcess.name}</strong></Text>
+            <Text color="fg.muted">No configurable parameters for this process.</Text>
+        </Stack>
+    );
+}
 
 // Extent
 interface ExtentSelectionProps {
@@ -227,6 +444,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const [processes, setProcesses] = useState<ProcessWithValue[]>([]);
     const [processTable, setProcessTable] = useState<ListCollection<ProcessWithValue>>();
     const [selectedProcess, setSelectedProcess] = useState<Process | undefined>();
+    const [bapParams, setBapParams] = useState<BapSensSlopeParams>(DEFAULT_BAP_PARAMS);
 
     const fetchProcesses = async () => {
         if (!id)
@@ -295,6 +513,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
 
     useEffect(() => {
         if (step == 1 && value.length > 0) {
+            setNextButtonDisabled(false);
+        }
+        if (step == 3) {
+            // Parameters step always has valid defaults
             setNextButtonDisabled(false);
         }
     }, [step]);
@@ -445,6 +667,14 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                     }} />,
         },
         {
+            title: "Parameters",
+            description: <ProcessParametersWidget
+                    selectedProcess={selectedProcess}
+                    bapParams={bapParams}
+                    onBapParamsChange={setBapParams}
+                />,
+        },
+        {
             title: "Check Data",
             description: <>
                 <Text pt="8" pb="2" textStyle="lg">CHECK DATA!</Text>
@@ -543,7 +773,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
-                                        {(step < 3) &&
+                                        {(step < 4) &&
                                             <Steps.NextTrigger asChild>
                                                 <Button
                                                     color="black"
