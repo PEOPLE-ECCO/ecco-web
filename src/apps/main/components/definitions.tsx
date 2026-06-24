@@ -15,6 +15,7 @@ export interface Timeseries {
     readonly bbox?: number[]
     readonly geometry?: GeoJSONFeature
     readonly process?: Process
+    readonly parameters?: Record<string, unknown>
     readonly jobs?: ReactiveArray<Job>
 }
 

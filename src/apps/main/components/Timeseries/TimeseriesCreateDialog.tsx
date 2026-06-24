@@ -81,6 +81,28 @@ export interface BapSensSlopeParams {
     coverageWeight: number;
 }
 
+function serializeBapSensSlopeParams(p: BapSensSlopeParams): Record<string, unknown> {
+    return {
+        years: Array.from({ length: p.yearTo - p.yearFrom + 1 }, (_, i) => p.yearFrom + i),
+        month: Array.from({ length: p.monthTo - p.monthFrom + 1 }, (_, i) => p.monthFrom + i),
+        include_reflectance_bands: p.includeReflectanceBands,
+        max_cloud_cover: p.maxCloudCover,
+        dtc_max_distance: p.distanceToCloudPixels,
+        cloud_buffer_px: p.cloudBufferPixels,
+        score_weight_dtc: p.distanceToCloudWeight,
+        score_weight_date: p.dateWeight,
+        score_weight_coverage: p.coverageWeight,
+    };
+}
+
+function serializeProcessParams(
+    process: Process | undefined,
+    bapParams: BapSensSlopeParams
+): Record<string, unknown> | undefined {
+    if (process?.name === "BAP Sens Slope") return serializeBapSensSlopeParams(bapParams);
+    return undefined;
+}
+
 export const DEFAULT_BAP_PARAMS: BapSensSlopeParams = {
     yearFrom: 2018,
     yearTo: 2023,
@@ -474,7 +496,8 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             description: description,
             jobs: undefined,
             extent: extent,
-            process: selectedProcess
+            process: selectedProcess,
+            parameters: serializeProcessParams(selectedProcess, bapParams),
         };
         const created = await createTimeseries(timeseries);
         handleExitClick();
@@ -488,6 +511,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             jobs: undefined,
             extent: extent,
             process: selectedProcess,
+            parameters: serializeProcessParams(selectedProcess, bapParams),
             results: computed(() => new Map<string, JobResult[]>())
         };
         resultCallback(result);
