@@ -104,17 +104,17 @@ function serializeProcessParams(
 }
 
 export const DEFAULT_BAP_PARAMS: BapSensSlopeParams = {
-    yearFrom: 2018,
-    yearTo: 2023,
-    monthFrom: 4,
-    monthTo: 9,
+    yearFrom: 2020,
+    yearTo: 2022,
+    monthFrom: 1,
+    monthTo: 12,
     includeReflectanceBands: false,
-    maxCloudCover: 70,
-    distanceToCloudPixels: 10,
-    cloudBufferPixels: 5,
-    distanceToCloudWeight: 0.5,
-    dateWeight: 0.5,
-    coverageWeight: 0.5,
+    maxCloudCover: 30,
+    distanceToCloudPixels: 30,
+    cloudBufferPixels: 2,
+    distanceToCloudWeight: 1.0,
+    dateWeight: 0.8,
+    coverageWeight: 0.0,
 };
 
 const selectStyle: React.CSSProperties = {
@@ -701,13 +701,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         {
             title: "Check Data",
             description: <>
-                <Text pt="8" pb="2" textStyle="lg">CHECK DATA!</Text>
+                <Text pt="8" pb="2" textStyle="lg">Summary of inputs</Text>
                 <Table.Root>
                     <Table.Caption />
                     <Table.Header>
                         <Table.Row>
-                            <Table.ColumnHeader font="semibold">Parameter</Table.ColumnHeader>
-                            <Table.ColumnHeader>Value</Table.ColumnHeader>
+                            <Table.ColumnHeader fontWeight="bold">Parameter</Table.ColumnHeader>
+                            <Table.ColumnHeader fontWeight="bold">Value</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -719,6 +719,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                             <Table.Cell>description</Table.Cell>
                             <Table.Cell>{description}</Table.Cell>
                         </Table.Row>
+                        {Object.entries(serializeProcessParams(selectedProcess, bapParams) ?? {}).map(([k, v]) => (
+                            <Table.Row key={k}>
+                                <Table.Cell>{k}</Table.Cell>
+                                <Table.Cell>{Array.isArray(v) ? v.join(", ") : String(v)}</Table.Cell>
+                            </Table.Row>
+                        ))}
                     </Table.Body>
                 </Table.Root>
             </>,
