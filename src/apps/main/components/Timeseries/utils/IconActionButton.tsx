@@ -3,7 +3,7 @@
 
 import { ReactElement } from "react";
 import { IconButton } from "@chakra-ui/react";
-import { Tooltip } from "../../components/tooltip";
+import { Tooltip } from "../../tooltip";
 
 interface IconActionButtonProps {
     icon: ReactElement;

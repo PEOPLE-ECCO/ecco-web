@@ -38,7 +38,8 @@ import Draw from "ol/interaction/Draw.js";
 import { JobResult, Process, SpatialExtent, Timeseries } from "../../components/definitions";
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
-import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { ActionButton } from "./utils/ActionButton";
+import { TimespanPicker } from "./utils/TimespanPicker";
 import { PARAMETER_WIDGETS } from "./ParameterWidgets/registry";
 import { ParameterWidgetValue, SerializedParams } from "./ParameterWidgets/types";
 
@@ -244,7 +245,9 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const [description, setDescription] = useState<string>("");
     const [extent, setExtent] = useState<SpatialExtent | undefined>();
     const [step, setStep] = useState<number>(0);
-    const { createTimeseries, getProcesses } = useServices();
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+    const { createTimeseries, createJob, getProcesses } = useServices();
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
     const [expandDialogClosed, setExpandDialogClosed] = useState<boolean>(false);
     const notificationService = useService<NotificationService>("notifier.NotificationService");
@@ -279,6 +282,8 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         setDescription("");
         setValue([]);
         setExtent(undefined);
+        setStartDate(null);
+        setEndDate(null);
         setExpandDialogClosed(true);
     };
 
@@ -294,7 +299,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             parameters: params,
         };
         const created = await createTimeseries(timeseries);
-        handleExitClick();
 
         // callback the results to the timeseries component
         const result = {
@@ -317,6 +321,33 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             level: "info",
             displayDuration: 5000,
         });
+
+        // Auto-start the first job for the selected timespan. If this fails the
+        // timeseries still exists, so keep it and warn the user — they can retry
+        // via the Expand dialog.
+        try {
+            const jobResult = await createJob(id!, created, {
+                timespan: [startDate!, endDate!],
+            });
+            notificationService.notify({
+                title: "Job created",
+                message: jobResult,
+                level: "info",
+                displayDuration: 5000,
+            });
+        } catch (error) {
+            console.error(error);
+            notificationService.notify({
+                title: "Job creation failed",
+                message:
+                    "The timeseries was created, but its first job could not be started. " +
+                    "You can retry from the Expand dialog.",
+                level: "error",
+                displayDuration: 8000,
+            });
+        }
+
+        handleExitClick();
     };
 
 
@@ -333,13 +364,16 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     // (if any) reports its current selection as valid.
     const processStepValid = value.length > 0 && paramsValid;
 
+    // Timespan step (index 3) requires both a start and an end date before
+    // advancing, since Create auto-starts a job for that range.
+    const timespanStepValid = startDate != null && endDate != null;
+
     useEffect(() => {
         if (step == 1) {
             setNextButtonDisabled(!processStepValid);
         }
         if (step == 3) {
-            // Parameters step always has valid defaults
-            setNextButtonDisabled(false);
+            setNextButtonDisabled(!timespanStepValid);
         }
     }, [step]);
 
@@ -349,6 +383,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             setNextButtonDisabled(!processStepValid);
         }
     }, [value, selectedProcess, paramsValid]);
+
+    useEffect(() => {
+        if (step == 3) {
+            setNextButtonDisabled(!timespanStepValid);
+        }
+    }, [startDate, endDate]);
 
     // Reset parameters when the process changes. A widget (if the process has one)
     // re-reports its own params/validity on mount; processes without a widget have
@@ -500,6 +540,17 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                     }} />,
         },
         {
+            title: "Timespan",
+            description: <>
+                <Text pt="8" pb="2" textStyle="lg">Please select Timespan:</Text>
+                <TimespanPicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartChange={setStartDate}
+                    onEndChange={setEndDate} />
+            </>,
+        },
+        {
             title: "Check Data",
             description: <>
                 <Text pt="8" pb="2" textStyle="lg">Summary of inputs</Text>
@@ -526,6 +577,14 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                 <Table.Cell>{Array.isArray(v) ? v.join(", ") : String(v)}</Table.Cell>
                             </Table.Row>
                         ))}
+                        <Table.Row key="start_date">
+                            <Table.Cell>start date</Table.Cell>
+                            <Table.Cell>{startDate?.toLocaleDateString()}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row key="end_date">
+                            <Table.Cell>end date</Table.Cell>
+                            <Table.Cell>{endDate?.toLocaleDateString()}</Table.Cell>
+                        </Table.Row>
                     </Table.Body>
                 </Table.Root>
             </>,

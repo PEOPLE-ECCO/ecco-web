@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, Flex, HStack } from "@chakra-ui/react";
-import { TimeseriesIcons } from "./TimeseriesIcons";
+import { TimeseriesIcons } from "./utils/TimeseriesIcons";
 import { Timeseries } from "../definitions";
 
 interface TimeseriesControlProps {

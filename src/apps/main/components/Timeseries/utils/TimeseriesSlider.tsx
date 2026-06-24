@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, Center, Circle, Icon, Slider } from "@chakra-ui/react";
-import { Job, JobResult } from "../definitions";
-import { SliderCircle } from "../Slider/SliderCircle";
+import { Job, JobResult } from "../../definitions";
+import { SliderCircle } from "../../Slider/SliderCircle";
 import { EventEmitter } from "@open-pioneer/core";
-import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
+import { Events } from "../../../views/Sites/SiteDetails/SiteDetails";
 
 interface TimeseriesSliderProps {
     jobs: Job[] | undefined;

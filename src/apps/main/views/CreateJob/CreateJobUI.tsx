@@ -16,7 +16,7 @@ import {
 import { FC } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useServices } from "../../services/Services";
-import { ActionButton } from "../../components/Timeseries/ActionButton";
+import { ActionButton } from "../../components/Timeseries/utils/ActionButton";
 import { setHeapSnapshotNearHeapLimit } from "v8";
 import { CloseButton } from "@chakra-ui/react";
 

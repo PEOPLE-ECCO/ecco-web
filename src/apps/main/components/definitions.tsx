@@ -27,6 +27,7 @@ export class TimeseriesImpl implements Timeseries {
     #extent?: SpatialExtent;
     #process?: Process;
     #jobs: ReactiveArray<Job>;
+    #process_parameters?: Record<string, unknown>;
 
     #httpService: HttpService;
 
@@ -56,6 +57,7 @@ export class TimeseriesImpl implements Timeseries {
         this.#process = payload.process;
         this.#jobs = reactiveArray([]);
         this.#fetchedJobs = false;
+        this.#process_parameters = payload.process_parameters;
 
         this.#httpService = httpService;
     }
@@ -75,6 +77,10 @@ export class TimeseriesImpl implements Timeseries {
 
     public get description(): string {
         return this.#description;
+    }
+
+    public get parameters(): Record<string, unknown> | undefined {
+        return this.#process_parameters;
     }
 
     public get extent(): SpatialExtent | undefined {

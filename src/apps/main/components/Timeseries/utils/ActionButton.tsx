@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from "@chakra-ui/react";
-import { Tooltip } from "../../components/tooltip";
+import { Tooltip } from "../../tooltip";
 import { ReactElement } from "react";
 
 interface ActionButtonProps {

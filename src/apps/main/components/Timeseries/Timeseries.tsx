@@ -242,6 +242,9 @@ function MenuContent({ ts, el }: MenuContentProps) {
         console.log("Archive:", ts.name);
     };
 
+    const expandable = ts.parameters?.["expandable"] !== false;
+    console.log(ts);
+
     const initiateDownload = (ts: Timeseries) => {
         const href = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts.id + "/download";
 
@@ -266,15 +269,28 @@ function MenuContent({ ts, el }: MenuContentProps) {
                     <Portal>
                         <Menu.Positioner>
                             <Menu.Content>
-                                <Dialog.Trigger >
-                                    <Menu.Item
-                                        value="expand"
-                                        onClick={() => {
-                                            handleExpand(ts);
-                                        }}>
-                                        Expand
-                                    </Menu.Item>
-                                </Dialog.Trigger>
+                                {expandable ? (
+                                    <Dialog.Trigger >
+                                        <Menu.Item
+                                            value="expand"
+                                            onClick={() => {
+                                                handleExpand(ts);
+                                            }}>
+                                            Expand
+                                        </Menu.Item>
+                                    </Dialog.Trigger>
+                                ) : (
+                                    <Tooltip content="Not available for this timeseries">
+                                        <Box>
+                                            <Menu.Item
+                                                value="expand"
+                                                disabled
+                                                closeOnSelect={false}>
+                                                Expand
+                                            </Menu.Item>
+                                        </Box>
+                                    </Tooltip>
+                                )}
                                 <Menu.Item
                                     value="delete"
                                     disabled

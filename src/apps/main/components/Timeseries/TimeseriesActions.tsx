@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { HStack, Spacer, VStack } from "@chakra-ui/react";
-import { ActionButton } from "./ActionButton";
+import { ActionButton } from "./utils/ActionButton";
 import { LuDownload } from "react-icons/lu";
 
 interface TimeseriesActionsProps {

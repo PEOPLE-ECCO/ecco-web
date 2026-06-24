@@ -2,29 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 import {
     Heading,
-    Button,
     Flex,
-    Stack,
     Dialog,
     Portal,
     Text,
-    Field,
     Box,
     CloseButton
 } from "@chakra-ui/react";
 import { useParams } from "react-router";
-import { useState, useEffect, FC } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { useState, useEffect } from "react";
 
 import { useService } from "open-pioneer:react-hooks";
 import { NotificationService } from "@open-pioneer/notifier";
 
 import { JobParameters, Timeseries } from "../definitions";
 import { useServices } from "../../services/Services";
-import { ActionButton } from "./ActionButton";
+import { ActionButton } from "./utils/ActionButton";
+import { TimespanPicker } from "./utils/TimespanPicker";
 
-import { setHeapSnapshotNearHeapLimit } from "v8";
 import { EventEmitter } from "@open-pioneer/core";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 
@@ -32,11 +27,6 @@ import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 interface CreateJobProps {
     timeseries: Timeseries;
     eventListener: EventEmitter<Events>;
-}
-
-interface SelectedDateMeta {
-    date: Date;
-    formattedDate: string;
 }
 
 export function TimeseriesExpandDialog({ timeseries, eventListener }: CreateJobProps) {
@@ -50,21 +40,6 @@ export function TimeseriesExpandDialog({ timeseries, eventListener }: CreateJobP
     const [selectedTimeseries, _] = useState<Timeseries>(timeseries);
 
     const notificationService = useService<NotificationService>("notifier.NotificationService");
-
-    const handleChangeRaw = (
-        value: string,
-        selectedDateMeta?: SelectedDateMeta | null,
-    ) => {
-        console.log(
-            selectedDateMeta
-                ? `Selected Date Meta: ${JSON.stringify(selectedDateMeta)}`
-                : "No Selection Meta is available",
-        );
-    };
-
-    const cancel = (buttonType: string) => {
-        console.log(`Button clicked: ${buttonType}`);
-    };
 
     const handleExitClick = () => {
         setStartDate(null);
@@ -113,48 +88,11 @@ export function TimeseriesExpandDialog({ timeseries, eventListener }: CreateJobP
                             <Dialog.Body>
                                 <Box h="55vh">
                                     <Text pb="2" textStyle="lg">Please select Timespan:</Text>
-                                    <Stack pt="4" direction="row" maxW="md">
-                                        <Field.Root>
-                                            <Field.Label>Start Date</Field.Label>
-                                            <Box
-                                                borderWidth={"1px"}
-                                                css={{ "--focus-color": "#2C7D75" }}>
-                                                <DatePicker
-                                                    showIcon
-                                                    isClearable
-                                                    selected={startDate}
-                                                    onChange={(date: Date | null) => setStartDate(date)}
-                                                    startDate={startDate}
-                                                    placeholderText="mm/dd/yyyy"
-                                                    onChangeRaw={(
-                                                        event:
-                                                            | React.MouseEvent<HTMLElement>
-                                                            | React.KeyboardEvent<HTMLElement>
-                                                            | React.ChangeEvent<HTMLInputElement>,
-                                                        selectedDateMeta?: SelectedDateMeta | null,
-                                                    ) => {
-                                                        if (event.target instanceof HTMLInputElement) {
-                                                            handleChangeRaw(event.target.value, selectedDateMeta);
-                                                        }
-                                                    }} />
-                                            </Box>
-                                        </Field.Root>
-                                        <Field.Root>
-                                            <Field.Label>End Date</Field.Label>
-                                            <Box
-                                                borderWidth={"1px"}>
-                                                <DatePicker
-                                                    showIcon
-                                                    isClearable
-                                                    selected={endDate}
-                                                    onChange={(date: Date | null) => setEndDate(date)}
-                                                    endDate={endDate}
-                                                    startDate={startDate}
-                                                    minDate={startDate}
-                                                    placeholderText="mm/dd/yyyy" />
-                                            </Box>
-                                        </Field.Root>
-                                    </Stack>
+                                    <TimespanPicker
+                                        startDate={startDate}
+                                        endDate={endDate}
+                                        onStartChange={setStartDate}
+                                        onEndChange={setEndDate} />
                                 </Box>
                             </Dialog.Body>
                             <Dialog.Footer>
