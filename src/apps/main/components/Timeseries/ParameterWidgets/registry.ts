@@ -13,3 +13,17 @@ export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
     "BAP (seasonal-sen)": BapSensSlopeParametersWidget,
     "BAP Sens Slope": ReferenceAreaWidget,
 };
+
+/**
+ * Processes that do not allow drawing a spatial extent. Their extent is implied
+ * by their parameters (e.g. the selected reference area / restoration site), so
+ * the create wizard shows a read-only map preview instead of the draw control
+ * and persists no extent.
+ */
+export const EXTENTLESS_PROCESSES: ReadonlySet<string> = new Set([
+    "BAP Sens Slope",
+]);
+
+export function isExtentlessProcess(processName: string | undefined): boolean {
+    return processName != null && EXTENTLESS_PROCESSES.has(processName);
+}

@@ -40,8 +40,9 @@ import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "./utils/ActionButton";
 import { TimespanPicker } from "./utils/TimespanPicker";
-import { PARAMETER_WIDGETS } from "./ParameterWidgets/registry";
+import { PARAMETER_WIDGETS, isExtentlessProcess } from "./ParameterWidgets/registry";
 import { ParameterWidgetValue, SerializedParams } from "./ParameterWidgets/types";
+import { ReferenceAreaMapPreview } from "./ParameterWidgets/ReferenceAreaMapPreview";
 
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
@@ -265,6 +266,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         setParamsValid(value.valid);
     }, []);
 
+    // Some processes (e.g. reference-area based ones) imply their extent from
+    // their parameters rather than letting the user draw one. For those the
+    // extent step shows a read-only preview and no extent is persisted.
+    const extentless = isExtentlessProcess(selectedProcess?.name);
+    const referenceAreaId = params?.reference_area_id as number | undefined;
+    const restorationSiteId = params?.restoration_site_id as number | undefined;
+
     const fetchProcesses = async () => {
         if (!id)
             return;
@@ -371,6 +379,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     useEffect(() => {
         if (step == 1) {
             setNextButtonDisabled(!processStepValid);
+        }
+        // Extentless processes have no draw control to validate against, so the
+        // step is always passable and no extent is persisted.
+        if (step == 2 && extentless) {
+            setExtent(undefined);
+            setNextButtonDisabled(false);
         }
         if (step == 3) {
             setNextButtonDisabled(!timespanStepValid);
@@ -520,8 +534,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         },
         {
             title: "Extent Selection",
-            description:
-                <ExtentSelection
+            description: extentless
+                ? <ReferenceAreaMapPreview
+                    referenceAreaId={referenceAreaId}
+                    restorationSiteId={restorationSiteId}
+                    isVisible={step == 2} />
+                : <ExtentSelection
                     initialExtent={scenario.bbox}
                     isVisible={step == 2}
                     dialogClosed={expandDialogClosed}
