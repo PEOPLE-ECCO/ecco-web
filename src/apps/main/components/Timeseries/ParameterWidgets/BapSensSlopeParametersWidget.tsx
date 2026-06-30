@@ -35,7 +35,10 @@ const MONTHS = [
     { value: 12, label: "December" },
 ];
 
+type CompositingMode = "yearly" | "monthly";
+
 interface BapSensSlopeParams {
+    compositingMode: CompositingMode;
     yearFrom: number;
     yearTo: number;
     monthFrom: number;
@@ -51,6 +54,7 @@ interface BapSensSlopeParams {
 
 function serialize(p: BapSensSlopeParams): SerializedParams {
     return {
+        compositing_mode: p.compositingMode,
         years: Array.from({ length: p.yearTo - p.yearFrom + 1 }, (_, i) => p.yearFrom + i),
         month: Array.from({ length: p.monthTo - p.monthFrom + 1 }, (_, i) => p.monthFrom + i),
         include_reflectance_bands: p.includeReflectanceBands,
@@ -64,6 +68,7 @@ function serialize(p: BapSensSlopeParams): SerializedParams {
 }
 
 const DEFAULT_PARAMS: BapSensSlopeParams = {
+    compositingMode: "yearly",
     yearFrom: 2020,
     yearTo: 2022,
     monthFrom: 1,
@@ -106,56 +111,73 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                 </Text>
             </Box>
 
+            {/* Compositing mode */}
+            <Field.Root>
+                <LabelWithHelp label="Compositing mode" help="Dummy help: choose whether the composite is computed over a range of years or a range of months." />
+                <select
+                    value={params.compositingMode}
+                    style={selectStyle}
+                    onChange={(e) => set({ compositingMode: e.target.value as CompositingMode })}
+                >
+                    <option value="yearly">Yearly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </Field.Root>
+
             {/* Year range */}
-            <HStack gap="4" align="flex-end">
-                <Field.Root>
-                    <LabelWithHelp label="Year from" help="Dummy help: first year (inclusive) of the analysis period." />
-                    <Input
-                        type="number" w="120px"
-                        value={params.yearFrom} min={2000} max={params.yearTo}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearFrom: v }); }}
-                    />
-                </Field.Root>
-                <Field.Root>
-                    <LabelWithHelp label="Year to" help="Dummy help: last year (inclusive) of the analysis period." />
-                    <Input
-                        type="number" w="120px"
-                        value={params.yearTo} min={params.yearFrom} max={2030}
-                        css={{ "--focus-color": "#2C7D75" }}
-                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearTo: v }); }}
-                    />
-                </Field.Root>
-            </HStack>
+            {params.compositingMode === "yearly" && (
+                <HStack gap="4" align="flex-end">
+                    <Field.Root>
+                        <LabelWithHelp label="Year from" help="Dummy help: first year (inclusive) of the analysis period." />
+                        <Input
+                            type="number" w="120px"
+                            value={params.yearFrom} min={2000} max={params.yearTo}
+                            css={{ "--focus-color": "#2C7D75" }}
+                            onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearFrom: v }); }}
+                        />
+                    </Field.Root>
+                    <Field.Root>
+                        <LabelWithHelp label="Year to" help="Dummy help: last year (inclusive) of the analysis period." />
+                        <Input
+                            type="number" w="120px"
+                            value={params.yearTo} min={params.yearFrom} max={2030}
+                            css={{ "--focus-color": "#2C7D75" }}
+                            onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearTo: v }); }}
+                        />
+                    </Field.Root>
+                </HStack>
+            )}
 
             {/* Month range */}
-            <HStack gap="4" align="flex-end">
-                <Field.Root>
-                    <LabelWithHelp label="Month from" help="Dummy help: first month of the year included in the composite." />
-                    <select
-                        value={params.monthFrom}
-                        style={selectStyle}
-                        onChange={(e) => {
-                            const v = parseInt(e.target.value);
-                            set({ monthFrom: v, monthTo: Math.max(params.monthTo, v) });
-                        }}
-                    >
-                        {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
-                </Field.Root>
-                <Field.Root>
-                    <LabelWithHelp label="Month to" help="Dummy help: last month of the year included in the composite." />
-                    <select
-                        value={params.monthTo}
-                        style={selectStyle}
-                        onChange={(e) => set({ monthTo: parseInt(e.target.value) })}
-                    >
-                        {MONTHS.filter((m) => m.value >= params.monthFrom).map((m) => (
-                            <option key={m.value} value={m.value}>{m.label}</option>
-                        ))}
-                    </select>
-                </Field.Root>
-            </HStack>
+            {params.compositingMode === "monthly" && (
+                <HStack gap="4" align="flex-end">
+                    <Field.Root>
+                        <LabelWithHelp label="Month from" help="Dummy help: first month of the year included in the composite." />
+                        <select
+                            value={params.monthFrom}
+                            style={selectStyle}
+                            onChange={(e) => {
+                                const v = parseInt(e.target.value);
+                                set({ monthFrom: v, monthTo: Math.max(params.monthTo, v) });
+                            }}
+                        >
+                            {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                        </select>
+                    </Field.Root>
+                    <Field.Root>
+                        <LabelWithHelp label="Month to" help="Dummy help: last month of the year included in the composite." />
+                        <select
+                            value={params.monthTo}
+                            style={selectStyle}
+                            onChange={(e) => set({ monthTo: parseInt(e.target.value) })}
+                        >
+                            {MONTHS.filter((m) => m.value >= params.monthFrom).map((m) => (
+                                <option key={m.value} value={m.value}>{m.label}</option>
+                            ))}
+                        </select>
+                    </Field.Root>
+                </HStack>
+            )}
 
             {/* Boolean */}
             <Switch.Root

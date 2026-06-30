@@ -243,7 +243,6 @@ function MenuContent({ ts, el }: MenuContentProps) {
     };
 
     const expandable = ts.parameters?.["expandable"] !== false;
-    console.log(ts);
 
     const initiateDownload = (ts: Timeseries) => {
         const href = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts.id + "/download";
