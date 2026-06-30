@@ -39,7 +39,7 @@ import { JobResult, Process, SpatialExtent, Timeseries } from "../../components/
 import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "./utils/ActionButton";
-import { TimespanPicker } from "./utils/TimespanPicker";
+import { TimespanWidget } from "./ParameterWidgets/TimespanWidget";
 import { PARAMETER_WIDGETS, isExtentlessProcess } from "./ParameterWidgets/registry";
 import { ParameterWidgetValue, SerializedParams } from "./ParameterWidgets/types";
 import { ReferenceAreaMapPreview } from "./ParameterWidgets/ReferenceAreaMapPreview";
@@ -57,9 +57,20 @@ import GeoJSON from "ol/format/GeoJSON";
 interface ProcessParametersWidgetProps {
     selectedProcess: Process | undefined;
     onChange: (value: ParameterWidgetValue) => void;
+    startDate: Date | null;
+    endDate: Date | null;
+    onStartChange: (date: Date | null) => void;
+    onEndChange: (date: Date | null) => void;
 }
 
-function ProcessParametersWidget({ selectedProcess, onChange }: ProcessParametersWidgetProps) {
+function ProcessParametersWidget({
+    selectedProcess,
+    onChange,
+    startDate,
+    endDate,
+    onStartChange,
+    onEndChange,
+}: ProcessParametersWidgetProps) {
     if (!selectedProcess) {
         return <></>;
     }
@@ -67,13 +78,22 @@ function ProcessParametersWidget({ selectedProcess, onChange }: ProcessParameter
     const Widget = PARAMETER_WIDGETS[selectedProcess.name];
     if (Widget) {
         // Remount on process change so each widget starts from its own defaults.
+        // The widget owns its own time range (encoded in its params), so no
+        // separate timespan picker is shown for these processes.
         return <Widget key={selectedProcess.name} process={selectedProcess} onChange={onChange} />;
     }
 
+    // Processes without a dedicated widget have no configurable parameters, but
+    // still need a timespan for the job Create auto-starts.
     return (
         <Stack pt="8" gap="4" align="flex-start" maxW="md">
             <Text textStyle="lg">Parameters for: <strong>{selectedProcess.name}</strong></Text>
             <Text color="fg.muted">No configurable parameters for this process.</Text>
+            <TimespanWidget
+                startDate={startDate}
+                endDate={endDate}
+                onStartChange={onStartChange}
+                onEndChange={onEndChange} />
         </Stack>
     );
 }
@@ -270,6 +290,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     // their parameters rather than letting the user draw one. For those the
     // extent step shows a read-only preview and no extent is persisted.
     const extentless = isExtentlessProcess(selectedProcess?.name);
+
+    // Whether the selected process has a dedicated parameter widget. Those widgets
+    // own their own time range, so the fallback TimespanWidget (and its timespan
+    // validity) only applies to processes without a dedicated widget.
+    const hasWidget = selectedProcess != null && PARAMETER_WIDGETS[selectedProcess.name] != null;
+
     const referenceAreaId = params?.reference_area_id as number | undefined;
     const restorationSiteId = params?.restoration_site_id as number | undefined;
 
@@ -368,13 +394,15 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         }
     }, [name, description]);
 
-    // Process step (index 1) requires a selected process whose parameter widget
-    // (if any) reports its current selection as valid.
-    const processStepValid = value.length > 0 && paramsValid;
+    // The timespan drives the job Create auto-starts, so both dates are required.
+    // It is only collected for processes without a dedicated widget; widget-based
+    // processes encode their own time range in their params.
+    const timespanStepValid = hasWidget || (startDate != null && endDate != null);
 
-    // Timespan step (index 3) requires both a start and an end date before
-    // advancing, since Create auto-starts a job for that range.
-    const timespanStepValid = startDate != null && endDate != null;
+    // Process step (index 1) requires a selected process whose parameter widget
+    // (if any) reports its current selection as valid, plus a complete timespan
+    // (the timespan picker lives in this step for processes without a widget).
+    const processStepValid = value.length > 0 && paramsValid && timespanStepValid;
 
     useEffect(() => {
         if (step == 1) {
@@ -386,9 +414,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             setExtent(undefined);
             setNextButtonDisabled(false);
         }
-        if (step == 3) {
-            setNextButtonDisabled(!timespanStepValid);
-        }
     }, [step]);
 
 
@@ -396,22 +421,15 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         if (step == 1) {
             setNextButtonDisabled(!processStepValid);
         }
-    }, [value, selectedProcess, paramsValid]);
-
-    useEffect(() => {
-        if (step == 3) {
-            setNextButtonDisabled(!timespanStepValid);
-        }
-    }, [startDate, endDate]);
+    }, [value, selectedProcess, paramsValid, startDate, endDate]);
 
     // Reset parameters when the process changes. A widget (if the process has one)
     // re-reports its own params/validity on mount; processes without a widget have
     // no parameters and are valid by default.
     useEffect(() => {
-        const hasWidget = selectedProcess != null && PARAMETER_WIDGETS[selectedProcess.name] != null;
         setParams(undefined);
         setParamsValid(!hasWidget);
-    }, [selectedProcess]);
+    }, [selectedProcess, hasWidget]);
 
     useEffect(() => {
         const listCollection = createListCollection({
@@ -527,6 +545,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                         <ProcessParametersWidget
                             selectedProcess={selectedProcess}
                             onChange={handleParamsChange}
+                            startDate={startDate}
+                            endDate={endDate}
+                            onStartChange={setStartDate}
+                            onEndChange={setEndDate}
                         />
                     </Box>
                 </Flex>
@@ -556,17 +578,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                             setNextButtonDisabled(true);
                         }
                     }} />,
-        },
-        {
-            title: "Timespan",
-            description: <>
-                <Text pt="8" pb="2" textStyle="lg">Please select Timespan:</Text>
-                <TimespanPicker
-                    startDate={startDate}
-                    endDate={endDate}
-                    onStartChange={setStartDate}
-                    onEndChange={setEndDate} />
-            </>,
         },
         {
             title: "Check Data",
@@ -681,7 +692,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
-                                        {(step < 4) &&
+                                        {(step < 3) &&
                                             <Steps.NextTrigger asChild>
                                                 <Button
                                                     color="black"
