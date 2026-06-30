@@ -5,13 +5,16 @@ import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
 import { Job, JobParameters, JobResult, LegendAndDescription, Timeseries, TimeseriesImpl } from "../components/definitions";
-import { useState } from "react";
+import { useCallback, useMemo } from "react";
 import { LegendProvider, SolutionNames } from "./LegendProvider";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
 
-    const getUser = async () => {
+    // All functions are wrapped in useCallback (and the returned object in
+    // useMemo) so their identities stay stable across renders. This lets callers
+    // use them directly as effect dependencies without causing render loops.
+    const getUser = useCallback(async () => {
         const url = import.meta.env.VITE_API_ROOT + "/user/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
@@ -21,9 +24,9 @@ export const useServices = () => {
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
-    };
+    }, [httpService]);
 
-    const getScenarios = async () => {
+    const getScenarios = useCallback(async () => {
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
@@ -33,9 +36,9 @@ export const useServices = () => {
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
-    };
+    }, [httpService]);
 
-    const getScenario = async (id: string) => {
+    const getScenario = useCallback(async (id: string) => {
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
@@ -47,9 +50,9 @@ export const useServices = () => {
                 }
             };
         }
-    };
+    }, [httpService]);
 
-    const getTimeseries = async (id: string) => {
+    const getTimeseries = useCallback(async (id: string) => {
         console.log("getTimeseries " + id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/timeseries/";
         const response = await httpService.fetch(url);
@@ -66,9 +69,9 @@ export const useServices = () => {
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
-    };
+    }, [httpService]);
 
-    const getProcesses = async (id: string) => {
+    const getProcesses = useCallback(async (id: string) => {
         console.log("getProcesses of scenario " + id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/processes/";
         const response = await httpService.fetch(url);
@@ -79,10 +82,10 @@ export const useServices = () => {
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
-    };
+    }, [httpService]);
 
 
-    const createTimeseries = async (ts: Timeseries) : Promise<string> => {
+    const createTimeseries = useCallback(async (ts: Timeseries) : Promise<string> => {
         console.log("createTimeseries " + ts);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
         console.log(ts);
@@ -100,9 +103,9 @@ export const useServices = () => {
         } else {
             throw Promise.reject("Unexpected response: " + JSON.stringify(responseData));
         }
-    };
+    }, [httpService]);
 
-    const createJob = async (scenario_id: string, ts_id: string, job_parameters: JobParameters) => {
+    const createJob = useCallback(async (scenario_id: string, ts_id: string, job_parameters: JobParameters) => {
         const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts_id + "/jobs/";
         const response = await httpService.fetch(url, {
             "method": "POST",
@@ -123,9 +126,21 @@ export const useServices = () => {
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
-    };
+    }, [httpService]);
 
-    const getLegend = async (outputType: string, timeseries?: Timeseries) : Promise<LegendAndDescription> => {
+    const getTimeseriesById = useCallback(async (id: string): Promise<Timeseries> => {
+        const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + id + "/";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+
+        if (responseData) {
+            return new TimeseriesImpl(responseData, httpService);
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    }, [httpService]);
+
+    const getLegend = useCallback(async (outputType: string, timeseries?: Timeseries) : Promise<LegendAndDescription> => {
         return new Promise((resolve, reject) => {
             const prov = new LegendProvider();
 
@@ -133,7 +148,10 @@ export const useServices = () => {
             const result = prov.resolveLegend(outputType, SolutionNames.SAV);
             resolve(result!);
         });
-    };
+    }, []);
 
-    return { getUser, getScenarios, getScenario, getTimeseries, getProcesses, createTimeseries, createJob, getLegend };
+    return useMemo(
+        () => ({ getUser, getScenarios, getScenario, getTimeseries, getTimeseriesById, getProcesses, createTimeseries, createJob, getLegend }),
+        [getUser, getScenarios, getScenario, getTimeseries, getTimeseriesById, getProcesses, createTimeseries, createJob, getLegend]
+    );
 };
