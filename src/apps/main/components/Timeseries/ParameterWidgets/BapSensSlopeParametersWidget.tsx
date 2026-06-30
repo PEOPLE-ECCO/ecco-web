@@ -56,7 +56,7 @@ function serialize(p: BapSensSlopeParams): SerializedParams {
     return {
         compositing_mode: p.compositingMode,
         years: Array.from({ length: p.yearTo - p.yearFrom + 1 }, (_, i) => p.yearFrom + i),
-        month: Array.from({ length: p.monthTo - p.monthFrom + 1 }, (_, i) => p.monthFrom + i),
+        months: Array.from({ length: p.monthTo - p.monthFrom + 1 }, (_, i) => p.monthFrom + i),
         include_reflectance_bands: p.includeReflectanceBands,
         max_cloud_cover: p.maxCloudCover,
         dtc_max_distance: p.distanceToCloudPixels,
