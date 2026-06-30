@@ -10,8 +10,8 @@ import { ReferenceAreaWidget } from "./ReferenceAreaWidget";
  * Processes without an entry have no configurable parameters.
  */
 export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
-    "BAP (seasonal-sen)": BapSensSlopeParametersWidget,
-    "BAP Sens Slope": ReferenceAreaWidget,
+    "BAP": BapSensSlopeParametersWidget,
+    "Sen's slope": ReferenceAreaWidget,
 };
 
 /**
@@ -21,7 +21,7 @@ export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
  * and persists no extent.
  */
 export const EXTENTLESS_PROCESSES: ReadonlySet<string> = new Set([
-    "BAP Sens Slope",
+    "Sen's slope",
 ]);
 
 export function isExtentlessProcess(processName: string | undefined): boolean {
