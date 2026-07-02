@@ -321,6 +321,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         setName("");
         setDescription("");
         setValue([]);
+        setSelectedProcess(undefined);
         setExtent(undefined);
         setStartDate(null);
         setEndDate(null);
