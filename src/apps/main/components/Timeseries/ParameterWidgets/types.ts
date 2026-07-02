@@ -13,6 +13,12 @@ export interface ParameterWidgetValue {
     params: SerializedParams;
     /** Whether the current selection is complete enough to proceed. */
     valid: boolean;
+    /**
+     * Timespan for the job the create wizard auto-starts. Widget-based processes
+     * encode their time range in their params rather than in a start/end picker,
+     * so they report a derived (or default) range here to drive the first job.
+     */
+    timespan?: { start: Date; end: Date };
 }
 
 export interface ParameterWidgetProps {

@@ -52,6 +52,16 @@ interface BapSensSlopeParams {
     coverageWeight: number;
 }
 
+// Derive the first job's timespan from the selected years/months: the first day
+// of the earliest month through the last day of the latest month. The job runs
+// over this range while the years/months params drive the actual compositing.
+function deriveTimespan(p: BapSensSlopeParams): { start: Date; end: Date } {
+    const start = new Date(p.yearFrom, p.monthFrom - 1, 1);
+    // Day 0 of the month after monthTo is the last day of monthTo.
+    const end = new Date(p.yearTo, p.monthTo, 0);
+    return { start, end };
+}
+
 function serialize(p: BapSensSlopeParams): SerializedParams {
     return {
         compositing_mode: p.compositingMode,
@@ -96,7 +106,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
     // Report serialized params to the parent whenever they change. Defaults are
     // always valid, so this widget is valid from the start.
     useEffect(() => {
-        onChange({ params: serialize(params), valid: true });
+        onChange({ params: serialize(params), valid: true, timespan: deriveTimespan(params) });
     }, [params, onChange]);
 
     const set = (partial: Partial<BapSensSlopeParams>) =>

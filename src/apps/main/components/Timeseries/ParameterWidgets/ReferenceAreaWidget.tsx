@@ -23,6 +23,11 @@ const OUTPUT_METRIC_OPTIONS = [
     "slope_intercept",
 ] as const;
 
+// This widget has no time-range UI, but the create wizard still auto-starts a
+// first job that needs a timespan. Default to a full-year range; the user can
+// re-run other ranges from the Expand dialog afterwards.
+const DEFAULT_TIMESPAN = { start: new Date(2020, 0, 1), end: new Date(2022, 11, 31) };
+
 type OutputMetric = (typeof OUTPUT_METRIC_OPTIONS)[number];
 
 export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps) {
@@ -48,6 +53,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                 outputMetric != null &&
                 restorationSiteId != null &&
                 (!referenceAreaRequired || referenceAreaId != null),
+            timespan: DEFAULT_TIMESPAN,
         });
     }, [outputMetric, referenceAreaRequired, referenceAreaId, restorationSiteId, onChange]);
 

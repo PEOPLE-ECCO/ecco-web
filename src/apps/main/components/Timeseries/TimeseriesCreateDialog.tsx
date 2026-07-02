@@ -283,6 +283,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const handleParamsChange = useCallback((value: ParameterWidgetValue) => {
         setParams(value.params);
         setParamsValid(value.valid);
+        // Widget-based processes have no separate timespan picker; they report the
+        // timespan for the auto-started job here. Sync it into the shared start/end
+        // dates that create()/createJob consume.
+        if (value.timespan) {
+            setStartDate(value.timespan.start);
+            setEndDate(value.timespan.end);
+        }
     }, []);
 
     // Some processes (e.g. reference-area based ones) imply their extent from
