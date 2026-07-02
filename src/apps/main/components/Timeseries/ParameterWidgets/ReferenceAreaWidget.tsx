@@ -146,7 +146,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
 
                     <Field.Root required>
                         <Field.Label>
-                            Restoration Site <Field.RequiredIndicator />
+                            Base Area <Field.RequiredIndicator />
                             <Tooltip content="Dummy help: the restoration site this time series applies to." showArrow>
                                 <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                             </Tooltip>

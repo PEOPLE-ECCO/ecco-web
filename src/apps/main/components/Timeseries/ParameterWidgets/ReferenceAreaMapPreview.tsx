@@ -378,8 +378,8 @@ export function ReferenceAreaMapPreview({
                                             ? <Stack gap="2" align="flex-start">
                                                 <Text fontSize="xs" color={drawValid ? "fg.muted" : "red.600"}>
                                                     {drawValid
-                                                        ? "Draw the analysis extent on the map, or use the whole restoration site. It must lie strictly inside the restoration site (orange)."
-                                                        : "The drawn extent must lie strictly inside the restoration site. Please draw again inside the orange area."}
+                                                        ? "Draw the analysis extent on the map, or use the whole area. It must lie strictly inside the area where data is available (orange)."
+                                                        : "The drawn extent must lie strictly inside the area. Please draw again inside the orange area."}
                                                 </Text>
                                                 <Button
                                                     size="xs"
