@@ -11,7 +11,10 @@ import { ReferenceAreaWidget } from "./ReferenceAreaWidget";
  */
 export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
     "BAP": BapSensSlopeParametersWidget,
+    "BAP (Reference)": BapSensSlopeParametersWidget,
+    "BAP (Restoration)": BapSensSlopeParametersWidget,
     "Sen's slope": ReferenceAreaWidget,
+    "TEST slope": ReferenceAreaWidget,
 };
 
 /**
@@ -22,6 +25,7 @@ export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
  */
 export const EXTENTLESS_PROCESSES: ReadonlySet<string> = new Set([
     "Sen's slope",
+    "TEST slope",
 ]);
 
 export function isExtentlessProcess(processName: string | undefined): boolean {

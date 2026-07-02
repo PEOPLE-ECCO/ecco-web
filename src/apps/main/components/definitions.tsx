@@ -15,7 +15,7 @@ export interface Timeseries {
     readonly bbox?: number[]
     readonly geometry?: GeoJSONFeature
     readonly process?: Process
-    readonly parameters?: Record<string, unknown>
+    readonly process_parameters?: Record<string, unknown>
     readonly jobs?: ReactiveArray<Job>
 }
 
@@ -514,8 +514,13 @@ export interface PreprocessOption {
     name: string
 }
 
+export interface PreprocessParameters {
+    reference_bap?: PreprocessOption[]
+    restoration_bap?: PreprocessOption[]
+}
+
 export interface ProcessParameters {
-    preprocess_options?: PreprocessOption[]
+    preprocess?: PreprocessParameters
 }
 
 export interface Process {
