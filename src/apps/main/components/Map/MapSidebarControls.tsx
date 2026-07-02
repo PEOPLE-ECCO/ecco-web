@@ -50,7 +50,7 @@ export const MapSidebarControls = ({ map }: MapSidebarControlsProps) => {
                 boxShadow="sm"
                 aria-label="Map sidebar controls"
             >
-                <Collapsible.Root defaultOpen>
+                <Collapsible.Root defaultOpen={false}>
                     <Collapsible.Trigger
                         paddingY="1"
                         display="flex"
