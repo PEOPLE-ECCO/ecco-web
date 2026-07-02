@@ -654,7 +654,7 @@ export function SiteDetails() {
                             </Flex>
                         </MapAnchor> */}
                         <Box>
-                            {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 0 &&
+                            {timeseriesViewActive && selectedTimeseries && expandedResultType && viewableJobResults.length > 1 &&
                                 <Box
                                     position="absolute"
                                     bottom="135px"
@@ -664,68 +664,35 @@ export function SiteDetails() {
                                     zIndex="10"
                                     pointerEvents="auto"
                                 >
-                                    {viewableJobResults.length == 1 && (
-                                        <Slider.Root background={"#ccccccee"} padding={"5px"} border={"solid"} borderRadius={"15px"} borderColor={"#444444"}
-                                            size="lg"
-                                            colorPalette="teal"
-                                            w="90%"
-                                            step={1}
-                                            max={viewableJobResults.length - 1}
-                                            defaultValue={[0]}
-                                            onValueChangeEnd={(val) => {
-                                                console.log("onValueChangeEnd", val.value[0]!);
-                                                showSelectedJobResult(val.value[0]!, expandedResultType.opacity || 100);
-                                            }}
-                                        >
-                                            <Slider.Control>
-                                                {viewableJobResults.map((jobResult, index) => (
-                                                    <>
-                                                        <Slider.Marker zIndex="9" pt="6" key={index} value={index} w={"100%"}>
-                                                            <Circle h="3" w="3" bg="teal"></Circle>
-                                                            <Tag.Root transform="rotate(-90deg) translate(-45px);">
-                                                                <Tag.Label fontWeight={700} fontSize={"120%"} fontFamily={"monospace"}>{jobResult.phenomenonTime}</Tag.Label>
-                                                            </Tag.Root>
-                                                        </Slider.Marker>
-                                                    </>
-                                                ))}
-                                                <Slider.Track>
-                                                    <Slider.Range />
-                                                </Slider.Track>
-                                                <SliderCircle />
-                                            </Slider.Control>
-                                        </Slider.Root>
-                                    )}
-                                    {viewableJobResults.length > 1 && (
-                                        <Slider.Root background={"#ccccccee"} padding={"5px"} border={"solid"} borderRadius={"15px"} borderColor={"#444444"}
-                                            size="lg"
-                                            colorPalette="teal"
-                                            w="90%"
-                                            step={1}
-                                            max={viewableJobResults.length - 1}
-                                            defaultValue={[0]}
-                                            onValueChangeEnd={(val) => {
-                                                console.log("onValueChangeEnd", val.value[0]!);
-                                                showSelectedJobResult(val.value[0]!, expandedResultType.opacity || 100);
-                                            }}
-                                        >
-                                            <Slider.Control>
-                                                {viewableJobResults.map((jobResult, index) => (
-                                                    <>
-                                                        <Slider.Marker zIndex="9" pt="7" key={index} value={index} w={"100%"}>
-                                                            <Circle h="3" w="3" bg="teal"></Circle>
-                                                            <Tag.Root transform="rotate(-90deg) translate(-45px);">
-                                                                <Tag.Label fontWeight={700} fontSize={"120%"} fontFamily={"monospace"}>{jobResult.phenomenonTime}</Tag.Label>
-                                                            </Tag.Root>
-                                                        </Slider.Marker>
-                                                    </>
-                                                ))}
-                                                <Slider.Track bg="teal">
-                                                    <Slider.Range bg="teal" />
-                                                </Slider.Track>
-                                                <SliderCircle />
-                                            </Slider.Control>
-                                        </Slider.Root>
-                                    )}
+                                    <Slider.Root background={"#ccccccee"} padding={"5px"} border={"solid"} borderRadius={"15px"} borderColor={"#444444"}
+                                        size="lg"
+                                        colorPalette="teal"
+                                        w="90%"
+                                        step={1}
+                                        max={viewableJobResults.length - 1}
+                                        defaultValue={[0]}
+                                        onValueChangeEnd={(val) => {
+                                            console.log("onValueChangeEnd", val.value[0]!);
+                                            showSelectedJobResult(val.value[0]!, expandedResultType.opacity || 100);
+                                        }}
+                                    >
+                                        <Slider.Control>
+                                            {viewableJobResults.map((jobResult, index) => (
+                                                <>
+                                                    <Slider.Marker zIndex="9" pt="7" key={index} value={index} w={"100%"}>
+                                                        <Circle h="3" w="3" bg="teal"></Circle>
+                                                        <Tag.Root transform="rotate(-90deg) translate(-45px);">
+                                                            <Tag.Label fontWeight={700} fontSize={"120%"} fontFamily={"monospace"}>{jobResult.phenomenonTime}</Tag.Label>
+                                                        </Tag.Root>
+                                                    </Slider.Marker>
+                                                </>
+                                            ))}
+                                            <Slider.Track bg="teal">
+                                                <Slider.Range bg="teal" />
+                                            </Slider.Track>
+                                            <SliderCircle />
+                                        </Slider.Control>
+                                    </Slider.Root>
                                     {/* <TimeseriesControl
                                     Timeseries={selectedTimeseries!}
                                 /> */}
@@ -762,7 +729,6 @@ export function SiteDetails() {
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="legend">
-                                        <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
                                         <Box pt="4" h="80vh">
                                             <MapContainer
                                                 map={map}
@@ -770,8 +736,6 @@ export function SiteDetails() {
                                                 aria-label=""
                                             >
                                                 <Flex gap="4" direction="column">
-                                                    
-                                                    <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                     <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                                                         <Stack >
                                                             <Button
@@ -815,6 +779,8 @@ export function SiteDetails() {
                                                             </Collapsible.RootProvider>
                                                         </Stack>
                                                     </Box>
+                                                    <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
+                                                    <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                 </Flex>
                                             </MapContainer>
                                         </Box>
