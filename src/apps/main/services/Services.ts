@@ -145,7 +145,7 @@ export const useServices = () => {
             const prov = new LegendProvider();
 
             // TODO resolve solution somehow from timeseries
-            const result = prov.resolveLegend(outputType, SolutionNames.SAV);
+            const result = prov.resolveLegend(outputType);
             resolve(result!);
         });
     }, []);

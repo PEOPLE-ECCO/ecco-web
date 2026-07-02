@@ -86,7 +86,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                             deltaIR: TODO
                         </li>
                         <li>
-                            slope_intercet: TODO
+                            slope_intercept: TODO
                         </li>
                     </ul>
                 </Text>

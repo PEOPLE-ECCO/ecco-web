@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
-import { LegendAndDescription } from "../components/definitions";
+import { GradientStop, LegendAndDescription } from "../components/definitions";
 
 export enum SolutionNames {
     SAV = "Submerged aquatic vegetation and coral reef habitat extent",
@@ -13,46 +13,14 @@ export enum SolutionNames {
 
 export class LegendProvider {
 
-    public resolveLegend(outputType: string, solutionName: SolutionNames) {
-        let result: LegendAndDescription | undefined;
-
-        switch (solutionName) {
-            case SolutionNames.SAV:
-                // Matches: "Submerged aquatic vegetation and coral reef habitat extent"
-                result = this.resolveSAVLegend(outputType);
-                break;
-
-            case SolutionNames.MHC:
-                // Matches: "Marine habitat connectivity"
-                console.log("Processing MHC solution...");
-                break;
-
-            case SolutionNames.MHF:
-                // Matches: "Marine habitat frequency"
-                console.log("Processing MHF solution...");
-                break;
-
-            case SolutionNames.VPT:
-                // Matches: "Vegetation Productivity Trend"
-                console.log("Processing VPT solution...");
-                break;
-
-            case SolutionNames.SAO:
-                // Matches: "Shifting Agriculture Occurrence"
-                console.log("Processing SAO solution...");
-                break;
-
-            case SolutionNames.HDI:
-                // Matches: "Habitat Disturbance Index"
-                console.log("Processing HDI solution...");
-                break;
-        
-        };
+    public resolveLegend(outputType: string) {
+        let result = this.resolveSAVLegend(outputType);
 
         if (!result) {
             result = {
                 processName: outputType,
                 entries: [],
+                gradient: [],
                 description: "No legend available"
             };
         }
@@ -66,7 +34,6 @@ export class LegendProvider {
         const lowered = outputType?.trim().toLowerCase();
         switch (lowered) {
             case "openeo raw files":
-                console.log("Handling OpenEO Raw Files...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "Red", color: "red" }, { value: "Green", color: "green" }, { value: "Blue", color: "blue " }],
@@ -75,7 +42,6 @@ export class LegendProvider {
                 break;
 
             case "overall probability":
-                console.log("Handling Overall Probability...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "Water/other", color: "blue" }],
@@ -84,7 +50,6 @@ export class LegendProvider {
                 break;
 
             case "aggregated probability":
-                console.log("Handling Aggregated Probability...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "Water/other", color: "blue" }],
@@ -93,7 +58,6 @@ export class LegendProvider {
                 break;
 
             case "sav probability":
-                console.log("Handling SAV Probability...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "SAV", color: "white" }],
@@ -102,7 +66,6 @@ export class LegendProvider {
                 break;
 
             case "coral probability":
-                console.log("Handling Coral Probability...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "Corals", color: "white" }],
@@ -111,7 +74,6 @@ export class LegendProvider {
                 break;
 
             case "prediction":
-                console.log("Handling Prediction...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "Corals", color: "red" }, { value: "SAV", color: "green" }, { value: "No Data", color: "white" }],
@@ -121,7 +83,6 @@ export class LegendProvider {
 
             case "geojson-sav":
             case "geojsonsav":
-                console.log("Handling GeoJSON SAV...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "SAV patch", color: "lightcyan" }, { value: "Selected patch", color: "#8b0000" }, { value: "Neighour patch", color: "#ff0000" }],
@@ -131,15 +92,71 @@ export class LegendProvider {
 
             case "geojson-coral":
             case "geojsoncoral":
-                console.log("Handling GeoJSON Coral...");
                 result = {
                     processName: lowered,
                     entries: [{ value: "Coral patch", color: "lightcyan" }, { value: "Selected patch", color: "#8b0000" }, { value: "Neighour patch", color: "#ff0000" }],
                     description: "Patches of Coral classification, including information on topology. Selecting a patch also marks its neighbours."
                 };
                 break;
-        }
+            case "bap":
+                result = {
+                    processName: lowered,
+                    entries: [],
+                    gradient: [
+                        { value: -1.5, color: "rgb(247, 252, 245)" },
+                        { value: -0.75, color: "rgb(199, 233, 192)" },
+                        { value: 0, color: "rgb(116, 196, 118)" },
+                        { value: 0.75, color: "rgb(35, 139, 69)" },
+                        { value: 1.5, color: "rgb(0, 90, 50)" }
+                    ],
+                    description: "Lighter greens indicate lower values, darker greens higher ones; intermediate colors are interpolated."
+                };
+                break;
 
+            case "seasonal sen slope - percent_change":
+                result = {
+                    processName: lowered,
+                    entries: [],
+                    gradient: [
+                        { value: -100, color: "rgb(215, 25, 28)" },
+                        { value: -50, color: "rgb(253, 174, 97)" },
+                        { value: 0, color: "rgb(255, 255, 191)" },
+                        { value: 50, color: "rgb(166, 217, 106)" },
+                        { value: 100, color: "rgb(26, 150, 65)" }
+                    ],
+                    description: "Red indicates negative change, greens positive change; intermediate colors are interpolated."
+                };
+                break;
+
+            case "seasonal sen slope - deltair":
+                result = {
+                    processName: lowered,
+                    entries: [],
+                    gradient: [
+                        { value: -0.5, color: "rgb(215, 25, 28)" },
+                        { value: -0.25, color: "rgb(253, 174, 97)" },
+                        { value: 0, color: "rgb(255, 255, 191)" },
+                        { value: 0.25, color: "rgb(166, 217, 106)" },
+                        { value: 0.5, color: "rgb(26, 150, 65)" }
+                    ],
+                    description: "Red indicates negative values, greens positive values; intermediate colors are interpolated."
+                };
+                break;
+            case "seasonal sen slope - r80p":
+                result = {
+                    processName: lowered,
+                    entries: [],
+                    gradient: [
+                        { value: -1.5, color: "rgb(215, 25, 28)" },
+                        { value: -0.75, color: "rgb(253, 174, 97)" },
+                        { value: 0, color: "rgb(255, 255, 191)" },
+                        { value: 0.75, color: "rgb(166, 217, 106)" },
+                        { value: 1.5, color: "rgb(26, 150, 65)" }
+                    ],
+                    description: "Red indicates negative change, greens positive change; intermediate colors are interpolated."
+                };
+                break;
+        }
         return result;
     }
 

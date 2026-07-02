@@ -535,8 +535,19 @@ export interface LegendElement {
     color: string
 }
 
+export interface GradientStop {
+    /** Numeric position of this stop on the scale, e.g. -1.5, 0, 1.5 */
+    value: number
+    /** Color at this stop, any valid CSS color */
+    color: string
+    /** Optional axis label; falls back to the stringified value */
+    label?: string
+}
+
 export interface LegendAndDescription {
     processName: string;
     entries: LegendElement[];
+    /** Present for continuous color scales; rendered as an interpolated gradient bar. */
+    gradient?: GradientStop[];
     description: string;
 }
