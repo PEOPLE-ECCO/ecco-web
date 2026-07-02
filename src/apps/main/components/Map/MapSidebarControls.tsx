@@ -59,6 +59,7 @@ export const MapSidebarControls = ({ map }: MapSidebarControlsProps) => {
                     >
                         <IconButton variant="plain" w="100%" p="4" size="sm">
                             <LuMap />
+                            Map Configuration
                             <Collapsible.Indicator
                                 transition="transform 0.2s"
                                 _open={{ transform: "rotate(180deg)" }}

@@ -124,7 +124,7 @@ export class LegendProvider {
                         { value: 50, color: "rgb(166, 217, 106)" },
                         { value: 100, color: "rgb(26, 150, 65)" }
                     ],
-                    description: "Red indicates negative change, greens positive change; intermediate colors are interpolated."
+                    description: "*intermediate colors are interpolated."
                 };
                 break;
 
@@ -139,7 +139,7 @@ export class LegendProvider {
                         { value: 0.25, color: "rgb(166, 217, 106)" },
                         { value: 0.5, color: "rgb(26, 150, 65)" }
                     ],
-                    description: "Red indicates negative values, greens positive values; intermediate colors are interpolated."
+                    description: "*intermediate colors are interpolated."
                 };
                 break;
             case "seasonal sen slope - r80p":
@@ -153,7 +153,7 @@ export class LegendProvider {
                         { value: 0.75, color: "rgb(166, 217, 106)" },
                         { value: 1.5, color: "rgb(26, 150, 65)" }
                     ],
-                    description: "Red indicates negative change, greens positive change; intermediate colors are interpolated."
+                    description: "*intermediate colors are interpolated."
                 };
                 break;
         }

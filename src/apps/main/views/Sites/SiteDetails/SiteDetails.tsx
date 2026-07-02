@@ -357,8 +357,6 @@ export function SiteDetails() {
         if (layerCandidates && layerCandidates.length > 0) {
             (layerCandidates[0] as SimpleLayer).olLayer.setVisible(true);
             (layerCandidates[0] as SimpleLayer).olLayer.setOpacity(opacity / 100);
-
-            console.log(`FOUND THE LAYER: ${layerUniqueId} ${opacity}`);
             //quick return
             return;
         }
@@ -728,23 +726,16 @@ export function SiteDetails() {
                                 <Tabs.Root defaultValue="legend" colorPalette="teal">
                                     <Tabs.List>
                                         <Tabs.Trigger value="legend">
-                                            <LuMap />
-                                            Legend
-                                        </Tabs.Trigger>
-                                        <Tabs.Trigger value="tools">
                                             <LuRuler />
-                                            Tools
+                                            Tools & Configuration
                                         </Tabs.Trigger>
                                         <Tabs.Trigger value="info">
                                             <LuDatabase />
-                                            Info
+                                            Metadata
                                         </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="legend">
                                         <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="tools">
-                                        Use Map Tools
                                         <Box pt="4" h="80vh">
                                             <MapContainer
                                                 map={map}
@@ -777,9 +768,8 @@ export function SiteDetails() {
                                         </Box>
                                     </Tabs.Content>
                                     <Tabs.Content value="info">
-                                        View Data and Values
                                         <Box pt="4" h="80vh">
-                                            Table with Pixelvalues, Metadata, ...
+                                            
                                         </Box>
                                     </Tabs.Content>
                                 </Tabs.Root>
