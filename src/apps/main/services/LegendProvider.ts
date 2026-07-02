@@ -109,7 +109,7 @@ export class LegendProvider {
                         { value: 0.75, color: "rgb(35, 139, 69)" },
                         { value: 1.5, color: "rgb(0, 90, 50)" }
                     ],
-                    description: "Lighter greens indicate lower values, darker greens higher ones; intermediate colors are interpolated."
+                    description: "*intermediate colors are interpolated."
                 };
                 break;
 
