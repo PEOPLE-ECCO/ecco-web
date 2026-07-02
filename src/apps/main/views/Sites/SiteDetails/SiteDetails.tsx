@@ -20,7 +20,7 @@ import {
 
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft, LuMapPinned } from "react-icons/lu";
+import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft, LuMapPinned, LuCrosshair } from "react-icons/lu";
 
 import { MapRegistry, MapContainer, SimpleLayer, MapAnchor, MapModel } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
@@ -43,6 +43,7 @@ import { Site } from "../Site/Site";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
+import { PixelInspector } from "../../../components/Map/PixelInspector";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
 import { JobResult, SpatialExtent, Timeseries } from "../../../components/definitions";
@@ -106,6 +107,7 @@ export function SiteDetails() {
     const geojson = new Projection({ code: "EPSG:4326" });
 
     const collapsible = useCollapsible();
+    const pixelInspectorCollapsible = useCollapsible();
     const navigate = useNavigate();
 
     const emitter = new EventEmitter<Events>();
@@ -134,10 +136,14 @@ export function SiteDetails() {
         init().then(() => {
             fetchTimeseries();
             fetchScenario();
+            setInfoViewOpen(true);
         });
     }, []);
 
     useEffect(() => {
+        // Stop pixel inspection when the timeseries changes: the markers were sampled
+        // against the previous timeseries' layers and are no longer meaningful.
+        pixelInspectorCollapsible.setOpen(false);
         if (!selectedTimeseries) {
             remove_current_item();
         }
@@ -743,6 +749,7 @@ export function SiteDetails() {
                                                 aria-label=""
                                             >
                                                 <Flex gap="4" direction="column">
+                                                    
                                                     <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                     <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
                                                         <Stack >
@@ -751,13 +758,37 @@ export function SiteDetails() {
                                                                 onClick={() => collapsible.setOpen(!collapsible.open)}
                                                             >
                                                                 <LuRuler />
-                                                                {collapsible.open ? <Text>End measurement</Text> : <Text>Start measurement</Text>}
+                                                                {collapsible.open ? <Text>Exit Measurement Mode</Text> : <Text>Measurement Mode</Text>}
                                                                 <Icon>{collapsible.open ? <LuChevronUp /> : <LuChevronDown />}</Icon>
                                                             </Button>
                                                             <Collapsible.RootProvider value={collapsible}>
                                                                 <Collapsible.Content>
                                                                     {collapsible.open &&
                                                                         <Measurement map={map} activeFeatureStyle={RED_STYLE} finishedFeatureStyle={BLACK_STYLE} />
+                                                                    }
+                                                                </Collapsible.Content>
+                                                            </Collapsible.RootProvider>
+                                                            <Tooltip
+                                                                content="Select a timeseries to inspect its pixel values"
+                                                                disabled={!!selectedTimeseries}
+                                                            >
+                                                                <Box as="span" w="100%">
+                                                                    <Button
+                                                                        size="md"
+                                                                        w="100%"
+                                                                        disabled={!selectedTimeseries}
+                                                                        onClick={() => pixelInspectorCollapsible.setOpen(!pixelInspectorCollapsible.open)}
+                                                                    >
+                                                                        <LuCrosshair />
+                                                                        {pixelInspectorCollapsible.open ? <Text>Exit Inspection Mode</Text> : <Text>Inspection Mode</Text>}
+                                                                        <Icon>{pixelInspectorCollapsible.open ? <LuChevronUp /> : <LuChevronDown />}</Icon>
+                                                                    </Button>
+                                                                </Box>
+                                                            </Tooltip>
+                                                            <Collapsible.RootProvider value={pixelInspectorCollapsible}>
+                                                                <Collapsible.Content>
+                                                                    {pixelInspectorCollapsible.open && map &&
+                                                                        <PixelInspector map={map} />
                                                                     }
                                                                 </Collapsible.Content>
                                                             </Collapsible.RootProvider>
@@ -769,7 +800,7 @@ export function SiteDetails() {
                                     </Tabs.Content>
                                     <Tabs.Content value="info">
                                         <Box pt="4" h="80vh">
-                                            
+                                            No metadata available
                                         </Box>
                                     </Tabs.Content>
                                 </Tabs.Root>
