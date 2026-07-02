@@ -509,6 +509,8 @@ export function SiteDetails() {
                     },
                 ],
             });
+
+            console.log(jobResult);
             //TODO: this is really really bad
             const style = JSON.parse(jobResult.style);
 

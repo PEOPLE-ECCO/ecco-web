@@ -286,45 +286,33 @@ export function ViewDetails({ timeseries }: ViewDetailsProps) {
     if (timeseries === undefined) {
         return <></>;
     }
-    const props = Object.getOwnPropertyNames(Object.getPrototypeOf(timeseries)).filter(o => "constructor" !== o);
-    /* eslint-disable react/prop-types */
-    const tabledata = props.filter((p: string) => p !== "jobs").map((p: string) => {
-        // Cast the string to a valid type-safe key index
-        const key = p as keyof typeof timeseries;
-        
-        // Grab the reference from the instance
-        const valueOrFunction = timeseries[key];
-        let evaluatedValue: string;
 
-        if (typeof valueOrFunction === "function") {
-            const executableMethod = valueOrFunction as () => unknown;
-        
-            const tmp = executableMethod.call(timeseries);
-            if (typeof(tmp) === "object") {
-                evaluatedValue = JSON.stringify(tmp);
-            } else {
-                evaluatedValue = String(tmp);
-            }
-        } else {
-            if (typeof(valueOrFunction) === "object") {
-                evaluatedValue = JSON.stringify(valueOrFunction);
-            } else {
-                evaluatedValue = String(valueOrFunction);
-            }
-        }
+    // Fields of the Timeseries to show in the details table. `jobs` is handled
+    // separately below since it needs custom formatting.
+    const fields: (keyof Timeseries)[] = [
+        "id",
+        "scenario_id",
+        "name",
+        "description",
+        "extent",
+        "bbox",
+        "geometry",
+        "process",
+        "process_parameters"
+    ];
 
-        return {
-            key: p,
-            value: evaluatedValue
-        };
-    });
+    const stringify = (value: unknown): string =>
+        typeof value === "object" && value !== null ? JSON.stringify(value) : String(value);
 
-    const l = timeseries.jobs?.length || 0;
-    const jobStrings = [];
-    for (let i = 0; i < l; i++) {
-        const element = timeseries.jobs?.get(i);
-        jobStrings.push(element?.toString());
-    }
+    const tabledata = fields.map((key) => ({
+        key,
+        value: stringify(timeseries[key])
+    }));
+
+    const jobStrings = Array.from(
+        { length: timeseries.jobs?.length ?? 0 },
+        (_, i) => timeseries.jobs?.get(i)?.toString()
+    );
     tabledata.push({
         key: "jobs",
         value: `[\n${jobStrings.join(",\n")}\n]`
