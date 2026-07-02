@@ -33,29 +33,40 @@ type OutputMetric = (typeof OUTPUT_METRIC_OPTIONS)[number];
 export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps) {
     const referenceAreaOptions = process.parameters.preprocess?.reference_bap ?? [];
     const restorationSiteOptions = process.parameters.preprocess?.restoration_bap ?? [];
-    const [outputMetric, setOutputMetric] = useState<OutputMetric | undefined>();
+    const [outputMetrics, setOutputMetrics] = useState<OutputMetric[]>([]);
     const [referenceAreaId, setReferenceAreaId] = useState<number | undefined>();
     const [restorationSiteId, setRestorationSiteId] = useState<number | undefined>();
 
-    // The reference area is only relevant (and required) for the R80P metric.
-    const referenceAreaRequired = outputMetric === "R80P";
+    const hasMetrics = outputMetrics.length > 0;
 
-    // The restoration site is always mandatory. The reference area is only
-    // required when the R80P metric is selected.
+    // The reference area is only relevant (and required) when the R80P metric is
+    // among the selected metrics.
+    const referenceAreaRequired = outputMetrics.includes("R80P");
+
+    const toggleMetric = (metric: OutputMetric) => {
+        setOutputMetrics((prev) =>
+            prev.includes(metric) ? prev.filter((m) => m !== metric) : [...prev, metric]
+        );
+    };
+
+    // The restoration site is always mandatory and shared across all selected
+    // metrics. The reference area is only required when the R80P metric is
+    // selected, and is likewise shared.
     useEffect(() => {
         onChange({
             params: {
-                output_metric: outputMetric,
+                output_metrics: outputMetrics,
                 reference_area_id: referenceAreaRequired ? referenceAreaId : undefined,
                 restoration_site_id: restorationSiteId,
+                expandable: false
             },
             valid:
-                outputMetric != null &&
+                hasMetrics &&
                 restorationSiteId != null &&
                 (!referenceAreaRequired || referenceAreaId != null),
             timespan: DEFAULT_TIMESPAN,
         });
-    }, [outputMetric, referenceAreaRequired, referenceAreaId, restorationSiteId, onChange]);
+    }, [outputMetrics, hasMetrics, referenceAreaRequired, referenceAreaId, restorationSiteId, onChange]);
 
     return (
         <Stack pt="4" gap="5" maxW="lg">
@@ -81,31 +92,33 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                 </Text>
             </Box>
 
-            {/* Step 1: choose the output metric. */}
+            {/* Step 1: choose one or more output metrics. */}
             <Field.Root required>
                 <Field.Label>
-                    Output Metric <Field.RequiredIndicator />
-                    <Tooltip content="Dummy help: the metric to compute for this time series." showArrow>
+                    Output Metrics <Field.RequiredIndicator />
+                    <Tooltip content="Dummy help: the metrics to compute for this time series. All selected metrics share the same restoration site (and reference area, if R80P is included)." showArrow>
                         <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                     </Tooltip>
                 </Field.Label>
-                <select
-                    value={outputMetric ?? ""}
-                    style={selectStyle}
-                    onChange={(e) => {
-                        const value = e.target.value;
-                        setOutputMetric(value === "" ? undefined : (value as OutputMetric));
-                    }}
-                >
-                    <option value="" disabled>Select an output metric</option>
+                <Stack gap="1">
                     {OUTPUT_METRIC_OPTIONS.map((metric) => (
-                        <option key={metric} value={metric}>{metric}</option>
+                        <label
+                            key={metric}
+                            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={outputMetrics.includes(metric)}
+                                onChange={() => toggleMetric(metric)}
+                            />
+                            <Text fontSize="sm">{metric}</Text>
+                        </label>
                     ))}
-                </select>
+                </Stack>
             </Field.Root>
 
-            {/* Step 2: only shown once an output metric is chosen. */}
-            {outputMetric != null && (
+            {/* Step 2: only shown once at least one output metric is chosen. */}
+            {hasMetrics && (
                 <HStack gap="4" align="flex-end">
                     {referenceAreaRequired && (
                         <Field.Root required>
