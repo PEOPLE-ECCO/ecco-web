@@ -20,7 +20,7 @@ import {
 
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { LuInfo, LuFolderTree, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft, LuMapPinned, LuCrosshair } from "react-icons/lu";
+import { LuInfo, LuMap, LuRuler, LuDatabase, LuChevronDown, LuChevronUp, LuArrowBigLeft, LuMapPinned, LuCrosshair } from "react-icons/lu";
 
 import { MapRegistry, MapContainer, SimpleLayer, MapAnchor, MapModel } from "@open-pioneer/map";
 import { EventEmitter } from "@open-pioneer/core";
@@ -146,6 +146,9 @@ export function SiteDetails() {
         pixelInspectorCollapsible.setOpen(false);
         if (!selectedTimeseries) {
             remove_current_item();
+            // No timeseries selected: clear its dashed bbox and show the scenario extent again.
+            clearTimeseriesExtent();
+            setSiteExtentVisible(true);
         }
         if (selectedTimeseries) {
             // Extent and EPSG should be from TS data later
@@ -275,9 +278,27 @@ export function SiteDetails() {
         }
     };
 
+    function setSiteExtentVisible(visible: boolean) {
+        if (!map) return;
+        const siteLayer = map.olMap.getAllLayers()
+            .find(layer => layer instanceof Layer && layer.get("id") === "site-details-overlay-layer") as Layer | undefined;
+        siteLayer?.setVisible(visible);
+    }
+
+    function clearTimeseriesExtent() {
+        if (!map) return;
+        const tsLayer = map.olMap.getAllLayers()
+            .find(layer => layer instanceof Layer && layer.get("id") === "timeseries-details-overlay-layer") as Layer | undefined;
+        (tsLayer?.getSource() as VectorSource | undefined)?.clear();
+    }
+
     async function ZoomToTimeseriesExtent(extent: SpatialExtent | undefined) {
         // There might be no extent (when no job has run yet)
         if (map && extent) {
+            // Only one dashed bbox should be visible at a time: hide the scenario
+            // extent while a timeseries extent is shown.
+            setSiteExtentVisible(false);
+
             map.zoom(
                 [
                     new Point([extent.bbox[0]!, extent.bbox[1]!]),
