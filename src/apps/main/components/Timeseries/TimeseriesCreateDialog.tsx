@@ -269,7 +269,6 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const { createTimeseries, createJob, getProcesses } = useServices();
-    const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
     const [expandDialogClosed, setExpandDialogClosed] = useState<boolean>(false);
     const notificationService = useService<NotificationService>("notifier.NotificationService");
     const [extentValid, setExtentValid] = useState<boolean>(true);
@@ -385,43 +384,42 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     };
 
 
-    useEffect(() => {
-        if (name != "" && description != "") {
-            setNextButtonDisabled(false);
-        }
-        else {
-            setNextButtonDisabled(true);
-        }
-    }, [name, description]);
-
     // The timespan drives the job Create auto-starts, so both dates are required.
     // It is only collected for processes without a dedicated widget; widget-based
     // processes encode their own time range in their params.
     const timespanStepValid = hasWidget || (startDate != null && endDate != null);
+
+    // Data input step (index 0) requires both text fields.
+    const dataStepValid = name != "" && description != "";
 
     // Process step (index 1) requires a selected process whose parameter widget
     // (if any) reports its current selection as valid, plus a complete timespan
     // (the timespan picker lives in this step for processes without a widget).
     const processStepValid = value.length > 0 && paramsValid && timespanStepValid;
 
-    useEffect(() => {
-        if (step == 1) {
-            setNextButtonDisabled(!processStepValid);
-        }
-        // Extentless processes have no draw control to validate against, so the
-        // step is always passable and no extent is persisted.
-        if (step == 2 && extentless) {
-            setExtent(undefined);
-            setNextButtonDisabled(false);
-        }
-    }, [step]);
+    // Extent step (index 2): a valid drawn extent is required in both branches.
+    // Extentless (reference-area) processes draw an extent that must lie inside
+    // the restoration site (see ReferenceAreaMapPreview); the others draw a free
+    // extent validated by size (see checkExtent).
+    const extentStepValid = extent != null && extentValid;
 
+    // Whether the "Next" button is enabled for the current step. Derived directly
+    // from the relevant state rather than mirrored into a separate state via
+    // effects — the latter left the button stale on step entry (it only refreshed
+    // once the user nudged a field such as the year).
+    const nextButtonDisabled =
+        step == 0 ? !dataStepValid
+        : step == 1 ? !processStepValid
+        : step == 2 ? !extentStepValid
+        : false;
 
+    // Reset the drawn extent when the process changes: extentless and free-draw
+    // processes validate their extent differently, so an extent drawn under one
+    // must not carry over to the other.
     useEffect(() => {
-        if (step == 1) {
-            setNextButtonDisabled(!processStepValid);
-        }
-    }, [value, selectedProcess, paramsValid, startDate, endDate]);
+        setExtent(undefined);
+        setExtentValid(false);
+    }, [selectedProcess]);
 
     // Reset parameters when the process changes. A widget (if the process has one)
     // re-reports its own params/validity on mount; processes without a widget have
@@ -560,7 +558,11 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                 ? <ReferenceAreaMapPreview
                     referenceAreaId={referenceAreaId}
                     restorationSiteId={restorationSiteId}
-                    isVisible={step == 2} />
+                    isVisible={step == 2}
+                    onExtentChange={(ext, valid) => {
+                        setExtentValid(valid);
+                        setExtent(valid ? ext : undefined);
+                    }} />
                 : <ExtentSelection
                     initialExtent={scenario.bbox}
                     isVisible={step == 2}
@@ -570,12 +572,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                         if (checkExtent(ext)) {
                             setExtentValid(true);
                             setExtent(ext);
-                            setNextButtonDisabled(!ext);
                         } else {
                             console.log("Extent not valid");
                             setExtentValid(false);
                             setExtent(undefined);
-                            setNextButtonDisabled(true);
                         }
                     }} />,
         },
@@ -606,6 +606,14 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                 <Table.Cell>{Array.isArray(v) ? v.join(", ") : String(v)}</Table.Cell>
                             </Table.Row>
                         ))}
+                        {extent &&
+                            <Table.Row key="extent">
+                                <Table.Cell>extent (bbox)</Table.Cell>
+                                <Table.Cell>
+                                    {extent.bbox.map((c) => c.toFixed(4)).join(", ")}
+                                </Table.Cell>
+                            </Table.Row>
+                        }
                         <Table.Row key="start_date">
                             <Table.Cell>start date</Table.Cell>
                             <Table.Cell>{startDate?.toLocaleDateString()}</Table.Cell>
@@ -687,8 +695,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                             <Button
                                                 color="black"
                                                 border="1px solid #2C7D75"
-                                                _hover={{ bg: "teal.50" }}
-                                                onClick={() => { setNextButtonDisabled(false); }}>
+                                                _hover={{ bg: "teal.50" }}>
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
@@ -698,8 +705,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                                     color="black"
                                                     border="1px solid #2C7D75"
                                                     _hover={{ bg: "teal.50" }}
-                                                    disabled={nextButtonDisabled}
-                                                    onClick={() => { setNextButtonDisabled(true); }}>
+                                                    disabled={nextButtonDisabled}>
                                                     Next
                                                 </Button>
                                             </Steps.NextTrigger>
