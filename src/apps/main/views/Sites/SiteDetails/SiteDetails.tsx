@@ -44,6 +44,7 @@ import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
 import { AdditionalLayersControl } from "../../../components/Map/AdditionalLayersControl";
+import { DownloadControl } from "../../../components/Map/DownloadControl";
 import { PixelInspector } from "../../../components/Map/PixelInspector";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
@@ -795,6 +796,7 @@ export function SiteDetails() {
                                                     </Box>
                                                     <AdditionalLayersControl map={map} />
                                                     <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
+                                                    <DownloadControl />
                                                     <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                 </Flex>
                                             </MapContainer>
