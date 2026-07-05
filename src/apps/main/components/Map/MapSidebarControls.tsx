@@ -3,24 +3,19 @@
 
 import {
     Box,
-    Button,
     Collapsible,
     Field,
-    HStack,
     IconButton,
     Separator,
-    Spacer,
-    Stack,
-    Text,
-    VStack
+    Text
 } from "@chakra-ui/react";
 import { OverviewMap } from "@open-pioneer/overview-map";
 import { BasemapSwitcher } from "@open-pioneer/basemap-switcher";
-import { MapAnchor, MapAnchorPosition, MapModel } from "@open-pioneer/map";
+import { MapAnchorPosition, MapModel } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { LuChevronDown, LuMap } from "react-icons/lu";
 
 interface MapSidebarControlsProps {

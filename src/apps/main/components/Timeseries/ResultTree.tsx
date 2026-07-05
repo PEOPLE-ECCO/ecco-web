@@ -83,7 +83,8 @@ export function ResultTree({ map, timeseries, eventListener }: ResultTreeProps) 
 
         if (resultType === expandedResultType) {
             const layerUniqueId = `TSLAYER_${timeseries?.name}_${expandedResultType}`;
-            const candidates = map?.layers.getLayers().filter(l => l.id.startsWith(layerUniqueId));
+            // timeseries layers are marked internal, so they must be included explicitly.
+            const candidates = map?.layers.getLayers({ includeInternalLayers: true }).filter(l => l.id.startsWith(layerUniqueId));
             if (candidates && candidates.length > 0) {
                 candidates.forEach(c => {
                     c.olLayer.setOpacity(value / 100);

@@ -43,6 +43,7 @@ import { Site } from "../Site/Site";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
 import { MapSidebarControls } from "../../../components/Map/MapSidebarControls";
+import { AdditionalLayersControl } from "../../../components/Map/AdditionalLayersControl";
 import { PixelInspector } from "../../../components/Map/PixelInspector";
 import { TimeseriesItem } from "../../../components/Timeseries/Timeseries";
 import { SliderCircle } from "../../../components/Slider/SliderCircle";
@@ -377,8 +378,9 @@ export function SiteDetails() {
         const layerUniqueId = `TSLAYER_${selectedTimeseries?.name}_${jobResult.type}_${jobResult.phenomenonTime}`;
         setVisibleLayerState(layerUniqueId);
 
-        // search all OL layers, it might have been created already
-        const layerCandidates = map?.layers?.getLayers().filter(l => {
+        // search all OL layers, it might have been created already.
+        // timeseries layers are marked internal, so they must be included explicitly.
+        const layerCandidates = map?.layers?.getLayers({ includeInternalLayers: true }).filter(l => {
             return l.id === layerUniqueId;
         });
         if (layerCandidates && layerCandidates.length > 0) {
@@ -424,12 +426,16 @@ export function SiteDetails() {
             const layer = new SimpleLayer({
                 id: layerUniqueId,
                 title: layerUniqueId,
+                // dynamic timeseries result layers are managed elsewhere and
+                // should not clutter the TOC layer list
+                internal: true,
                 olLayer: vectorLayer,
             });
 
-            // 4. Set opacity and add to the map
+            // 4. Set opacity and add to the map. "topmost" keeps timeseries
+            // results above the additional COG overlays (see raster branch).
             layer.olLayer.setOpacity(opacity / 100);
-            map.layers.addLayer(layer);
+            map.layers.addLayer(layer, { at: "topmost" });
 
             // 2. Set up the Popup HTML and Overlay
             const popupContainer = document.createElement("div");
@@ -518,13 +524,19 @@ export function SiteDetails() {
             const layer = new SimpleLayer({
                 id: layerUniqueId,
                 title: layerUniqueId,
+                // dynamic timeseries result layers are managed elsewhere and
+                // should not clutter the TOC layer list
+                internal: true,
                 olLayer: new TileLayer({
                     source: image,
                     style: style,
                 }),
             });
             layer.olLayer.setOpacity(opacity / 100);
-            map.layers.addLayer(layer);
+            // "topmost" keeps timeseries results above the additional COG
+            // overlays regardless of insertion order (Open Pioneer manages the
+            // z-index itself, so a zIndex on the olLayer would be overwritten).
+            map.layers.addLayer(layer, { at: "topmost" });
         
 
         }
@@ -781,6 +793,7 @@ export function SiteDetails() {
                                                             </Collapsible.RootProvider>
                                                         </Stack>
                                                     </Box>
+                                                    <AdditionalLayersControl map={map} />
                                                     <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
                                                     <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                 </Flex>
