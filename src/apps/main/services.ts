@@ -32,7 +32,7 @@ import { MapConfig, MapConfigProvider, SimpleLayer } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import WebGLTileLayer from "ol/layer/WebGLTile.js";
 import OSM from "ol/source/OSM";
-import { GeoTIFF } from "ol/source";
+import { GeoTIFF, XYZ } from "ol/source";
 import WMTS, { optionsFromCapabilities } from "ol/source/WMTS.js";
 import WMTSCapabilities from "ol/format/WMTSCapabilities.js";
 
@@ -355,6 +355,18 @@ export class MainMapProvider implements MapConfigProvider {
             projection: "EPSG:3857",
             layers: [
                 new SimpleLayer({
+                    title: "МИНИСТЕРСТВО НА РЕГИОНАЛНОТО РАЗВИТИЕ И БЛАГОУСТРОЙСТВОТО",
+                    olLayer: new TileLayer({
+
+                        source: new XYZ({
+                            // Replace this with your actual server URL
+                            url: "http://85.14.37.51/tiles/aero_3857/{z}/{x}/{y}.png",
+                        }),
+                        properties: { title: "Bulgaria" }
+                    }),
+                    isBaseLayer: true
+                }),
+                new SimpleLayer({
                     title: "OpenStreetMap",
                     olLayer: new TileLayer({
                         source: new OSM(),
@@ -363,9 +375,8 @@ export class MainMapProvider implements MapConfigProvider {
                     isBaseLayer: true
                 }),
 
-
                 new SimpleLayer({
-                    title: "SatelliteImage",
+                    title: "ESRIImage",
                     olLayer: new TileLayer({
                         opacity: 1,
                         source: new WMTS(options!),
