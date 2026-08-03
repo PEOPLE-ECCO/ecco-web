@@ -20,13 +20,7 @@ import {
 } from "@chakra-ui/react";
 import { Ellipsis } from "lucide-react";
 import { FiMoreVertical } from "react-icons/fi"; // Vertical ellipsis icon
-
-export interface Site {
-    preview_image: string;
-    description: string;
-    id: number;
-    name: string;
-}
+import { Site } from "../../views/Sites/Site/Site";
 
 export const Dataset = (site: Site) => {
 
@@ -35,7 +29,7 @@ export const Dataset = (site: Site) => {
             key={site.id}
             cursor="pointer"
             _hover={{
-                bg: "#abebc6", // light green
+                bg: "teal.50", // light teal
                 transform: "scale(1.02)",
                 transition: "all 0.2s ease-in-out"
             }}

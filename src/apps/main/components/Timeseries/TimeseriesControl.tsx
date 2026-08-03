@@ -3,31 +3,23 @@
 
 import { Card, Flex, HStack } from "@chakra-ui/react";
 import { TimeseriesIcons } from "./TimeseriesIcons";
-import { TimeseriesActions } from "./TimeseriesActions";
-import { Asset } from "../definitions";
+import { Timeseries } from "../definitions";
 
 interface TimeseriesControlProps {
-    asset: Asset;
-    onDownloadCurrent: () => void;
+    Timeseries: Timeseries;
 }
 
-export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesControlProps) {
-
+export function TimeseriesControl({ Timeseries }: TimeseriesControlProps) {
     return (
         <Card.Root marginTop="2%" w="100%">
-            {asset &&
+            {Timeseries &&
                 <>
                     <Card.Header paddingBottom="2" paddingX="5" paddingTop="2">
-                        {asset.title}
+                        Timeseries Info
                     </Card.Header>
                     <Card.Body>
                         <HStack>
                             <Flex justify="space-between" align="center">
-                                Type: {asset.type}
-                                <br></br>
-                                proj:epsg: {asset["proj:epsg"]}
-                                <br></br>
-                                proj:bbox: {asset["proj:bbox"][0]} {asset["proj:bbox"][1]} {asset["proj:bbox"][2]} {asset["proj:bbox"][3]}
                                 <br></br>
                                 <TimeseriesIcons
                                     onDocumentClick={() => console.log("Document clicked")}
@@ -35,11 +27,6 @@ export function TimeseriesControl({ asset, onDownloadCurrent }: TimeseriesContro
                                     onLocateClick={() => console.log("Locate clicked")}
                                 />
                             </Flex>
-                            <TimeseriesActions
-                                onDownloadAll={() => console.log("Downloading all")}
-                                onDownloadCurrent={onDownloadCurrent}
-                                onExecute={() => console.log("Executing")}
-                            />
                         </HStack>
                     </Card.Body>
                 </>

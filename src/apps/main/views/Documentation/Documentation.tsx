@@ -8,14 +8,20 @@ import { Box, GridItem } from "@chakra-ui/react";
 export const Documentation: FC = () => {
     return (
         <>
-            <GridItem colSpan={12} rowSpan={8} borderWidth="1px" margin="1%" padding="1%">
+            <object
+                data="https://files.specki.xyz/hdZCjTNh/PEOPLE-ECCO%20-%20D4.1%20-%20Technical%20Specifications%20V0.2.docx.pdf"
+                type="application/pdf"
+                width="100%"
+                height="800"
+            />
+            {/* <GridItem colSpan={12} rowSpan={8} borderWidth="1px" margin="1%" padding="1%">
                 <Box borderWidth="1px">
                     <div id="header">
-                        <h1><span className="image"><img src="./images/arc42-logo.png" alt="arc42"/></span> Template</h1>
+                        <h1><span className="image"><img src="./images/arc42-logo.png" alt="arc42" /></span> Template</h1>
                         <div className="details">
                             <span id="revnumber">version 8.2 EN,</span>
                             <span id="revdate">January 2023</span>
-                            <br/><span id="revremark">(based upon AsciiDoc version)</span>
+                            <br /><span id="revremark">(based upon AsciiDoc version)</span>
                         </div>
                         <div id="toc" className="toc">
                             <div id="toctitle">Table of Contents</div>
@@ -89,10 +95,10 @@ export const Documentation: FC = () => {
                                 </div>
                                 <div className="paragraph">
                                     <p>Created, maintained and &#169; by Dr. Peter Hruschka, Dr. Gernot Starke and contributors.
-        See <a href="https://arc42.org" className="bare">https://arc42.org</a>.</p>
+                                        See <a href="https://arc42.org" className="bare">https://arc42.org</a>.</p>
                                 </div>
-                                <hr/>
-                                <div style={{pageBreakAfter: "always"}}></div>
+                                <hr />
+                                <div style={{ pageBreakAfter: "always" }}></div>
                             </div>
                         </div>
                         <div className="sect1">
@@ -110,9 +116,9 @@ export const Documentation: FC = () => {
                                     <h3 id="_stakeholders">1.3. Stakeholders</h3>
                                     <table className="tableblock frame-all grid-all stretch">
                                         <colgroup>
-                                            <col style={{width: "20%"}}/>
-                                            <col style={{width: "40%"}}/>
-                                            <col style={{width: "40%"}}/>
+                                            <col style={{ width: "20%" }} />
+                                            <col style={{ width: "40%" }} />
+                                            <col style={{ width: "40%" }} />
                                         </colgroup>
                                         <thead>
                                             <tr>
@@ -134,14 +140,14 @@ export const Documentation: FC = () => {
                                             </tr>
                                         </tbody>
                                     </table>
-                                    <div style={{pageBreakAfter: "always"}}></div>
+                                    <div style={{ pageBreakAfter: "always" }}></div>
                                 </div>
                             </div>
                         </div>
                         <div className="sect1">
                             <h2 id="section-architecture-constraints">2. Architecture Constraints</h2>
                             <div className="sectionbody">
-                                <div style={{pageBreakAfter: "always"}}></div>
+                                <div style={{ pageBreakAfter: "always" }}></div>
                             </div>
                         </div>
                         <div className="sect1">
@@ -167,14 +173,14 @@ export const Documentation: FC = () => {
                                     <div className="paragraph">
                                         <p><strong>&lt;Mapping Input/Output to Channels&gt;</strong></p>
                                     </div>
-                                    <div style={{pageBreakAfter: "always"}}></div>
+                                    <div style={{ pageBreakAfter: "always" }}></div>
                                 </div>
                             </div>
                         </div>
                         <div className="sect1">
                             <h2 id="section-solution-strategy">4. Solution Strategy</h2>
                             <div className="sectionbody">
-                                <div style={{pageBreakAfter: "always"}}></div>
+                                <div style={{ pageBreakAfter: "always" }}></div>
                             </div>
                         </div>
                         <div className="sect1">
@@ -288,7 +294,7 @@ export const Documentation: FC = () => {
                                         <div className="paragraph">
                                             <p><em>&lt;white box template&gt;</em></p>
                                         </div>
-                                        <div style={{pageBreakAfter: "always"}}></div>
+                                        <div style={{ pageBreakAfter: "always" }}></div>
                                     </div>
                                 </div>
                             </div>
@@ -305,7 +311,7 @@ export const Documentation: FC = () => {
                                             </li>
                                             <li>
                                                 <p><em>&lt;insert description of the notable aspects of the interactions between the
-        building block instances depicted in this diagram.&gt;</em></p>
+                                                    building block instances depicted in this diagram.&gt;</em></p>
                                             </li>
                                         </ul>
                                     </div>
@@ -320,7 +326,7 @@ export const Documentation: FC = () => {
                                 </div>
                                 <div className="sect2">
                                     <h3 id="_runtime_scenario_n">6.4. &lt;Runtime Scenario n&gt;</h3>
-                                    <div style={{pageBreakAfter: "always"}}></div>
+                                    <div style={{ pageBreakAfter: "always" }}></div>
                                 </div>
                             </div>
                         </div>
@@ -371,7 +377,7 @@ export const Documentation: FC = () => {
                                         <div className="paragraph">
                                             <p><em>&lt;diagram + explanation&gt;</em></p>
                                         </div>
-                                        <div style={{pageBreakAfter: "always"}}></div>
+                                        <div style={{ pageBreakAfter: "always" }}></div>
                                     </div>
                                 </div>
                             </div>
@@ -399,14 +405,14 @@ export const Documentation: FC = () => {
                                     <div className="paragraph">
                                         <p><em>&lt;explanation&gt;</em></p>
                                     </div>
-                                    <div style={{pageBreakAfter: "always"}}></div>
+                                    <div style={{ pageBreakAfter: "always" }}></div>
                                 </div>
                             </div>
                         </div>
                         <div className="sect1">
                             <h2 id="section-design-decisions">9. Architecture Decisions</h2>
                             <div className="sectionbody">
-                                <div style={{pageBreakAfter: "always"}}></div>
+                                <div style={{ pageBreakAfter: "always" }}></div>
                             </div>
                         </div>
                         <div className="sect1">
@@ -418,14 +424,14 @@ export const Documentation: FC = () => {
                                 </div>
                                 <div className="sect2">
                                     <h3 id="_quality_scenarios">10.2. Quality Scenarios</h3>
-                                    <div style={{pageBreakAfter: "always"}}></div>
+                                    <div style={{ pageBreakAfter: "always" }}></div>
                                 </div>
                             </div>
                         </div>
                         <div className="sect1">
                             <h2 id="section-technical-risks">11. Risks and Technical Debts</h2>
                             <div className="sectionbody">
-                                <div style={{pageBreakAfter: "always"}}></div>
+                                <div style={{ pageBreakAfter: "always" }}></div>
                             </div>
                         </div>
                         <div className="sect1">
@@ -454,12 +460,12 @@ export const Documentation: FC = () => {
                     </div>
                     <div id="footer">
                         <div id="footer-text">
-        Version 8.2 EN<br/>
-        Last updated 2024-11-04 17:00:46 +0100
+                            Version 8.2 EN<br />
+                            Last updated 2024-11-04 17:00:46 +0100
                         </div>
                     </div>
                 </Box>
-            </GridItem>
+            </GridItem> */}
         </>
     );
 };

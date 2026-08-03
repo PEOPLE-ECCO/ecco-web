@@ -30,7 +30,7 @@ export function MapSwitcherControls({
                     checked={isChecked}
                     onChange={(e) => onToggle(e.target.checked)}
                 >
-                    <Switch.Control />
+                    <Switch.Control bgColor={"#2C7D75"}/>
                 </Switch.Root>
             </Field.Root>
         </MapAnchor>

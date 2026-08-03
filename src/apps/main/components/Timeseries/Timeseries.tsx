@@ -3,202 +3,247 @@
 
 import {
     Box,
-    Button,
-    Collapsible,
     Stack,
     Text,
     Menu,
     IconButton,
     Flex,
-    useDisclosure,
-    HStack,
     Accordion,
     Portal,
     Dialog,
-    Table
+    ScrollArea,
+    CloseButton
 } from "@chakra-ui/react";
-import { TimeseriesAddBtn } from "./TimeseriesAddBtn";
+
+import { useCallback, useEffect, useState } from "react";
+import { Ellipsis } from "lucide-react";
+
+import { EventEmitter } from "@open-pioneer/core";
+import { NotificationService } from "@open-pioneer/notifier";
+import { useService } from "open-pioneer:react-hooks";
+import { MapModel } from "@open-pioneer/map";
+
+import { CreateTimeseries } from "./TimeseriesCreateDialog";
 import { Job, Timeseries } from "../definitions";
-import { useServices } from "../../services/Services";
-import { ReactNode, useState } from "react";
-import { useNavigate } from "react-router";
-import { Ellipsis, Plus } from "lucide-react";
+import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
+import { ResultTree } from "./ResultTree";
+import { TimeseriesExpandDialog } from "./TimeseriesExpandDialog";
+import { Site } from "../../views/Sites/Site/Site";
+
 
 interface TimeseriesProps {
-    timeseries?: Timeseries[];
-    onSelect: (ts: Timeseries) => void;
+    map: MapModel
+    scenario: Site
+    timeseries?: Timeseries[]
+    eventListener: EventEmitter<Events>
 }
 
-export function TimeseriesItem({ timeseries, onSelect }: TimeseriesProps) {
-    const title = "Timeseries";
-    const navigate = useNavigate();
 
-    const { getJobLog } = useServices();
-    const { open, onOpen, onClose } = useDisclosure();
-    const [modalContent, setModalContent] = useState<ReactNode>();
-    const [_, setSelectedTimeseries] = useState<Timeseries>();
+export function TimeseriesItem({ map, scenario, timeseries, eventListener }: TimeseriesProps) {
+    const [viewResultsButtonDisabled, setViewResultsButtonDisabled] = useState<boolean>(true);
+    const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
+    const [timeseriesList, setTimeseriesList] = useState<Timeseries[]>([]);
+
+    useEffect(() => {
+        setTimeseriesList(timeseries || []);
+    }, [timeseries]);
+
+    useEffect(() => {
+        if (!selectedTimeseries || !selectedTimeseries!.jobs) {
+            return;
+        }
+        viewResultsDisabling(selectedTimeseries!);
+    }, [selectedTimeseries?.jobs]);
+
+    const timeseriesSelection = (ts: Timeseries) => {
+        setViewResultsButtonDisabled(true);
+        eventListener.emit("selectedTimeseries", ts);
+        setSelectedTimeseries(ts);
+    };
+
+    const viewResultsDisabling = (ts: Timeseries) => {
+        if (ts?.jobs?.length !== undefined) {
+            if (selectedTimeseries?.jobs?.length !== 0) {
+                setViewResultsButtonDisabled(false);
+            }
+        };
+    };
+
+    /*
+    function downloadAllResults() {
+        const downloadLinks = [];
+        for (const result of jobResults) {
+            if (!result.href)
+                return;
+            const href = result.href;
+            // Add link to List
+            downloadLinks.push(href);
+        }
+        console.log(downloadLinks);
+
+        // zip the list
+        // download zip
+    }
+    */
+
+    const onTimeseriesCreated = (ts: Timeseries | undefined) => {
+        if (ts && timeseries) {
+            setTimeseriesList(timeseriesList => [...timeseriesList, ts]);
+        }
+    };
+
+    return (
+        <>
+            <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
+                <Stack gap="4">
+                    <Text fontWeight="700" fontSize={22}>Timeseries</Text>
+                    <Accordion.Root
+                        collapsible
+                        onValueChange={(e) => {
+                            const ts: Timeseries = timeseriesList![e.value[0]!];
+                            timeseriesSelection(ts);
+                        }}>
+                        {timeseriesList?.map((ts, key) => (
+                            <Accordion.Item value={key} key={key}>
+                                <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
+                                    <Box as="span" flex="1" textAlign="left" fontWeight="700">
+                                        {ts.name}
+                                    </Box>
+                                    <Accordion.ItemIndicator />
+                                </Accordion.ItemTrigger>
+                                <Accordion.ItemContent pb={4} bg="white">
+                                    {ts.id == selectedTimeseries?.id &&
+                                        <>
+                                            <Flex pb="2" gap="1" justify="space-between" direction="row">
+                                                <Text whiteSpace="pre-wrap" pb="2">{ts.description}</Text>
+                                                <MenuContent ts={ts} el={eventListener} />
+                                            </Flex>
+                                            {/* {false &&
+                                                <Collapsible.Root>
+                                                    <Flex pb="2" gap="1" justify="flex-start" direction="row">
+                                                        <Collapsible.Trigger>
+                                                            <Button
+                                                                size="md"
+                                                                width="100%"
+                                                                bg="#2C7D75"
+                                                                _hover={{ bg: "teal.700" }}
+                                                                disabled={false}>
+                                                                View Jobs
+                                                                <Collapsible.Indicator
+                                                                    transition="transform 0.2s"
+                                                                    _open={{ transform: "rotate(180deg)" }}>
+                                                                    <LuChevronDown />
+                                                                </Collapsible.Indicator>
+                                                            </Button>
+                                                        </Collapsible.Trigger>
+                                                        <CreateJob timeseries={ts} eventListener={eventListener} />
+                                                        <MenuContent ts={ts} el={eventListener} />
+                                                    </Flex>
+                                                    <Collapsible.Content>
+                                                        <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                            <JobTree jobs={ts.jobs} eventListener={eventListener}></JobTree>
+                                                        </Box>
+                                                    </Collapsible.Content>
+                                                </Collapsible.Root>
+                                            } */}
+                                            <Box mt="2" padding="4" borderWidth="1px" rounded="lg">
+                                                <Text fontWeight="bold">Results</Text>
+                                                <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
+                                            </Box>
+                                        </>
+                                    }
+                                </Accordion.ItemContent>
+                            </Accordion.Item>
+                        ))}
+                    </Accordion.Root>
+                    <CreateTimeseries scenario={scenario} eventListener={eventListener} resultCallback={onTimeseriesCreated} />
+                </Stack>
+            </Box >
+        </>
+    );
+}
+
+interface MenuContentProps {
+    ts: Timeseries
+    el: EventEmitter<Events>
+}
+
+function MenuContent({ ts, el }: MenuContentProps) {
+    const notificationService = useService<NotificationService>("notifier.NotificationService");
+
+    const handleExpand = (ts: Timeseries) => {
+        console.log("Expand:", ts.id);
+    };
+
+    const handleViewJobInfo = (jobs: Job[]) => {
+        console.log("JobInfo:", jobs.at(0)!.logs.getItems().at(0));
+    };
 
     const handleDelete = (ts: Timeseries) => {
-        console.log("Delete:", ts);
+        console.error(ts.jobs.getItems());
+        console.log("Delete:", ts.name);
     };
 
     const handleArchive = (ts: Timeseries) => {
-        console.log("Archive:", ts);
+        console.log("Archive:", ts.name);
     };
-
-    const viewLog = async (job: Job) => {
-        const log = await getJobLog("1", job);
-        setModalContent(
-            <>
-                <Table.Root>
-                    <Table.Caption />
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.ColumnHeader>Time</Table.ColumnHeader>
-                            <Table.ColumnHeader>Level</Table.ColumnHeader>
-                            <Table.ColumnHeader>Message</Table.ColumnHeader>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {log.map((item, key) => (
-                            <Table.Row key={key}>
-                                <Table.Cell>{item.time}</Table.Cell>
-                                <Table.Cell>{item.level}</Table.Cell>
-                                <Table.Cell>{item.message}</Table.Cell>
-                            </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
-            </>
-        );
-        onOpen();
-    };
-
-    const vieDetails = async (job: Job) => {
-        const content = (
-            <Text>
-                ID: {job.id}<br></br>
-                Scheduled: {job.scheduleTime}<br></br>
-                {job.usage && <>
-                    Costs: {job.credits} Credits<br></br>
-                    CPU: {job.usage?.cpu.value} {job.usage?.cpu.unit}<br></br>
-                    Duration: {job.usage?.duration.value} {job.usage?.duration.unit}<br></br>
-                    Memory: {job.usage?.memory.value} {job.usage?.memory.unit}<br></br>
-                    SentinelHub: {job.usage?.sentinelhub.value} {job.usage?.sentinelhub.unit}<br></br>
-                </>}
-            </Text>
-        );
-
-        setModalContent([content]);
-        onOpen();
-    };
-
-    const select = (ts: Timeseries) => {
-        setSelectedTimeseries(ts);
-        onSelect(ts);
-    };
-
 
     return (
-        <Box bg="white" p="4" borderRadius="md" boxShadow="sm">
-            <Stack gap="4">
-                <Text fontWeight="700" fontSize={18}>{title}</Text>
-                <Accordion.Root collapsible multiple>
-                    {timeseries?.map((ts, key) => (
-                        <Accordion.Item value={ts.id} key={key}>
-                            <Accordion.ItemTrigger bg="white" display="flex" alignItems="center">
-                                <Box as="span" flex="1" textAlign="left" fontWeight="700">
-                                    {ts.name}
-                                </Box>
-                                <Accordion.ItemIndicator />
-                            </Accordion.ItemTrigger>
-                            <Accordion.ItemContent pb={4} bg="white">
-
-                                <HStack>
-                                    <Text fontWeight="medium">Description:</Text>
-                                    <Text whiteSpace="pre-wrap">{ts.description}</Text>
-                                </HStack>
-
-                                <HStack>
-                                    <Flex justify="space-between">
-                                        <Button onClick={() => select(ts)}>
-                                            View Results
-                                        </Button>
-                                        <IconButton onClick={() => navigate("timeseries/" + ts.id + "/createJob")}>
-                                            Expand Timeseries
-                                        </IconButton>
-                                        <Menu.Root>
-                                            <Menu.Trigger asChild>
-                                                <IconButton variant="outline" size="sm">
-                                                    <Ellipsis />
-                                                </IconButton>
-                                            </Menu.Trigger>
-                                            <Portal>
-                                                <Menu.Positioner>
-                                                    <Menu.Content>
-                                                        <Menu.Item value="delete" onClick={() => handleDelete(ts)}>Delete</Menu.Item>
-                                                        <Menu.Item value="archive" onClick={() => handleArchive(ts)}>Archive</Menu.Item>
-                                                    </Menu.Content>
-                                                </Menu.Positioner>
-                                            </Portal>
-                                        </Menu.Root>
-                                    </Flex>
-                                </HStack>
-                                <Box>
-                                    {ts.jobs &&
-                                        <>
-                                            <Table.Root>
-                                                <Table.Header>Jobs:</Table.Header>
-                                                <Table.Header>
-                                                    <Table.Row>
-                                                        <Table.ColumnHeader>Id</Table.ColumnHeader>
-                                                        <Table.ColumnHeader>Details</Table.ColumnHeader>
-                                                        <Table.ColumnHeader>Log</Table.ColumnHeader>
-                                                    </Table.Row>
-                                                </Table.Header>
-                                                <Table.Body>
-                                                    {ts.jobs.map((job) => (
-                                                        <Table.Row key={job.id}>
-                                                            <Table.Cell>{job.id}</Table.Cell>
-                                                            <Table.Cell><Button onClick={() => vieDetails(job)}>Details</Button></Table.Cell>
-                                                            <Table.Cell><Button onClick={() => viewLog(job)}>Log</Button></Table.Cell>
-                                                        </Table.Row>
-                                                    ))}
-                                                </Table.Body>
-                                            </Table.Root>
-                                        </>
-                                    }
-                                </Box>
-                            </Accordion.ItemContent>
-                        </Accordion.Item>
-                    ))}
-                </Accordion.Root>
-
-                <TimeseriesAddBtn />
-
-                {modalContent && open &&
-                    <Dialog.Root size="full" open={open} onExitComplete={onClose} scrollBehavior="inside">
-                        <Dialog.Backdrop />
-                        <Dialog.Positioner>
-                            <Dialog.Content>
-                                <Dialog.Header>
-                                    <Dialog.Title></Dialog.Title>
-                                </Dialog.Header>
-                                <Dialog.CloseTrigger />
-                                <Dialog.Body>
-                                    {modalContent}
-                                </Dialog.Body>
-
-                                <Dialog.Footer>
-                                    <Button colorPalette='blue' mr={3} onClick={onClose}>
-                                        Close
-                                    </Button>
-                                </Dialog.Footer>
-                            </Dialog.Content>
-                        </Dialog.Positioner>
-                    </Dialog.Root>
-                }
-            </Stack>
-        </Box >
+        <>
+            <Dialog.Root size="lg" placement="center">
+                <Menu.Root>
+                    <Menu.Trigger asChild>
+                        <IconButton variant="outline" size="md" border="1px solid #2C7D75" _hover={{ bg: "teal.50" }}>
+                            <Ellipsis />
+                        </IconButton>
+                    </Menu.Trigger>
+                    <Portal>
+                        <Menu.Positioner>
+                            <Menu.Content>
+                                <Dialog.Trigger >
+                                    <Menu.Item
+                                        value="expand"
+                                        onClick={() => {
+                                            handleExpand(ts);
+                                        }}>
+                                        Expand
+                                    </Menu.Item>
+                                </Dialog.Trigger>
+                                <Menu.Item
+                                    value="delete"
+                                    disabled
+                                    onClick={() => {
+                                        handleDelete(ts);
+                                        notificationService.notify({
+                                            title: "Deleted",
+                                            message: ts.name,
+                                            level: "info",
+                                            displayDuration: 5000,
+                                        });
+                                    }}>
+                                    Delete
+                                </Menu.Item>
+                                <Menu.Item
+                                    value="archive"
+                                    disabled
+                                    onClick={() => {
+                                        handleArchive(ts);
+                                        notificationService.notify({
+                                            title: "Archived",
+                                            message: ts.name,
+                                            level: "info",
+                                            displayDuration: 5000,
+                                        });
+                                    }}>
+                                    Archive
+                                </Menu.Item>
+                            </Menu.Content>
+                        </Menu.Positioner>
+                    </Portal>
+                </Menu.Root >
+                
+                <TimeseriesExpandDialog timeseries={ts} eventListener={el} />
+            </Dialog.Root >
+        </>
     );
-}
+};

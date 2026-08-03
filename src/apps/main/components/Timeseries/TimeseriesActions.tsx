@@ -3,6 +3,7 @@
 
 import { HStack, Spacer, VStack } from "@chakra-ui/react";
 import { ActionButton } from "./ActionButton";
+import { LuDownload } from "react-icons/lu";
 
 interface TimeseriesActionsProps {
     onDownloadAll?: () => void;
@@ -31,5 +32,35 @@ export function TimeseriesActions({
                 onClick={onDownloadCurrent}
             />
         </VStack>
+    );
+}
+
+export function DownloadAllButton({
+    onDownloadAll
+}: TimeseriesActionsProps) {
+    return (
+            <ActionButton
+                icon={<LuDownload />}
+                label="Download all results"
+                tooltip="Download all available timeseries results"
+                disabled={true}
+                onClick={onDownloadAll}
+            />
+        
+    );
+}
+
+export function DownloadCurrentButton({
+    onDownloadCurrent
+}: TimeseriesActionsProps) {
+    return (
+        
+            <ActionButton
+                label="Download current result"
+                tooltip="Download the currently selected result"
+                disabled={false}
+                onClick={onDownloadCurrent}
+            />
+        
     );
 }

@@ -3,20 +3,32 @@
 
 import {
     Box,
+    Button,
+    Collapsible,
     Field,
+    HStack,
+    IconButton,
     Separator,
-    Text
+    Spacer,
+    Stack,
+    Text,
+    VStack
 } from "@chakra-ui/react";
 import { OverviewMap } from "@open-pioneer/overview-map";
 import { BasemapSwitcher } from "@open-pioneer/basemap-switcher";
-import { MapAnchor } from "@open-pioneer/map";
+import { MapAnchor, MapAnchorPosition } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import { OSM } from "ol/source";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { LuChevronDown, LuMap } from "react-icons/lu";
 
 interface MapSidebarControlsProps {
     mapId: string;
+    position?: MapAnchorPosition | "top-right";
+    horizontalGap?: number | 10;
+    verticalGap?: number | 60;
+    
 }
 
 export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
@@ -30,25 +42,42 @@ export const MapSidebarControls = ({ mapId }: MapSidebarControlsProps) => {
     );
 
     return (
-        <MapAnchor position="top-right" horizontalGap={5} verticalGap={5}>
             <Box
                 backgroundColor="white"
                 borderWidth="1px"
-                borderRadius="sm"
-                padding={2}
+                borderRadius="md"
+                padding="2"
                 boxShadow="sm"
-                role="top-right"
                 aria-label="Map sidebar controls"
             >
-                <OverviewMap map={mapId} olLayer={overviewMapLayer} />
-                <Separator mt={2} />
-                <Field.Root>
-                    <Field.Label mt={1}>
-                        <Text as="b">Select basemap:</Text>
-                    </Field.Label>
-                    <BasemapSwitcher mapId={mapId} allowSelectingEmptyBasemap />
-                </Field.Root>
+                <Collapsible.Root defaultOpen>
+                    <Collapsible.Trigger
+                        paddingY="1"
+                        display="flex"
+                        gap="2"
+                        alignItems="center"
+                    >
+                        <IconButton variant="plain" w="100%" p="4" size="sm">
+                            <LuMap />
+                            <Collapsible.Indicator
+                                transition="transform 0.2s"
+                                _open={{ transform: "rotate(180deg)" }}
+                            >
+                                <LuChevronDown />
+                            </Collapsible.Indicator>
+                        </IconButton>
+                    </Collapsible.Trigger>
+                    <Collapsible.Content>
+                        <OverviewMap mapId={mapId} olLayer={overviewMapLayer} ></OverviewMap>
+                        <Separator mt={2} colorPalette="gray" />
+                        <Field.Root>
+                            <Field.Label mt={1}>
+                                <Text as="b">Select basemap:</Text>
+                            </Field.Label>
+                            <BasemapSwitcher mapId={mapId} allowSelectingEmptyBasemap />
+                        </Field.Root>
+                    </Collapsible.Content>
+                </Collapsible.Root>
             </Box>
-        </MapAnchor>
     );
 };

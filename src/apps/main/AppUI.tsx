@@ -13,8 +13,8 @@ import { DataInventory } from "./views/DataInventory/DataInventory";
 import { Documentation } from "./views/Documentation/Documentation";
 import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
-import CreateTimeseries from "./views/CreateTimeseries/CreateTimeseries";
 import CreateJob from "./views/CreateJob/CreateJobUI";
+import { ForceAuth } from "@open-pioneer/authentication";
 
 const basePath = "/";
 
@@ -40,10 +40,6 @@ const router = createBrowserRouter([
                 element: <DataInventory />
             },
             {
-                path: `sites/:id/createTimeseries`,
-                element: <CreateTimeseries />
-            },
-            {
                 path: `sites/:id/timeseries/:ts_id/createJob`,
                 element: <CreateJob />
             },
@@ -65,9 +61,9 @@ export function Layout() {
     return (
         <>
             <Notifier />
-            <Flex direction="column" minH="100vh">
+            <Flex direction="column" minH="100%">
                 <Flex
-                    as="header"d
+                    as="header"
                     position="fixed"
                     w="100%"
                     bg="white"
@@ -79,9 +75,11 @@ export function Layout() {
                     </Container>
                 </Flex>
 
-                <Box as="main" flex="1" pt={height} bg="#EFEAEA">
-                    <Outlet />
-                </Box>
+                <ForceAuth>
+                    <Box as="main" flex="1" pt={height} bg="#EFEAEA">
+                        <Outlet />
+                    </Box>
+                </ForceAuth>
 
                 <Footer />
             </Flex>

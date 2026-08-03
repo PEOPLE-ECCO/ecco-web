@@ -4,10 +4,23 @@
 import "@open-pioneer/runtime";
 import { useService } from "open-pioneer:react-hooks";
 import { HttpService } from "@open-pioneer/http";
-import { Job, Timeseries } from "../components/definitions";
+import { Job, JobParameters, JobResult, Timeseries, TimeseriesImpl } from "../components/definitions";
+import { useState } from "react";
 
 export const useServices = () => {
     const httpService = useService<HttpService>("http.HttpService");
+
+    const getUser = async () => {
+        const url = import.meta.env.VITE_API_ROOT + "/user/";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+
+        if (responseData) {
+            return responseData;
+        } else {
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
+        }
+    };
 
     const getScenarios = async () => {
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/";
@@ -21,73 +34,42 @@ export const useServices = () => {
         }
     };
 
+    const getScenario = async (id: string) => {
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/";
+        const response = await httpService.fetch(url);
+        const responseData = await response.json();
+
+        if (responseData) {
+            for (const obj of responseData) {
+                if (""+obj.id == id) {
+                    return obj;
+                }
+            };
+        }
+    };
+
     const getTimeseries = async (id: string) => {
-        console.log("getTimeseries" + id);
+        console.log("getTimeseries " + id);
         const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/timeseries/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
 
         if (responseData) {
-            return responseData;
+            const raw = [];
+            for (const obj of responseData) {
+                raw.push(
+                    new TimeseriesImpl(obj, httpService)
+                );
+            }
+            return raw;
         } else {
             throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
 
-    const createTimeseries = async (ts: Timeseries) => {
-        console.log("createTimeseries" + ts);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
-        const response = await httpService.fetch(url, {
-            "method": "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(
-                {
-                    "name": ts.name,
-                    "description": ts.description,
-                    "process": 1
-                }
-            )
-        });
-        const responseData = await response.text();
-
-        if (responseData) {
-            return responseData;
-        } else {
-            throw new Error("Unexpected response: " + JSON.stringify(responseData));
-        }
-    };
-
-    const createJob = async (scenario_id: string, ts_id: string, job: Job) => {
-        console.log("createJob for timeseries: " + ts_id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + ts_id + "/jobs/";
-        const response = await httpService.fetch(url, {
-            "method": "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(
-                {
-                    "name": "asdf",
-                    "description": "asdf",
-                    "process": 7,
-                    "parameters": "ads"
-                }
-            )
-        });
-        const responseData = await response.text();
-
-        if (responseData) {
-            return responseData;
-        } else {
-            throw new Error("Unexpected response: " + JSON.stringify(responseData));
-        }
-    };
-
-    const getJobsByTimeseriesId = async (scenario_id: string, timeseries_id: string) => {
-        console.log("getJobsByTimeseriesId" + scenario_id + "," + timeseries_id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + timeseries_id + "/jobs";
+    const getProcesses = async (id: string) => {
+        console.log("getProcesses of scenario " + id);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + id + "/processes/";
         const response = await httpService.fetch(url);
         const responseData = await response.json();
 
@@ -98,42 +80,48 @@ export const useServices = () => {
         }
     };
 
-    const getJobCatalog = async (scenario_id: string, job: Job) => {
-        console.log("getJobCatalog" + scenario_id + "," + job.id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + job.timeseries_id + "/jobs/" + job.id + "/catalog";
-        const response = await httpService.fetch(url);
 
-        if (response.status != 200) {
-            console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
-            return null;
+    const createTimeseries = async (ts: Timeseries) : Promise<string> => {
+        console.log("createTimeseries " + ts);
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + ts.scenario_id + "/timeseries/";
+        console.log(ts);
+        const response = await httpService.fetch(url, {
+            "method": "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(ts)
+        });
+        const responseData = await response.text();
+
+        if (responseData) {
+            return Promise.resolve(responseData);
         } else {
-            const responseData = await response.json();
-            if (responseData) {
-                job.catalog = responseData;
-                return responseData;
-            } else {
-                throw new Error("Unexpected response: " + JSON.stringify(responseData));
-            }
+            throw Promise.reject("Unexpected response: " + JSON.stringify(responseData));
         }
     };
 
-    const getJobLog = async (scenario_id: string, job: Job) => {
-        console.log("getJobLog" + scenario_id + "," + job.id);
-        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/timeseries/" + job.timeseries_id + "/jobs/" + job.id + "/log";
-        const response = await httpService.fetch(url);
+    const createJob = async (scenario_id: string, ts_id: string, job_parameters: JobParameters) => {
+        const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + ts_id + "/jobs/";
+        const response = await httpService.fetch(url, {
+            "method": "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(
+                {
+                    "rangeend": job_parameters.timespan[1].toISOString().substring(0, 10),
+                    "rangestart": job_parameters.timespan[0].toISOString().substring(0, 10)
+                }
+            )
+        });
+        const responseData = await response.text();
 
-        if (response.status != 200) {
-            console.error("Could not load catalog for job " + job.id + " | got HTTP Status" + response.status);
-            return null;
+        if (responseData) {
+            return responseData;
         } else {
-            const responseData = await response.json();
-            if (responseData) {
-                return responseData;
-            } else {
-                throw new Error("Unexpected response: " + JSON.stringify(responseData));
-            }
+            throw new Error("Unexpected response: " + JSON.stringify(responseData));
         }
     };
-
-    return { getScenarios, getTimeseries, getJobsByTimeseriesId, getJobCatalog, getJobLog, createTimeseries, createJob };
+    return { getUser, getScenarios, getScenario, getTimeseries, getProcesses, createTimeseries, createJob };
 };

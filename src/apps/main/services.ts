@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 import { AuthService } from "@open-pioneer/authentication";
-import { ServiceOptions} from "@open-pioneer/runtime";
-import { Interceptor, BeforeRequestParams} from "@open-pioneer/http";
+import { ServiceOptions } from "@open-pioneer/runtime";
+import { Interceptor, BeforeRequestParams } from "@open-pioneer/http";
 
 interface References {
     authService: AuthService;
@@ -31,16 +31,85 @@ export class TokenInterceptor implements Interceptor {
 import { MapConfig, MapConfigProvider, SimpleLayer } from "@open-pioneer/map";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
+import WMTS, { optionsFromCapabilities } from "ol/source/WMTS.js";
+import WMTSCapabilities from "ol/format/WMTSCapabilities.js";
 
 export const MAP_ID = "main";
 export class MainMapProvider implements MapConfigProvider {
     mapId = MAP_ID;
 
     async getMapConfig(): Promise<MapConfig> {
+
+        const parser = new WMTSCapabilities();
+        const response = await fetch("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml");
+        const responseText = await response.text();
+
+        const result = parser.read(responseText);
+        const options = optionsFromCapabilities(result, {
+            layer: "World_Imagery",
+            matrixSet: "EPSG:3857",
+        });
+
         return {
             initialView: {
                 kind: "position",
-                center: { x: 850000, y: 6793120},
+                center: { x: 850000, y: 6793120 },
+                zoom: 10
+            },
+            projection: "EPSG:3857",
+            layers: [
+                new SimpleLayer({
+                    title: "OpenStreetMap",
+                    olLayer: new TileLayer({
+                        source: new OSM(),
+                        properties: { title: "OSM" }
+                    }),
+                    isBaseLayer: true
+                }),
+
+
+                new SimpleLayer({
+                    title: "SatelliteImage",
+                    olLayer: new TileLayer({
+                        opacity: 1,
+                        source: new WMTS(options!),
+                        maxZoom: 17
+                    }),
+                    isBaseLayer: true,
+                }),
+                /*
+                new SimpleLayer({
+                    id: "right",
+                    title: "Mean Temperature (2000-01)",
+                    olLayer: new WebGLTileLayer({
+                        source: new GeoTIFF({
+                            normalize: false,
+                            sources: [
+                                {
+                                    url: "https://s3.people-ecco.dev.52north.org/tangerine-chupacabra//tmp/52_North_Examples/Lebanon/41R1_S1_S2_deltaIR_NBR_SSS.tif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=GKcee6e50255a82b471f712fea%2F20251130%2Fgarage%2Fs3%2Faws4_request&X-Amz-Date=20251130T161723Z&X-Amz-Expires=7200&X-Amz-SignedHeaders=host&X-Amz-Signature=41f828efc52697329d9576cb5786f37bb4d4eb0802d859b2c7ca5a3cd0542026",
+                                    nodata: -9999
+                                }
+                            ]
+                        }),
+                        properties: { title: "Mean Temperature (2000-01)" }
+                    }),
+                    isBaseLayer: false
+                }),
+                */
+            ]
+        };
+    }
+}
+
+export const MAP_BOX = "boxselection";
+export class BoxMapProvider implements MapConfigProvider {
+    mapId = MAP_BOX;
+
+    async getMapConfig(): Promise<MapConfig> {
+        return {
+            initialView: {
+                kind: "position",
+                center: { x: 850000, y: 6793120 },
                 zoom: 10
             },
             projection: "EPSG:3857",
@@ -55,5 +124,33 @@ export class MainMapProvider implements MapConfigProvider {
                 })
             ]
         };
-    }    
+    }
+}
+
+
+
+export const MAP_SiteView = "siteview";
+export class SiteViewMapProvider implements MapConfigProvider {
+    mapId = MAP_SiteView;
+
+    async getMapConfig(): Promise<MapConfig> {
+        return {
+            initialView: {
+                kind: "position",
+                center: { x: 850000, y: 6793120 },
+                zoom: 1
+            },
+            projection: "EPSG:3857",
+            layers: [
+                new SimpleLayer({
+                    title: "OpenStreetMap",
+                    olLayer: new TileLayer({
+                        source: new OSM(),
+                        properties: { title: "OSM" }
+                    }),
+                    isBaseLayer: true
+                }),
+            ]
+        };
+    }
 }

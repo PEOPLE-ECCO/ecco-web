@@ -8,6 +8,7 @@ import {
     Steps,
     ButtonGroup,
     Button,
+    Flex,
     Stack,
     Input,
     Table,
@@ -17,6 +18,7 @@ import { useNavigate, useParams } from "react-router";
 import { useServices } from "../../services/Services";
 import { ActionButton } from "../../components/Timeseries/ActionButton";
 import { setHeapSnapshotNearHeapLimit } from "v8";
+import { CloseButton } from "@chakra-ui/react";
 
 const CreateJob: FC = () => {
     const { id, ts_id } = useParams();
@@ -34,6 +36,10 @@ const CreateJob: FC = () => {
 
         alert("Created Job: " + created);
         navigate("..");
+    };
+
+    const handleClick = () => {
+        navigate(-1);
     };
 
 
@@ -69,9 +75,12 @@ const CreateJob: FC = () => {
 
     return (
         <>
-            <Heading size="md" mb={4}>
+            <Flex gap="10">
+                <Heading height="12" size="lg" mb={4} order="1">
                 Create new Job
-            </Heading>
+                </Heading>
+                <CloseButton height="10" variant="outline" order="2" size="md" colorPalette="teal" onClick={handleClick}/>
+            </Flex>
 
             <Steps.Root defaultStep={0} count={steps.length} orientation="horizontal">
                 <Steps.List>
