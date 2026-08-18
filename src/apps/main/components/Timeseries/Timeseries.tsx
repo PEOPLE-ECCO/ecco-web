@@ -17,7 +17,7 @@ import {
 
 import { useCallback, useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuDownload } from "react-icons/lu";
+import { LuDownload, LuLink } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -47,6 +47,7 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [timeseriesList, setTimeseriesList] = useState<Timeseries[]>([]);
     const [currentResultForDownload, setCurrentResultForDownload] = useState<JobResult | undefined>(undefined);
+    const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     useEffect(() => {
         setTimeseriesList(timeseries || []);
@@ -125,6 +126,28 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
         document.body.removeChild(link);
     }
 
+    async function copyCurrentResultUrl() {
+        if (!currentResultForDownload)
+            return;
+        try {
+            await navigator.clipboard.writeText(currentResultForDownload.href);
+            notificationService.notify({
+                title: "Copied",
+                message: "Download URL copied to clipboard",
+                level: "info",
+                displayDuration: 5000,
+            });
+        } catch (error) {
+            console.error("Failed to copy download URL:", error);
+            notificationService.notify({
+                title: "Copy failed",
+                message: "Could not copy download URL to clipboard",
+                level: "error",
+                displayDuration: 5000,
+            });
+        }
+    }
+
     return (
         <>
             <Box bg="white" p="4" borderWidth="1px" borderRadius="md" boxShadow="sm">
@@ -190,6 +213,17 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                                                 <Flex>
                                                     <Text fontWeight="bold">Metrics</Text>
                                                     <Box ml="auto"></Box>
+                                                    <Tooltip content="Copy temporary download URL">
+                                                        <Button
+                                                            color="black"
+                                                            _hover={{ bg: "teal.50" }}
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            disabled={!currentResultForDownload}
+                                                            onClick={() => { copyCurrentResultUrl(); }}>
+                                                            <LuLink />
+                                                        </Button>
+                                                    </Tooltip>
                                                     <Tooltip content="Download current result">
                                                         <Button
                                                             color="black"
