@@ -405,7 +405,7 @@ export class MainMapProvider implements MapConfigProvider {
 
                         source: new XYZ({
                             // Replace this with your actual server URL
-                            url: "https://gis.mrrb.government.bg/tiles/aero_3857/{z}/{x}/{y}.png",
+                            url: "/tiles/aero_3857/{z}/{x}/{y}.png",
                         }),
                         properties: { title: "Bulgaria" }
                     }),
