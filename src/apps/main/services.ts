@@ -338,13 +338,10 @@ export const BASEMAP_ESRI_IMAGERY_ID = "basemap-esri-imagery";
 
 /**
  * Picks the base layer id that should be active for a given site title.
- *
- * TODO: fill in the real site-name -> base layer mapping once it's known;
- * for now everything falls back to the default base layer.
  */
 export function resolveBaseLayerId(siteTitle: string | undefined): string {
     if ((siteTitle || "").toLowerCase().includes("bulgaria")) {
-        return BASEMAP_ESRI_IMAGERY_ID;
+        return BASEMAP_BULGARIA_ID;
     }
     return BASEMAP_OSM_ID;
 }
@@ -353,8 +350,6 @@ export function resolveBaseLayerId(siteTitle: string | undefined): string {
  * Picks which of the fixed additional COG overlay layers (see
  * {@link ADDITIONAL_COG_LAYER_IDS}) should be available for a given site title.
  *
- * TODO: fill in the real site-name -> layer-id mapping once it's known;
- * for now every site gets the full set of additional layers.
  */
 export function resolveOperationalLayerIds(siteTitle: string | undefined): string[] {
     if ((siteTitle || "").toLowerCase().includes("bulgaria")) {
@@ -367,8 +362,6 @@ export function resolveOperationalLayerIds(siteTitle: string | undefined): strin
  * Whether the download links in {@link DownloadControl} should be shown for a
  * given site title.
  *
- * TODO: fill in the real site-name rule once it's known; for now only sites
- * matching "bulgaria" show the download links.
  */
 export function isDownloadControlVisible(siteTitle: string | undefined): boolean {
     return (siteTitle || "").toLowerCase().includes("bulgaria");
