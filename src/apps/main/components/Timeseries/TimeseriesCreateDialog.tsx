@@ -40,9 +40,9 @@ import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "./utils/ActionButton";
 import { TimespanWidget } from "./ParameterWidgets/TimespanWidget";
-import { PARAMETER_WIDGETS, isExtentlessProcess } from "./ParameterWidgets/registry";
+import { PARAMETER_WIDGETS, getExtentPreview } from "./ParameterWidgets/registry";
 import { ParameterWidgetValue, SerializedParams } from "./ParameterWidgets/types";
-import { ReferenceAreaMapPreview } from "./ParameterWidgets/ReferenceAreaMapPreview";
+import { AreaMapPreview } from "./ParameterWidgets/AreaMapPreview";
 
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
@@ -293,17 +293,15 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     }, []);
 
     // Some processes (e.g. reference-area based ones) imply their extent from
-    // their parameters rather than letting the user draw one. For those the
-    // extent step shows a read-only preview and no extent is persisted.
-    const extentless = isExtentlessProcess(selectedProcess?.name);
+    // their parameters rather than letting the user draw a free one. For those
+    // the extent step shows the implied areas and constrains drawing to them.
+    const extentPreview = getExtentPreview(selectedProcess?.name, params);
+    const extentless = extentPreview != null;
 
     // Whether the selected process has a dedicated parameter widget. Those widgets
     // own their own time range, so the fallback TimespanWidget (and its timespan
     // validity) only applies to processes without a dedicated widget.
     const hasWidget = selectedProcess != null && PARAMETER_WIDGETS[selectedProcess.name] != null;
-
-    const referenceAreaId = params?.reference_area_id as number | undefined;
-    const restorationSiteId = params?.restoration_site_id as number | undefined;
 
     const fetchProcesses = async () => {
         if (!id)
@@ -406,9 +404,9 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const processStepValid = value.length > 0 && paramsValid && timespanStepValid;
 
     // Extent step (index 2): a valid drawn extent is required in both branches.
-    // Extentless (reference-area) processes draw an extent that must lie inside
-    // the restoration site (see ReferenceAreaMapPreview); the others draw a free
-    // extent validated by size (see checkExtent).
+    // Extentless processes draw an extent that must lie inside the area implied
+    // by their parameters (see AreaMapPreview); the others draw a free extent
+    // validated by size (see checkExtent).
     const extentStepValid = extent != null && extentValid;
 
     // Whether the "Next" button is enabled for the current step. Derived directly
@@ -562,10 +560,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         },
         {
             title: "Extent Selection",
-            description: extentless
-                ? <ReferenceAreaMapPreview
-                    referenceAreaId={referenceAreaId}
-                    restorationSiteId={restorationSiteId}
+            description: extentPreview
+                ? <AreaMapPreview
+                    boundingArea={extentPreview.boundingArea}
+                    contextAreas={extentPreview.contextAreas}
                     isVisible={step == 2}
                     onExtentChange={(ext, valid) => {
                         setExtentValid(valid);

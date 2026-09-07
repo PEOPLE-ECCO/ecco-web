@@ -140,6 +140,51 @@ export const useServices = () => {
         }
     }, [httpService]);
 
+    /**
+     * Uploads one input file for a scenario and returns the path the processing
+     * backend can read it back from — that path is what goes into a process's
+     * parameters, so the tools keep taking plain paths.
+     *
+     * The upload is scenario-scoped because files are picked in the create
+     * wizard before the timeseries they belong to exists.
+     *
+     * NOTE: this is the single place that knows the upload contract. It expects
+     * `POST /scenarios/{id}/files/` with a `multipart/form-data` body whose file
+     * field is named `file`, answering with the stored path either as JSON
+     * (`{"path": "..."}`) or as a bare string, as the other POSTs here do. If
+     * the backend settles on something else, this function is the only thing
+     * that has to change.
+     */
+    const uploadFile = useCallback(async (scenario_id: string, file: File): Promise<string> => {
+        const url = import.meta.env.VITE_API_ROOT + "/scenarios/" + scenario_id + "/files/";
+        const body = new FormData();
+        body.append("file", file);
+        // No Content-Type header on purpose: the browser has to set it, because
+        // only it knows the multipart boundary.
+        const response = await httpService.fetch(url, { method: "POST", body });
+
+        if (!response.ok) {
+            throw new Error(`Upload of ${file.name} failed (status ${response.status})`);
+        }
+
+        const responseData = await response.text();
+        try {
+            const parsed = JSON.parse(responseData);
+            const path = parsed?.path ?? parsed?.file ?? parsed?.url;
+            if (typeof path === "string" && path !== "") {
+                return path;
+            }
+        } catch {
+            // Not JSON — fall through and treat the body as the path itself.
+        }
+
+        const path = responseData.trim().replace(/^"|"$/g, "");
+        if (!path) {
+            throw new Error(`Upload of ${file.name} returned no path`);
+        }
+        return path;
+    }, [httpService]);
+
     const getLegend = useCallback(async (outputType: string, timeseries?: Timeseries) : Promise<LegendAndDescription> => {
         return new Promise((resolve, reject) => {
             const prov = new LegendProvider();
@@ -151,7 +196,7 @@ export const useServices = () => {
     }, []);
 
     return useMemo(
-        () => ({ getUser, getScenarios, getScenario, getTimeseries, getTimeseriesById, getProcesses, createTimeseries, createJob, getLegend }),
-        [getUser, getScenarios, getScenario, getTimeseries, getTimeseriesById, getProcesses, createTimeseries, createJob, getLegend]
+        () => ({ getUser, getScenarios, getScenario, getTimeseries, getTimeseriesById, getProcesses, createTimeseries, createJob, uploadFile, getLegend }),
+        [getUser, getScenarios, getScenario, getTimeseries, getTimeseriesById, getProcesses, createTimeseries, createJob, uploadFile, getLegend]
     );
 };

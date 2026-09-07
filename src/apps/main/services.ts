@@ -399,6 +399,8 @@ export class MainMapProvider implements MapConfigProvider {
                         source: new XYZ({
                             // Replace this with your actual server URL
                             url: "/tiles/aero_3857/{z}/{x}/{y}.png",
+                            minZoom: 10,
+                            maxZoom: 18
                         }),
                         properties: { title: "Bulgaria" }
                     }),

@@ -517,6 +517,8 @@ export interface PreprocessOption {
 export interface PreprocessParameters {
     reference_bap?: PreprocessOption[]
     restoration_bap?: PreprocessOption[]
+    breaks_bap?: PreprocessOption[]
+    breaks?: PreprocessOption[]
 }
 
 export interface ProcessParameters {
