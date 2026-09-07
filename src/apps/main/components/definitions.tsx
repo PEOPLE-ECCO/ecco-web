@@ -235,6 +235,10 @@ export class JobImpl implements Job {
                     if (response) {                    
                         const r = response as STACItemCollection;
                         for (const feature of r.features) {
+                            if (!feature.assets?.["image"]?.href) {
+                                console.debug("Skipping result without image asset: " + feature.id);
+                                continue;
+                            }
                             this.#results.push(new JobResultData(feature));
                         }
                     } else {

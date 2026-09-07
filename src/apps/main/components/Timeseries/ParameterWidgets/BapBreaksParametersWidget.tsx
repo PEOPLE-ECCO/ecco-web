@@ -132,6 +132,12 @@ function serialize(p: BreaksParams): SerializedParams {
         score_weight_dtc: p.distanceToCloudWeight,
         score_weight_date: p.dateWeight,
         score_weight_coverage: p.coverageWeight,
+        export_profile: "breaks",
+        export_payload: "indices",
+        naming_convention: "profiled",
+        indices_to_export: [
+            "SAVI"
+        ],
     };
 }
 
