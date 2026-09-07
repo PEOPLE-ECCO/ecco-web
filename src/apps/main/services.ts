@@ -330,6 +330,50 @@ function buildCogLayer(cfg: AdditionalCogLayer): SimpleLayer {
     });
 }
 
+/** Ids of the selectable base layers of the main map, used to activate one
+ * of them depending on the currently loaded site (see {@link resolveBaseLayerId}). */
+export const BASEMAP_BULGARIA_ID = "basemap-bulgaria-aerial";
+export const BASEMAP_OSM_ID = "basemap-osm";
+export const BASEMAP_ESRI_IMAGERY_ID = "basemap-esri-imagery";
+
+/**
+ * Picks the base layer id that should be active for a given site title.
+ *
+ * TODO: fill in the real site-name -> base layer mapping once it's known;
+ * for now everything falls back to the default base layer.
+ */
+export function resolveBaseLayerId(siteTitle: string | undefined): string {
+    if ((siteTitle || "").toLowerCase().includes("bulgaria")) {
+        return BASEMAP_ESRI_IMAGERY_ID;
+    }
+    return BASEMAP_OSM_ID;
+}
+
+/**
+ * Picks which of the fixed additional COG overlay layers (see
+ * {@link ADDITIONAL_COG_LAYER_IDS}) should be available for a given site title.
+ *
+ * TODO: fill in the real site-name -> layer-id mapping once it's known;
+ * for now every site gets the full set of additional layers.
+ */
+export function resolveOperationalLayerIds(siteTitle: string | undefined): string[] {
+    if ((siteTitle || "").toLowerCase().includes("bulgaria")) {
+        return ADDITIONAL_COG_LAYER_IDS;
+    }
+    return [];
+}
+
+/**
+ * Whether the download links in {@link DownloadControl} should be shown for a
+ * given site title.
+ *
+ * TODO: fill in the real site-name rule once it's known; for now only sites
+ * matching "bulgaria" show the download links.
+ */
+export function isDownloadControlVisible(siteTitle: string | undefined): boolean {
+    return (siteTitle || "").toLowerCase().includes("bulgaria");
+}
+
 export const MAP_ID = "main";
 export class MainMapProvider implements MapConfigProvider {
     mapId = MAP_ID;
@@ -355,6 +399,7 @@ export class MainMapProvider implements MapConfigProvider {
             projection: "EPSG:3857",
             layers: [
                 new SimpleLayer({
+                    id: BASEMAP_BULGARIA_ID,
                     title: "МИНИСТЕРСТВО НА РЕГИОНАЛНОТО РАЗВИТИЕ И БЛАГОУСТРОЙСТВОТО",
                     olLayer: new TileLayer({
 
@@ -367,6 +412,7 @@ export class MainMapProvider implements MapConfigProvider {
                     isBaseLayer: true
                 }),
                 new SimpleLayer({
+                    id: BASEMAP_OSM_ID,
                     title: "OpenStreetMap",
                     olLayer: new TileLayer({
                         source: new OSM(),
@@ -376,6 +422,7 @@ export class MainMapProvider implements MapConfigProvider {
                 }),
 
                 new SimpleLayer({
+                    id: BASEMAP_ESRI_IMAGERY_ID,
                     title: "ESRIImage",
                     olLayer: new TileLayer({
                         opacity: 1,

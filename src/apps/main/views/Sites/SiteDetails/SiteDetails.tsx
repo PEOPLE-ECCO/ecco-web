@@ -38,7 +38,7 @@ import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 
 import { useServices } from "../../../services/Services";
-import { MAP_ID } from "../../../services";
+import { MAP_ID, resolveBaseLayerId, resolveOperationalLayerIds, ADDITIONAL_COG_LAYER_IDS, isDownloadControlVisible } from "../../../services";
 import { Site } from "../Site/Site";
 import { MapZoomControls } from "../../../components/Map/MapZoomControl";
 import { MapInfoControls } from "../../../components/Map/MapInfoControls";
@@ -178,6 +178,22 @@ export function SiteDetails() {
 
     useEffect(() => {
         zoomToInitialView(scenario);
+    }, [scenario, map]);
+
+    useEffect(() => {
+        map?.layers.activateBaseLayer(resolveBaseLayerId(scenario?.name));
+    }, [scenario, map]);
+
+    useEffect(() => {
+        if (!map) return;
+        const allowedIds = new Set(resolveOperationalLayerIds(scenario?.name));
+        for (const id of ADDITIONAL_COG_LAYER_IDS) {
+            const layer = map.layers.getLayerById(id);
+            if (!layer) continue;
+            const allowed = allowedIds.has(id);
+            layer.setInternal(!allowed);
+            if (!allowed) layer.setVisible(false);
+        }
     }, [scenario, map]);
 
     useReactiveSnapshot(
@@ -796,7 +812,7 @@ export function SiteDetails() {
                                                     </Box>
                                                     <AdditionalLayersControl map={map} />
                                                     <Legend process={expandedResultType?.name} timeseries={selectedTimeseries} />
-                                                    <DownloadControl />
+                                                    {isDownloadControlVisible(scenario?.name) && <DownloadControl />}
                                                     <MapSidebarControls map={map} position={"top-left"} verticalGap={0} />
                                                 </Flex>
                                             </MapContainer>
