@@ -216,8 +216,8 @@ export function VdoDisturbanceIndexParametersWidget({ process, onChange }: Param
             {/* Intro help text */}
             <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" borderRadius="md" p="3">
                 <Text fontSize="sm" color="gray.600">
-                    The disturbance index is computed from an existing Breaks time series and a
-                    set of auxiliary layers. Pick the Breaks series, upload the layers, and tune
+                    The disturbance index is computed from an existing VDO time series and a
+                    set of auxiliary layers. Pick the VDO series, upload the layers, and tune
                     the detection parameters below. Hover over the info icon next to each field
                     for details.
                 </Text>

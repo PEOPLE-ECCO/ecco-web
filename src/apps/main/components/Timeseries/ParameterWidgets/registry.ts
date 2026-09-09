@@ -19,7 +19,9 @@ export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
     "BAP (Restoration)": BapSensSlopeParametersWidget,
     "BAP (Breaks)": BapBreaksParametersWidget,
     "Breaks": BreaksParametersWidget,
+    "Vegetation Disturbance Occurrence": BreaksParametersWidget,
     "VDO Disturbance Index": VdoDisturbanceIndexParametersWidget,
+    "Habitat Disturbance Rating": VdoDisturbanceIndexParametersWidget,
     "Sen's slope": ReferenceAreaWidget,
     "TEST slope": ReferenceAreaWidget,
 };

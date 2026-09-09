@@ -68,7 +68,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
             {/* Intro help text */}
             <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" borderRadius="md" p="3">
                 <Text fontSize="sm" color="gray.600">
-                    Break detection runs on an existing BAP (Breaks) time series. Pick the
+                    Dummy: Break detection runs on an existing BAP (Breaks) time series. Pick the
                     series to analyse and configure the detection parameters below. Hover over
                     the info icon next to each field for details.
                 </Text>
@@ -77,7 +77,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
             <Field.Root required>
                 <LabelWithHelp
                     label={<>BAP (Breaks) Series <Field.RequiredIndicator /></>}
-                    help="Dummy help: the previously computed BAP (Breaks) time series whose composites the break detection runs on."
+                    help="Dummy help: the previously computed BAP time series whose composites the break detection runs on."
                 />
                 <select
                     value={breaksBapId ?? ""}
@@ -87,7 +87,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
                         setBreaksBapId(isNaN(id) ? undefined : id);
                     }}
                 >
-                    <option value="" disabled>Select a BAP (Breaks) series</option>
+                    <option value="" disabled>Select a BAP series</option>
                     {breaksBapOptions.map((o) => (
                         <option key={o.id} value={o.id}>{o.name}</option>
                     ))}
