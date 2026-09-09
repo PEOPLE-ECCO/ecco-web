@@ -68,7 +68,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
             {/* Intro help text */}
             <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" borderRadius="md" p="3">
                 <Text fontSize="sm" color="gray.600">
-                    Dummy: Break detection runs on an existing BAP (Breaks) time series. Pick the
+                    Dummy: Break detection runs on an existing BAP time series. Pick the
                     series to analyse and configure the detection parameters below. Hover over
                     the info icon next to each field for details.
                 </Text>
@@ -76,7 +76,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
 
             <Field.Root required>
                 <LabelWithHelp
-                    label={<>BAP (Breaks) Series <Field.RequiredIndicator /></>}
+                    label={<>BAP Series <Field.RequiredIndicator /></>}
                     help="Dummy help: the previously computed BAP time series whose composites the break detection runs on."
                 />
                 <select

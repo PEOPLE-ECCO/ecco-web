@@ -225,8 +225,8 @@ export function VdoDisturbanceIndexParametersWidget({ process, onChange }: Param
 
             <Field.Root required>
                 <LabelWithHelp
-                    label={<>Breaks Reference Series <Field.RequiredIndicator /></>}
-                    help="Dummy help: the previously computed Breaks time series the disturbance index is derived from."
+                    label={<>VDO Reference Series <Field.RequiredIndicator /></>}
+                    help="Dummy help: the previously computed VDO time series the disturbance index is derived from."
                 />
                 <select
                     value={breaksId ?? ""}
@@ -236,7 +236,7 @@ export function VdoDisturbanceIndexParametersWidget({ process, onChange }: Param
                         setBreaksId(isNaN(id) ? undefined : id);
                     }}
                 >
-                    <option value="" disabled>Select a Breaks series</option>
+                    <option value="" disabled>Select a VDO series</option>
                     {breaksOptions.map((o) => (
                         <option key={o.id} value={o.id}>{o.name}</option>
                     ))}
