@@ -26,12 +26,6 @@ const selectStyle: React.CSSProperties = {
  */
 const FILE_FIELDS = [
     {
-        param: "breaks_raster",
-        label: "Breaks raster",
-        accept: ".tif,.tiff",
-        help: "Dummy help: the breaks raster the index is computed from (GeoTIFF).",
-    },
-    {
         param: "built_raster",
         label: "Built areas raster",
         accept: ".tif,.tiff",
