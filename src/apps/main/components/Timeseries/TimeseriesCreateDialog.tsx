@@ -40,9 +40,10 @@ import { MapInfoControls } from "../../components/Map/MapInfoControls";
 import { MapZoomControls } from "../../components/Map/MapZoomControl";
 import { ActionButton } from "./utils/ActionButton";
 import { TimespanWidget } from "./ParameterWidgets/TimespanWidget";
-import { PARAMETER_WIDGETS, getExtentPreview } from "./ParameterWidgets/registry";
+import { PARAMETER_WIDGETS, getExtentPreview, hasDerivedExtent } from "./ParameterWidgets/registry";
 import { ParameterWidgetValue, SerializedParams } from "./ParameterWidgets/types";
 import { AreaMapPreview } from "./ParameterWidgets/AreaMapPreview";
+import { GROUP_ORDER, processGroup } from "./processGroups";
 
 import { useServices } from "../../services/Services";
 import { MAP_BOX } from "../../services";
@@ -296,7 +297,11 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     // their parameters rather than letting the user draw a free one. For those
     // the extent step shows the implied areas and constrains drawing to them.
     const extentPreview = getExtentPreview(selectedProcess?.name, params);
-    const extentless = extentPreview != null;
+
+    // Other processes have no extent step at all — the backend derives their
+    // extent from one of the uploaded files, so the timeseries is created
+    // without one.
+    const derivedExtent = hasDerivedExtent(selectedProcess?.name);
 
     // Whether the selected process has a dedicated parameter widget. Those widgets
     // own their own time range, so the fallback TimespanWidget (and its timespan
@@ -395,31 +400,21 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     // processes encode their own time range in their params.
     const timespanStepValid = hasWidget || (startDate != null && endDate != null);
 
-    // Data input step (index 0) requires both text fields.
+    // Data input step requires both text fields.
     const dataStepValid = name != "" && description != "";
 
-    // Process step (index 1) requires a selected process whose parameter widget
-    // (if any) reports its current selection as valid, plus a complete timespan
-    // (the timespan picker lives in this step for processes without a widget).
+    // Process step requires a selected process whose parameter widget (if any)
+    // reports its current selection as valid, plus a complete timespan (the
+    // timespan picker lives in this step for processes without a widget).
     const processStepValid = value.length > 0 && paramsValid && timespanStepValid;
 
-    // Extent step (index 2): a valid drawn extent is required in both branches.
-    // Extentless processes draw an extent that must lie inside the area implied
+    // Extent step: a valid drawn extent is required in both branches. Processes
+    // with an extent preview draw an extent that must lie inside the area implied
     // by their parameters (see AreaMapPreview); the others draw a free extent
     // validated by size (see checkExtent).
     const extentStepValid = extent != null && extentValid;
 
-    // Whether the "Next" button is enabled for the current step. Derived directly
-    // from the relevant state rather than mirrored into a separate state via
-    // effects — the latter left the button stale on step entry (it only refreshed
-    // once the user nudged a field such as the year).
-    const nextButtonDisabled =
-        step == 0 ? !dataStepValid
-        : step == 1 ? !processStepValid
-        : step == 2 ? !extentStepValid
-        : false;
-
-    // Reset the drawn extent when the process changes: extentless and free-draw
+    // Reset the drawn extent when the process changes: preview-bounded and
     // processes validate their extent differently, so an extent drawn under one
     // must not carry over to the other.
     useEffect(() => {
@@ -440,7 +435,11 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             items: processes!.map((p) => {
                 p.value = p.id.toString();
                 return p;
-            })
+            }),
+            // Group the menu by algorithm family. GROUP_ORDER fixes the section
+            // order; groups without processes in this scenario never appear.
+            groupBy: (p) => processGroup(p.name),
+            groupSort: GROUP_ORDER
         });
         setProcessTable(listCollection);
     }, [processes]);
@@ -474,9 +473,13 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     };
 
 
+    // The wizard's steps, in order. Each carries the condition that has to hold
+    // before "Next" is enabled, so the checks stay attached to their step rather
+    // than to a position — the extent step is absent for some processes.
     const steps = [
         {
             title: "Data Input",
+            valid: dataStepValid,
             description: <>
                 <Stack pt="8" gap="4" align="flex-start" maxW="md">
                     <Field.Root required>
@@ -501,6 +504,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         },
         {
             title: "Process Selection",
+            valid: processStepValid,
             description: <>
                 <Flex pt="8" direction="row" align="space-between">
                     <Box width="300px">
@@ -517,29 +521,40 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                 gap="4"
                             >
                                 <Listbox.Label><Text fontSize="md">Available Algorithms:</Text></Listbox.Label>
-                                <Listbox.Content>
-                                    {processTable.items.map((item) => (
-                                        <Listbox.Item
-                                            item={item}
-                                            key={item.value}
-                                            flexDirection="row"
-                                            alignItems="flex-start"
-                                            gap="1">
-                                            <HStack align="space-between">
-                                                <Box>
-                                                    <Listbox.ItemText>{item.name}</Listbox.ItemText>
-                                                    <Text fontSize="xs" color="fg.muted" mt="1">
-                                                        {item.description}
-                                                    </Text>
-                                                </Box>
-                                                <Box>
-                                                    <Listbox.ItemIndicator
-                                                        position="absolute"
-                                                        right="4"
-                                                        top="40%" />
-                                                </Box>
-                                            </HStack>
-                                        </Listbox.Item>
+                                <Listbox.Content maxH="60vh" overflowY="auto">
+                                    {processTable.group().map(([groupKey, items]) => (
+                                        <Listbox.ItemGroup key={groupKey}>
+                                            <Listbox.ItemGroupLabel
+                                                fontSize="xs"
+                                                color="fg.muted"
+                                                textTransform="uppercase"
+                                                letterSpacing="wide">
+                                                {groupKey}
+                                            </Listbox.ItemGroupLabel>
+                                            {items.map((item) => (
+                                                <Listbox.Item
+                                                    item={item}
+                                                    key={item.value}
+                                                    flexDirection="row"
+                                                    alignItems="flex-start"
+                                                    gap="1">
+                                                    <HStack align="space-between">
+                                                        <Box>
+                                                            <Listbox.ItemText>{item.name}</Listbox.ItemText>
+                                                            <Text fontSize="xs" color="fg.muted" mt="1">
+                                                                {item.description}
+                                                            </Text>
+                                                        </Box>
+                                                        <Box>
+                                                            <Listbox.ItemIndicator
+                                                                position="absolute"
+                                                                right="4"
+                                                                top="40%" />
+                                                        </Box>
+                                                    </HStack>
+                                                </Listbox.Item>
+                                            ))}
+                                        </Listbox.ItemGroup>
                                     ))}
                                 </Listbox.Content>
                             </Listbox.Root>
@@ -558,8 +573,9 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                 </Flex>
             </>,
         },
-        {
+        ...(derivedExtent ? [] : [{
             title: "Extent Selection",
+            valid: extentStepValid,
             description: extentPreview
                 ? <AreaMapPreview
                     boundingArea={extentPreview.boundingArea}
@@ -584,9 +600,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                             setExtent(undefined);
                         }
                     }} />,
-        },
+        }]),
         {
             title: "Check Data",
+            valid: true,
             description: <>
                 <Text pt="8" pb="2" textStyle="lg">Summary of inputs</Text>
                 <Table.Root>
@@ -633,6 +650,12 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             </>,
         },
     ];
+
+    // Whether the "Next" button is enabled for the current step. Derived directly
+    // from the relevant state rather than mirrored into a separate state via
+    // effects — the latter left the button stale on step entry (it only refreshed
+    // once the user nudged a field such as the year).
+    const nextButtonDisabled = !steps[step]?.valid;
 
     /*
     - Name
@@ -705,7 +728,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                                                 Prev
                                             </Button>
                                         </Steps.PrevTrigger>
-                                        {(step < 3) &&
+                                        {(step < steps.length - 1) &&
                                             <Steps.NextTrigger asChild>
                                                 <Button
                                                     color="black"

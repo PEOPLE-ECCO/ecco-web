@@ -14,16 +14,17 @@ import { ReferenceAreaWidget } from "./ReferenceAreaWidget";
  * Processes without an entry have no configurable parameters.
  */
 export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
-    "BAP": BapSensSlopeParametersWidget,
-    "BAP (Reference)": BapSensSlopeParametersWidget,
-    "BAP (Restoration)": BapSensSlopeParametersWidget,
-    "BAP (Breaks)": BapBreaksParametersWidget,
-    "Breaks": BreaksParametersWidget,
+    // BAP compositing
+    "BAP for VPT (Reference Area)": BapSensSlopeParametersWidget,
+    "BAP for VPT (Restoration Area)": BapSensSlopeParametersWidget,
+    "BAP for VDO": BapBreaksParametersWidget,
+    // Vegetation Productivity Trend
+    "VPT - Sen's slope": ReferenceAreaWidget,
+    "VPT - Spectral Recovery": ReferenceAreaWidget,
+    // Disturbance detection
     "Vegetation Disturbance Occurrence": BreaksParametersWidget,
     "VDO Disturbance Index": VdoDisturbanceIndexParametersWidget,
     "Habitat Disturbance Rating": VdoDisturbanceIndexParametersWidget,
-    "Sen's slope": ReferenceAreaWidget,
-    "TEST slope": ReferenceAreaWidget,
 };
 
 /** An area of the preview, named by the param that holds its timeseries id. */
@@ -51,19 +52,19 @@ interface ExtentPreviewConfig {
  * resolved from its widget's serialized params by {@link getExtentPreview}.
  */
 const EXTENT_PREVIEWS: Record<string, ExtentPreviewConfig> = {
-    "Sen's slope": {
+    "VPT - Sen's slope": {
         bounding: { param: "restoration_site_id", label: "Restoration site" },
         context: [{ param: "reference_area_id", label: "Reference area" }],
     },
-    "TEST slope": {
+    "VPT - Spectral Recovery": {
         bounding: { param: "restoration_site_id", label: "Restoration site" },
         context: [{ param: "reference_area_id", label: "Reference area" }],
     },
-    "Breaks": {
-        bounding: { param: "breaks_bap_id", label: "BAP (Breaks) series" },
+    "Vegetation Disturbance Occurrence": {
+        bounding: { param: "breaks_bap_id", label: "BAP for VDO series" },
     },
     "VDO Disturbance Index": {
-        bounding: { param: "breaks_id", label: "Breaks series" },
+        bounding: { param: "breaks_id", label: "Vegetation Disturbance Occurrence series" },
     },
 };
 
@@ -96,6 +97,15 @@ export function getExtentPreview(
     };
 }
 
-export function isExtentlessProcess(processName: string | undefined): boolean {
-    return processName != null && EXTENT_PREVIEWS[processName] != null;
+/**
+ * Processes whose spatial extent is not chosen in the wizard at all: the backend
+ * derives it from one of the files uploaded as a parameter. The create wizard
+ * omits its extent step entirely for these, and the timeseries is created
+ * without an extent.
+ */
+const DERIVED_EXTENT_PROCESSES = new Set(["Habitat Disturbance Rating"]);
+
+/** Whether the backend derives this process' extent, so the wizard skips the step. */
+export function hasDerivedExtent(processName: string | undefined): boolean {
+    return processName != null && DERIVED_EXTENT_PROCESSES.has(processName);
 }

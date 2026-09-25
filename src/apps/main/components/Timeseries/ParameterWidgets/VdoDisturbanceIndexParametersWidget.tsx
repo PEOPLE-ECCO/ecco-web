@@ -29,19 +29,19 @@ const FILE_FIELDS = [
         param: "built_raster",
         label: "Built areas raster",
         accept: ".tif,.tiff",
-        help: "Dummy help: raster of built-up areas, used to separate construction from other disturbance (GeoTIFF).",
+        help: "Raster of built-up areas (GeoTIFF), used to tell construction apart from other kinds of disturbance.",
     },
     {
         param: "fires_points",
         label: "Fire points",
         accept: ".geojson,.json",
-        help: "Dummy help: FIRMS fire detections, used to attribute disturbance to fires (GeoJSON).",
+        help: "FIRMS fire detections (GeoJSON), used to attribute disturbance to fires.",
     },
     {
         param: "zones_polys",
         label: "Zones",
         accept: ".geojson,.json",
-        help: "Dummy help: polygons the index is aggregated over (GeoJSON).",
+        help: "Polygons the index is aggregated over (GeoJSON): one index value is produced per zone.",
     },
 ] as const;
 
@@ -54,31 +54,31 @@ const NUMBER_FIELDS = [
         param: "mmu_area",
         label: "Minimum mapping unit (m²)",
         default: "5000.0",
-        help: "Dummy help: disturbance patches smaller than this area are discarded.",
+        help: "Disturbance patches smaller than this area are discarded as noise.",
     },
     {
         param: "majority_filter_size",
         label: "Majority filter size (px)",
         default: "7",
-        help: "Dummy help: window size of the majority filter smoothing the classified raster.",
+        help: "Window size, in pixels, of the majority filter that smooths the classified raster.",
     },
     {
         param: "connectivity",
         label: "Connectivity",
         default: "8",
-        help: "Dummy help: pixel neighbourhood used when grouping pixels into patches (4 or 8).",
+        help: "Pixel neighbourhood used when grouping pixels into patches: 4 counts only shared edges, 8 also counts diagonals.",
     },
     {
         param: "cap_percentile",
         label: "Cap percentile",
         default: "99.0",
-        help: "Dummy help: percentile the index values are capped at, to keep outliers from dominating.",
+        help: "Percentile used as each factor's ceiling when normalising. Values at or above it map to 1, so a few extreme zones cannot dominate the index.",
     },
     {
         param: "magnitude_threshold",
         label: "Magnitude threshold",
         default: "-200.0",
-        help: "Dummy help: change magnitude a pixel must reach to count as disturbed (negative for a drop).",
+        help: "Change magnitude a pixel must reach to count as disturbed. Negative values mean a drop in the index.",
     },
 ] as const;
 
@@ -220,7 +220,7 @@ export function VdoDisturbanceIndexParametersWidget({ process, onChange }: Param
             <Field.Root required>
                 <LabelWithHelp
                     label={<>VDO Reference Series <Field.RequiredIndicator /></>}
-                    help="Dummy help: the previously computed VDO time series the disturbance index is derived from."
+                    help="The previously computed Vegetation Disturbance Occurrence time series the disturbance index is derived from."
                 />
                 <select
                     value={breaksId ?? ""}
@@ -319,7 +319,7 @@ export function VdoDisturbanceIndexParametersWidget({ process, onChange }: Param
             <Field.Root maxW="240px" required invalid={!weightsValid}>
                 <LabelWithHelp
                     label={<>Weights <Field.RequiredIndicator /></>}
-                    help="Dummy help: comma-separated weights of the index components, e.g. 0.3,0.7,0.9."
+                    help="Relative weights of the three factors, in the order disturbance count, fire count, built-up sum. Exactly three comma-separated values; they are rescaled to sum to 1."
                 />
                 <Input
                     value={weights}

@@ -41,7 +41,7 @@ export function TimespanWidget({
                 <Field.Root required>
                     <Field.Label>
                         Start Date <Field.RequiredIndicator />
-                        <Tooltip content="Dummy help: first date (inclusive) of the analysis period." showArrow>
+                        <Tooltip content="First date of the analysis period (inclusive)." showArrow>
                             <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                         </Tooltip>
                     </Field.Label>
@@ -59,7 +59,7 @@ export function TimespanWidget({
                 <Field.Root required>
                     <Field.Label>
                         End Date <Field.RequiredIndicator />
-                        <Tooltip content="Dummy help: last date (inclusive) of the analysis period." showArrow>
+                        <Tooltip content="Last date of the analysis period (inclusive)." showArrow>
                             <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                         </Tooltip>
                     </Field.Label>

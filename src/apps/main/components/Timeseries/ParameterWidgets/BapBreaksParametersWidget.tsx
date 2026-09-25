@@ -177,7 +177,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
             {/* Year range */}
             <HStack gap="4" align="flex-end">
                 <Field.Root>
-                    <LabelWithHelp label="Year from" help="Dummy help: first year (inclusive) of the analysis period." />
+                    <LabelWithHelp label="Year from" help="First year of the analysis period (inclusive)." />
                     <Input
                         type="number" w="120px"
                         value={params.yearFrom} min={2000} max={params.yearTo}
@@ -186,7 +186,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
                     />
                 </Field.Root>
                 <Field.Root>
-                    <LabelWithHelp label="Year to" help="Dummy help: last year (inclusive) of the analysis period." />
+                    <LabelWithHelp label="Year to" help="Last year of the analysis period (inclusive)." />
                     <Input
                         type="number" w="120px"
                         value={params.yearTo} min={params.yearFrom} max={2030}
@@ -200,7 +200,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
             <Stack gap="2">
                 <HStack gap="4" align="flex-end" wrap="wrap">
                     <Field.Root maxW="180px">
-                        <LabelWithHelp label="Season start" help="Dummy help: first day of the season window, applied within every selected year." />
+                        <LabelWithHelp label="Season start" help="First day of the seasonal window, applied within every selected year." />
                         <select
                             value={params.seasonStartMonth}
                             style={selectStyle}
@@ -226,7 +226,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
                 </HStack>
                 <HStack gap="4" align="flex-end" wrap="wrap">
                     <Field.Root maxW="180px">
-                        <LabelWithHelp label="Season end" help="Dummy help: last day of the season window. A window that ends before it starts wraps across the turn of the year." />
+                        <LabelWithHelp label="Season end" help="Last day of the seasonal window. A window that ends before it starts wraps across the turn of the year." />
                         <select
                             value={params.seasonEndMonth}
                             style={selectStyle}
@@ -260,7 +260,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
             {/* Integers */}
             <Flex gap="4" wrap="wrap" align="flex-end">
                 <Field.Root maxW="160px">
-                    <LabelWithHelp label="Max cloud cover (%)" help="Dummy help: scenes above this cloud cover percentage are discarded." />
+                    <LabelWithHelp label="Max cloud cover (%)" help="Scenes whose overall cloud cover exceeds this percentage are not considered at all." />
                     <Input
                         type="number"
                         value={params.maxCloudCover} min={0} max={100}
@@ -269,7 +269,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
                     />
                 </Field.Root>
                 <Field.Root maxW="180px">
-                    <LabelWithHelp label="Spatial resolution (m)" help="Dummy help: output pixel size. Limited to the Sentinel-2 native resolutions." />
+                    <LabelWithHelp label="Spatial resolution (m)" help="Output pixel size in metres. Limited to the native Sentinel-2 resolutions." />
                     <select
                         value={params.spatialResolution}
                         style={selectStyle}
@@ -281,7 +281,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
             </Flex>
             <Flex gap="4" wrap="wrap" align="flex-end">
                 <Field.Root maxW="170px">
-                    <LabelWithHelp label="Distance to cloud (px)" help="Dummy help: maximum distance in pixels from a cloud for a pixel to be penalized." />
+                    <LabelWithHelp label="Distance to cloud (px)" help="How far from the nearest cloud, in pixels, proximity still counts against a pixel. Beyond this distance the distance-to-cloud score stops penalising it." />
                     <Input
                         type="number"
                         value={params.distanceToCloudPixels} min={0}
@@ -290,7 +290,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
                     />
                 </Field.Root>
                 <Field.Root maxW="160px">
-                    <LabelWithHelp label="Cloud buffer (px)" help="Dummy help: number of pixels to dilate the cloud mask by." />
+                    <LabelWithHelp label="Cloud buffer (px)" help="Pixels to grow the detected cloud mask by, so pixels just outside a cloud are masked as well." />
                     <Input
                         type="number"
                         value={params.cloudBufferPixels} min={0}
@@ -303,7 +303,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
             {/* Floats 0–1 */}
             <Flex gap="4" wrap="wrap" align="flex-end">
                 <Field.Root maxW="175px">
-                    <LabelWithHelp label="Distance-to-cloud weight" help="Dummy help: weight (0–1) given to distance-from-cloud when scoring pixels." />
+                    <LabelWithHelp label="Distance-to-cloud weight" help="How much a pixel's distance from the nearest cloud counts when ranking candidate pixels. The three weights are relative to one another and need not add up to 1." />
                     <Input
                         type="number"
                         value={params.distanceToCloudWeight} min={0} max={1} step={0.1}
@@ -312,7 +312,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
                     />
                 </Field.Root>
                 <Field.Root maxW="175px">
-                    <LabelWithHelp label="Date weight" help="Dummy help: weight (0–1) given to proximity to the target date when scoring pixels." />
+                    <LabelWithHelp label="Date weight" help="How much a pixel's closeness to the target date counts when ranking candidate pixels. The three weights are relative to one another and need not add up to 1." />
                     <Input
                         type="number"
                         value={params.dateWeight} min={0} max={1} step={0.1}
@@ -321,7 +321,7 @@ export function BapBreaksParametersWidget({ onChange }: ParameterWidgetProps) {
                     />
                 </Field.Root>
                 <Field.Root maxW="175px">
-                    <LabelWithHelp label="Coverage weight" help="Dummy help: weight (0–1) given to overall scene coverage when scoring pixels." />
+                    <LabelWithHelp label="Coverage weight" help="How much the scene's overall cloud-free coverage counts when ranking candidate pixels. The three weights are relative to one another and need not add up to 1." />
                     <Input
                         type="number"
                         value={params.coverageWeight} min={0} max={1} step={0.1}

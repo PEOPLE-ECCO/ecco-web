@@ -72,6 +72,7 @@ function serialize(p: BapSensSlopeParams): SerializedParams {
         dtc_max_distance: p.distanceToCloudPixels,
         cloud_buffer_px: p.cloudBufferPixels,
         score_weight_dtc: p.distanceToCloudWeight,
+        export_profile: "seasonal_sen",
         score_weight_date: p.dateWeight,
         score_weight_coverage: p.coverageWeight,
     };
@@ -123,7 +124,12 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
 
             {/* Compositing mode */}
             <Field.Root>
-                <LabelWithHelp label="Compositing mode" help="Dummy help: choose whether the composite is computed over a range of years or a range of months." />
+                <LabelWithHelp label="Compositing mode" help="Whether one composite is produced per year, or one per month within each selected year." />
+                <Field.HelperText mb="1">
+                    Pick the mode that suits the analysis this composite feeds into:<br/>
+                    <strong>VPT - Sen&apos;s slope</strong> works with <strong>monthly</strong> series<br/>
+                    <strong>VPT - Spectral Recovery</strong> works with <strong>yearly</strong> series
+                </Field.HelperText>
                 <select
                     value={params.compositingMode}
                     style={selectStyle}
@@ -134,35 +140,34 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                 </select>
             </Field.Root>
 
-            {/* Year range */}
-            {params.compositingMode === "yearly" && (
-                <HStack gap="4" align="flex-end">
-                    <Field.Root>
-                        <LabelWithHelp label="Year from" help="Dummy help: first year (inclusive) of the analysis period." />
-                        <Input
-                            type="number" w="120px"
-                            value={params.yearFrom} min={2000} max={params.yearTo}
-                            css={{ "--focus-color": "#2C7D75" }}
-                            onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearFrom: v }); }}
-                        />
-                    </Field.Root>
-                    <Field.Root>
-                        <LabelWithHelp label="Year to" help="Dummy help: last year (inclusive) of the analysis period." />
-                        <Input
-                            type="number" w="120px"
-                            value={params.yearTo} min={params.yearFrom} max={2030}
-                            css={{ "--focus-color": "#2C7D75" }}
-                            onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearTo: v }); }}
-                        />
-                    </Field.Root>
-                </HStack>
-            )}
+            {/* Year range. Needed in both modes: monthly compositing produces one
+                composite per selected month within each of these years. */}
+            <HStack gap="4" align="flex-end">
+                <Field.Root>
+                    <LabelWithHelp label="Year from" help="First year of the analysis period (inclusive)." />
+                    <Input
+                        type="number" w="120px"
+                        value={params.yearFrom} min={2000} max={params.yearTo}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearFrom: v }); }}
+                    />
+                </Field.Root>
+                <Field.Root>
+                    <LabelWithHelp label="Year to" help="Last year of the analysis period (inclusive)." />
+                    <Input
+                        type="number" w="120px"
+                        value={params.yearTo} min={params.yearFrom} max={2030}
+                        css={{ "--focus-color": "#2C7D75" }}
+                        onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v)) set({ yearTo: v }); }}
+                    />
+                </Field.Root>
+            </HStack>
 
             {/* Month range */}
             {params.compositingMode === "monthly" && (
                 <HStack gap="4" align="flex-end">
                     <Field.Root>
-                        <LabelWithHelp label="Month from" help="Dummy help: first month of the year included in the composite." />
+                        <LabelWithHelp label="Month from" help="First month of the year included in the composite." />
                         <select
                             value={params.monthFrom}
                             style={selectStyle}
@@ -175,7 +180,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                         </select>
                     </Field.Root>
                     <Field.Root>
-                        <LabelWithHelp label="Month to" help="Dummy help: last month of the year included in the composite." />
+                        <LabelWithHelp label="Month to" help="Last month of the year included in the composite." />
                         <select
                             value={params.monthTo}
                             style={selectStyle}
@@ -201,7 +206,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                 </Switch.Control>
                 <Switch.Label>
                     Include reflectance bands
-                    <Tooltip content="Dummy help: include raw reflectance bands in the output alongside the slope." showArrow>
+                    <Tooltip content="Also export the original Sentinel-2 reflectance bands alongside the computed spectral indices." showArrow>
                         <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                     </Tooltip>
                 </Switch.Label>
@@ -210,7 +215,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
             {/* Integers */}
             <Flex gap="4" wrap="wrap" align="flex-end">
                 <Field.Root maxW="160px">
-                    <LabelWithHelp label="Max cloud cover (%)" help="Dummy help: scenes above this cloud cover percentage are discarded." />
+                    <LabelWithHelp label="Max cloud cover (%)" help="Scenes whose overall cloud cover exceeds this percentage are not considered at all." />
                     <Input
                         type="number"
                         value={params.maxCloudCover} min={0} max={100}
@@ -219,7 +224,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                     />
                 </Field.Root>
                 <Field.Root maxW="170px">
-                    <LabelWithHelp label="Distance to cloud (px)" help="Dummy help: maximum distance in pixels from a cloud for a pixel to be penalized." />
+                    <LabelWithHelp label="Distance to cloud (px)" help="How far from the nearest cloud, in pixels, proximity still counts against a pixel. Beyond this distance the distance-to-cloud score stops penalising it." />
                     <Input
                         type="number"
                         value={params.distanceToCloudPixels} min={0}
@@ -228,7 +233,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                     />
                 </Field.Root>
                 <Field.Root maxW="160px">
-                    <LabelWithHelp label="Cloud buffer (px)" help="Dummy help: number of pixels to dilate the cloud mask by." />
+                    <LabelWithHelp label="Cloud buffer (px)" help="Pixels to grow the detected cloud mask by, so pixels just outside a cloud are masked as well." />
                     <Input
                         type="number"
                         value={params.cloudBufferPixels} min={0}
@@ -241,7 +246,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
             {/* Floats 0–1 */}
             <Flex gap="4" wrap="wrap" align="flex-end">
                 <Field.Root maxW="175px">
-                    <LabelWithHelp label="Distance-to-cloud weight" help="Dummy help: weight (0–1) given to distance-from-cloud when scoring pixels." />
+                    <LabelWithHelp label="Distance-to-cloud weight" help="How much a pixel's distance from the nearest cloud counts when ranking candidate pixels. The three weights are relative to one another and need not add up to 1." />
                     <Input
                         type="number"
                         value={params.distanceToCloudWeight} min={0} max={1} step={0.1}
@@ -250,7 +255,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                     />
                 </Field.Root>
                 <Field.Root maxW="175px">
-                    <LabelWithHelp label="Date weight" help="Dummy help: weight (0–1) given to proximity to the target date when scoring pixels." />
+                    <LabelWithHelp label="Date weight" help="How much a pixel's closeness to the target date counts when ranking candidate pixels. The three weights are relative to one another and need not add up to 1." />
                     <Input
                         type="number"
                         value={params.dateWeight} min={0} max={1} step={0.1}
@@ -259,7 +264,7 @@ export function BapSensSlopeParametersWidget({ onChange }: ParameterWidgetProps)
                     />
                 </Field.Root>
                 <Field.Root maxW="175px">
-                    <LabelWithHelp label="Coverage weight" help="Dummy help: weight (0–1) given to overall scene coverage when scoring pixels." />
+                    <LabelWithHelp label="Coverage weight" help="How much the scene's overall cloud-free coverage counts when ranking candidate pixels. The three weights are relative to one another and need not add up to 1." />
                     <Input
                         type="number"
                         value={params.coverageWeight} min={0} max={1} step={0.1}

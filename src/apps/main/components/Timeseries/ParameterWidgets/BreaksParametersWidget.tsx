@@ -34,7 +34,7 @@ function LabelWithHelp({ label, help }: { label: React.ReactNode; help: string }
 
 /**
  * Parameters for the break detection itself. It runs on the output of a
- * previously computed BAP (Breaks) time series, which is picked from the
+ * previously computed "BAP for VDO" time series, which is picked from the
  * available ones the same way the reference area is in {@link ReferenceAreaWidget}.
  */
 export function BreaksParametersWidget({ process, onChange }: ParameterWidgetProps) {
@@ -68,7 +68,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
             {/* Intro help text */}
             <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" borderRadius="md" p="3">
                 <Text fontSize="sm" color="gray.600">
-                    Dummy: Break detection runs on an existing BAP time series. Pick the
+                    Break detection runs on an existing BAP time series. Pick the
                     series to analyse and configure the detection parameters below. Hover over
                     the info icon next to each field for details.
                 </Text>
@@ -77,7 +77,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
             <Field.Root required>
                 <LabelWithHelp
                     label={<>BAP Series <Field.RequiredIndicator /></>}
-                    help="Dummy help: the previously computed BAP time series whose composites the break detection runs on."
+                    help="The previously computed “BAP for VDO” time series whose yearly composites the break detection runs on."
                 />
                 <select
                     value={breaksBapId ?? ""}
@@ -98,7 +98,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
                 <Field.Root maxW="175px" required invalid={!thresholdValid}>
                     <LabelWithHelp
                         label={<>Break threshold <Field.RequiredIndicator /></>}
-                        help="Dummy help: magnitude a change must exceed to be reported as a break."
+                        help="Error threshold of the bottom-up segmentation: neighbouring segments keep being merged while the cost of merging them stays below this value, so a lower threshold keeps more breakpoints."
                     />
                     <Input
                         type="number"
@@ -111,7 +111,7 @@ export function BreaksParametersWidget({ process, onChange }: ParameterWidgetPro
                 <Field.Root maxW="175px" required invalid={!scaleValid}>
                     <LabelWithHelp
                         label={<>Index scale <Field.RequiredIndicator /></>}
-                        help="Dummy help: factor the index values are scaled by (e.g. 10000 for integer-encoded reflectance indices)."
+                        help="The index composites are multiplied by this before break detection, so the break threshold applies to scaled values."
                     />
                     <Input
                         type="number"

@@ -72,21 +72,24 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
         <Stack pt="4" gap="5" maxW="lg">
             {/* Intro help text */}
             <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" borderRadius="md" p="3">
-                <Text fontSize="sm" color="gray.600" width="100%">
+                <Text as="div" fontSize="sm" color="gray.600" width="100%">
                     Hover over the info icon next to each field for details.<br></br>
                     <b>Available Metrics</b>
                     <ul>
                         <li>
-                            R80P: TODO
+                            R80P: how far the site has recovered towards 80% of the reference
+                            area&apos;s pre-restoration level. A value of 1 means that target is reached.
                         </li>
                         <li>
-                            percent_change: TODO
+                            percent_change: the modelled change over the period, as a percentage
+                            of the reference area&apos;s baseline value.
                         </li>
                         <li>
-                            deltaIR: TODO
+                            DeltaIR: the total modelled change in the index across the analysis period.
                         </li>
                         <li>
-                            slope_intercept: TODO
+                            slope_intercept: exports the raw Sen slope and intercept rasters the
+                            other metrics are derived from.
                         </li>
                     </ul>
                 </Text>
@@ -96,7 +99,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
             <Field.Root required>
                 <Field.Label>
                     Output Metrics <Field.RequiredIndicator />
-                    <Tooltip content="Dummy help: the metrics to compute for this time series. All selected metrics share the same restoration site (and reference area, if R80P is included)." showArrow>
+                    <Tooltip content="Which metrics to compute for this time series. All of them are computed for the same restoration site, and share the same reference area." showArrow>
                         <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                     </Tooltip>
                 </Field.Label>
@@ -124,7 +127,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                         <Field.Root required>
                             <Field.Label>
                                 Reference Area <Field.RequiredIndicator />
-                                <Tooltip content="Dummy help: the previously configured reference area to use as the baseline." showArrow>
+                                <Tooltip content="The undisturbed area the restoration site is compared against. Its value before restoration began — by default averaged over the three preceding years — is the baseline R80P and percent change are measured against." showArrow>
                                     <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                                 </Tooltip>
                             </Field.Label>
@@ -147,7 +150,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                     <Field.Root required>
                         <Field.Label>
                             Base Area <Field.RequiredIndicator />
-                            <Tooltip content="Dummy help: the restoration site this time series applies to." showArrow>
+                            <Tooltip content="The restoration site this time series is computed for." showArrow>
                                 <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                             </Tooltip>
                         </Field.Label>
