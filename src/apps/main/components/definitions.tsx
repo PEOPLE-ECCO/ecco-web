@@ -17,6 +17,7 @@ export interface Timeseries {
     readonly process?: Process
     readonly process_parameters?: Record<string, unknown>
     readonly jobs?: ReactiveArray<Job>
+    refreshJobs?(): Promise<Job[]>
 }
 
 export class TimeseriesImpl implements Timeseries {
@@ -92,30 +93,61 @@ export class TimeseriesImpl implements Timeseries {
     }
 
     public get jobs(): ReactiveArray<Job> {
-        // TODO: allow refetching
         if (this.#jobs.length == 0 && !this.#fetchedJobs) {
             this.#fetchedJobs = true;
-            const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + this.#id + "/jobs/";
-            this.#httpService.fetch(url)
-                .then(r => r.json())
-                .then(response => {
-                    if (response) {
-                        for (const obj of response) {
-                            this.#jobs.push(
-                                new JobImpl(obj, this.#httpService)
-                            );
-                        }
-                    } else {
-                        throw new Error("Unexpected response: " + JSON.stringify(response));
-                    }
-                })
+            this.refreshJobs()
                 .catch((rejectReason) => {
-                    console.error("Could not load catalog for job " + this.#id + " | got HTTP Status" + rejectReason);
+                    console.error("Could not load jobs for timeseries " + this.#id + " | got HTTP Status" + rejectReason);
                 });
         }
 
         return this.#jobs;
     }
+
+    /**
+     * Re-fetches the jobs of this timeseries. New jobs are added and jobs whose state
+     * changed are replaced, so that their results and logs get fetched again.
+     *
+     * @returns the jobs that were in progress before and are finished now.
+     */
+    public async refreshJobs(): Promise<Job[]> {
+        this.#fetchedJobs = true;
+        const url = import.meta.env.VITE_API_ROOT + "/timeseries/" + this.#id + "/jobs/";
+        const response = await this.#httpService.fetch(url).then(r => r.json());
+        if (!response) {
+            throw new Error("Unexpected response: " + JSON.stringify(response));
+        }
+
+        const finished: Job[] = [];
+        for (const obj of response) {
+            const job = new JobImpl(obj, this.#httpService);
+            const idx = this.#jobs.findIndex(j => j.id === job.id);
+            if (idx === -1) {
+                this.#jobs.push(job);
+                continue;
+            }
+            const previous = this.#jobs.get(idx)!;
+            if (previous.state_name !== job.state_name) {
+                this.#jobs.set(idx, job);
+                if (isJobInProgress(previous) && !isJobInProgress(job)) {
+                    finished.push(job);
+                }
+            }
+        }
+        return finished;
+    }
+}
+
+// Job states are Prefect flow run state names, the API merges the flow run into each job.
+const FAILED_JOB_STATES = ["Failed", "Crashed"];
+const FINISHED_JOB_STATES = ["Completed", "Cached", "Cancelled", ...FAILED_JOB_STATES];
+
+export function isJobFailed(job: Job): boolean {
+    return FAILED_JOB_STATES.includes(job.state_name);
+}
+
+export function isJobInProgress(job: Job): boolean {
+    return !FINISHED_JOB_STATES.includes(job.state_name);
 }
 
 export interface Job {

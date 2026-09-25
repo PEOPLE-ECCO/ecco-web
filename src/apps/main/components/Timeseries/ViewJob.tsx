@@ -37,14 +37,16 @@ import { Tooltip } from "../tooltip";
 
 export interface ViewLogProps {
     timeseries: Timeseries | undefined
+    // name of the job whose logs are shown first, defaults to the first job
+    initialJobName?: string
 }
 
-export function ViewLog({ timeseries }: ViewLogProps) {
+export function ViewLog({ timeseries, initialJobName }: ViewLogProps) {
     const [selectedLogs, setSelectedLogs] = useState<Array<LogLine>>();
     const [viewLogVisible, setViewLogVisible] = useState(false);
     const [job, setJob] = useState<Job | undefined>(undefined);
     const [jobNames, setJobNames] = useState<ListCollection<{ label: string; value: string; }> | undefined>(undefined);
-    const [selectedJobName, setSelectedJobName] = useState<string[]>([""]);
+    const [selectedJobName, setSelectedJobName] = useState<string[]>([initialJobName ?? ""]);
     const [logs, setLogs] = useState<Array<Array<LogLine>>>([[], [], [], []]);
 
     watchValue(

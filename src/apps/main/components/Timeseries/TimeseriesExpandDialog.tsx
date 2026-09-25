@@ -67,6 +67,8 @@ export function TimeseriesExpandDialog({ timeseries, eventListener }: CreateJobP
             level: "info",
             displayDuration: 5000,
         });
+        // pick up the new job so it is shown as in progress
+        selectedTimeseries.refreshJobs?.().catch(e => console.error("Failed to refresh jobs:", e));
     };
 
 

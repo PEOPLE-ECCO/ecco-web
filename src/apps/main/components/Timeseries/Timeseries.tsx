@@ -17,7 +17,7 @@ import {
 
 import { useCallback, useEffect, useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { LuDownload, LuLink } from "react-icons/lu";
+import { LuDownload, LuLink, LuRefreshCw } from "react-icons/lu";
 
 import { EventEmitter } from "@open-pioneer/core";
 import { NotificationService } from "@open-pioneer/notifier";
@@ -25,13 +25,14 @@ import { useService } from "open-pioneer:react-hooks";
 import { MapModel } from "@open-pioneer/map";
 
 import { CreateTimeseries } from "./TimeseriesCreateDialog";
-import { Job, JobResult, Timeseries } from "../definitions";
+import { isJobFailed, Job, JobResult, Timeseries } from "../definitions";
 import { Events } from "../../views/Sites/SiteDetails/SiteDetails";
 import { ResultTree } from "./ResultTree";
 import { TimeseriesExpandDialog } from "./TimeseriesExpandDialog";
 import { Site } from "../../views/Sites/Site/Site";
 import { Tooltip } from "../tooltip";
 import { ViewDetails, ViewLog } from "./ViewJob";
+import { JobStatus } from "./JobStatus";
 
 
 interface TimeseriesProps {
@@ -47,6 +48,7 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
     const [selectedTimeseries, setSelectedTimeseries] = useState<Timeseries>();
     const [timeseriesList, setTimeseriesList] = useState<Timeseries[]>([]);
     const [currentResultForDownload, setCurrentResultForDownload] = useState<JobResult | undefined>(undefined);
+    const [refreshingJobs, setRefreshingJobs] = useState<boolean>(false);
     const notificationService = useService<NotificationService>("notifier.NotificationService");
 
     useEffect(() => {
@@ -115,6 +117,33 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
     eventListener.on("currentResult", (result: JobResult) => {
         setCurrentResultForDownload(result);
     });
+
+    async function refreshJobs(ts: Timeseries) {
+        if (!ts.refreshJobs)
+            return;
+        setRefreshingJobs(true);
+        try {
+            const finished = await ts.refreshJobs();
+            for (const job of finished) {
+                notificationService.notify({
+                    title: isJobFailed(job) ? "Job failed" : "Job finished",
+                    message: `${ts.name}: job ${job.name} is ${job.state_name}`,
+                    level: isJobFailed(job) ? "error" : "info",
+                    displayDuration: 5000,
+                });
+            }
+        } catch (error) {
+            console.error("Failed to refresh jobs:", error);
+            notificationService.notify({
+                title: "Refresh failed",
+                message: `Could not load the jobs of ${ts.name}`,
+                level: "error",
+                displayDuration: 5000,
+            });
+        } finally {
+            setRefreshingJobs(false);
+        }
+    }
 
     function downloadCurrentResult() {
         if (!currentResultForDownload)
@@ -214,6 +243,17 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                                                 <Flex>
                                                     <Text fontWeight="bold">Metrics</Text>
                                                     <Box ml="auto"></Box>
+                                                    <Tooltip content="Refresh job status">
+                                                        <Button
+                                                            color="black"
+                                                            _hover={{ bg: "teal.50" }}
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            loading={refreshingJobs}
+                                                            onClick={() => { refreshJobs(ts); }}>
+                                                            <LuRefreshCw />
+                                                        </Button>
+                                                    </Tooltip>
                                                     <Tooltip content="Copy temporary download URL">
                                                         <Button
                                                             color="black"
@@ -237,6 +277,7 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
                                                         </Button>
                                                     </Tooltip>
                                                 </Flex>
+                                                <JobStatus timeseries={ts} />
                                                 <ResultTree map={map} timeseries={ts} eventListener={eventListener} />
                                             </Box>
                                         </>

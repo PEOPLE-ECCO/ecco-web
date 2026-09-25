@@ -269,7 +269,7 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
     const [step, setStep] = useState<number>(0);
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
-    const { createTimeseries, createJob, getProcesses } = useServices();
+    const { createTimeseries, createJob, getProcesses, getTimeseriesById } = useServices();
     const [expandDialogClosed, setExpandDialogClosed] = useState<boolean>(false);
     const notificationService = useService<NotificationService>("notifier.NotificationService");
     const [extentValid, setExtentValid] = useState<boolean>(true);
@@ -344,8 +344,9 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
         };
         const created = await createTimeseries(timeseries);
 
-        // callback the results to the timeseries component
-        const result = {
+        // callback the results to the timeseries component. Load the stored timeseries
+        // so its jobs can be fetched, the fallback cannot show jobs until the page is reloaded.
+        const fallbackResult = {
             id: created,
             scenario_id: id!.toString(),
             name: name,
@@ -356,6 +357,10 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
             parameters: params,
             results: computed(() => new Map<string, JobResult[]>())
         };
+        const result: Timeseries = await getTimeseriesById(created).catch(e => {
+            console.error("Failed to load created timeseries:", e);
+            return fallbackResult;
+        });
         resultCallback(result);
 
         // also notify the user
@@ -379,6 +384,8 @@ export const CreateTimeseries: FC<CreateTimeseriesProps> = ({ resultCallback, sc
                 level: "info",
                 displayDuration: 5000,
             });
+            // pick up the new job so it is shown as in progress
+            result.refreshJobs?.().catch(e => console.error("Failed to refresh jobs:", e));
         } catch (error) {
             console.error(error);
             notificationService.notify({
