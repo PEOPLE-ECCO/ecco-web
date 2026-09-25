@@ -65,8 +65,9 @@ export function TimeseriesItem({ map, scenario, timeseries, eventListener }: Tim
         // slow down the browser
         console.log(`Timeseries changed: ${selectedTimeseries?.name}`);
 
-        // all TS related layers have the prefix "TSLAYER_"
-        const removalLayers = map?.layers.getLayers().filter(l => l.id.startsWith("TSLAYER_"));
+        // all TS related layers have the prefix "TSLAYER_".
+        // timeseries layers are marked internal, so they must be included explicitly.
+        const removalLayers = map?.layers.getLayers({ includeInternalLayers: true }).filter(l => l.id.startsWith("TSLAYER_"));
         console.log(`Garbage collecting layers: ${removalLayers.map(l => l.id)}`);
         removalLayers.forEach(l => {
             map.layers.removeLayerById(l.id);
