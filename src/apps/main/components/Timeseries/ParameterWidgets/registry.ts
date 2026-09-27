@@ -3,7 +3,7 @@
 
 import { ParameterWidget, SerializedParams } from "./types";
 import { BoundingArea, PreviewArea } from "./AreaMapPreview";
-import { BapSensSlopeParametersWidget } from "./BapSensSlopeParametersWidget";
+import { BapVptParametersWidget } from "./BapVptParametersWidget";
 import { BapBreaksParametersWidget } from "./BapBreaksParametersWidget";
 import { BreaksParametersWidget } from "./BreaksParametersWidget";
 import { VdoDisturbanceIndexParametersWidget } from "./VdoDisturbanceIndexParametersWidget";
@@ -15,8 +15,8 @@ import { ReferenceAreaWidget } from "./ReferenceAreaWidget";
  */
 export const PARAMETER_WIDGETS: Record<string, ParameterWidget> = {
     // BAP compositing
-    "BAP for VPT (Reference Area)": BapSensSlopeParametersWidget,
-    "BAP for VPT (Restoration Area)": BapSensSlopeParametersWidget,
+    "BAP for VPT (Reference Area)": BapVptParametersWidget,
+    "BAP for VPT (Restoration Area)": BapVptParametersWidget,
     "BAP for VDO": BapBreaksParametersWidget,
     // Vegetation Productivity Trend
     "VPT - Sen's slope": ReferenceAreaWidget,

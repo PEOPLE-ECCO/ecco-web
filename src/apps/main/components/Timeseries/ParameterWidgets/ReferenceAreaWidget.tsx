@@ -16,42 +16,115 @@ const selectStyle: React.CSSProperties = {
     fontSize: "14px",
 };
 
-const OUTPUT_METRIC_OPTIONS = [
-    "R80P",
-    "percent_change",
-    "DeltaIR",
-    "slope_intercept",
-] as const;
+interface MetricOption {
+    /** Metric name as sent to the backend in `output_metrics`. */
+    value: string;
+    description: string;
+}
+
+interface MetricConfig {
+    metrics: MetricOption[];
+    /** Whether the selected metrics need a reference area. */
+    requiresReferenceArea: (selected: string[]) => boolean;
+    referenceAreaHelp: string;
+}
+
+// seasonal-sen falls back to the restoration site's own baseline when no
+// reference area is given, so only R80P insists on one.
+const SENS_SLOPE_METRICS: MetricConfig = {
+    metrics: [
+        {
+            value: "R80P",
+            description:
+                "how far the site has recovered towards 80% of the reference area's pre-restoration level. A value of 1 means that target is reached.",
+        },
+        {
+            value: "percent_change",
+            description:
+                "the modelled change over the period, as a percentage of the baseline value: the reference area's if one is selected (for R80P), otherwise the restoration site's own.",
+        },
+        {
+            value: "DeltaIR",
+            description: "the total modelled change in the index across the analysis period.",
+        },
+        {
+            value: "slope_intercept",
+            description:
+                "exports the raw Sen slope and intercept rasters the other metrics are derived from.",
+        },
+    ],
+    requiresReferenceArea: (selected) => selected.includes("R80P"),
+    referenceAreaHelp:
+        "The undisturbed area the restoration site is compared against. Its value before restoration began — by default averaged over the three preceding years — is the baseline R80P and percent change are measured against.",
+};
+
+// spectral-recovery always derives a recovery target from the reference area,
+// whichever metrics are selected, so it is always required.
+const SPECTRAL_RECOVERY_METRICS: MetricConfig = {
+    metrics: [
+        {
+            value: "R80P",
+            description:
+                "how far the site has reached 80% of the recovery target, the reference area's median index value. A value of 1 means that target is reached.",
+        },
+        {
+            value: "deltaIR",
+            description:
+                "the absolute change in the index from the start of restoration to the end of the analysis period.",
+        },
+        {
+            value: "YrYr",
+            description:
+                "the average annual recovery rate from the start of restoration to the end of the analysis period.",
+        },
+        {
+            value: "Y2R",
+            description: "the number of years the site took to first reach 80% of the recovery target.",
+        },
+        {
+            value: "RRI",
+            description:
+                "the recovery since restoration started, relative to the drop in the index caused by the disturbance.",
+        },
+        {
+            value: "percent_change",
+            description: "deltaIR as a percentage of the recovery target.",
+        },
+    ],
+    requiresReferenceArea: () => true,
+    referenceAreaHelp:
+        "The undisturbed area the restoration site is compared against. Its median index value from the start of restoration to the end of the analysis period is the recovery target all metrics are measured against.",
+};
 
 // This widget has no time-range UI, but the create wizard still auto-starts a
 // first job that needs a timespan. Default to a full-year range; the user can
 // re-run other ranges from the Expand dialog afterwards.
 const DEFAULT_TIMESPAN = { start: new Date(2020, 0, 1), end: new Date(2022, 11, 31) };
 
-type OutputMetric = (typeof OUTPUT_METRIC_OPTIONS)[number];
-
 export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps) {
     const referenceAreaOptions = process.parameters.preprocess?.reference_bap ?? [];
     const restorationSiteOptions = process.parameters.preprocess?.restoration_bap ?? [];
-    const [outputMetrics, setOutputMetrics] = useState<OutputMetric[]>([]);
+    // The widget serves both VPT processes; their metrics and reference area
+    // requirements differ.
+    const metricConfig =
+        process.name === "VPT - Spectral Recovery" ? SPECTRAL_RECOVERY_METRICS : SENS_SLOPE_METRICS;
+    const [outputMetrics, setOutputMetrics] = useState<string[]>([]);
     const [referenceAreaId, setReferenceAreaId] = useState<number | undefined>();
     const [restorationSiteId, setRestorationSiteId] = useState<number | undefined>();
 
     const hasMetrics = outputMetrics.length > 0;
 
-    // The reference area is only relevant (and required) when the R80P metric is
-    // among the selected metrics.
-    const referenceAreaRequired = outputMetrics.includes("R80P");
+    const referenceAreaRequired = metricConfig.requiresReferenceArea(outputMetrics);
 
-    const toggleMetric = (metric: OutputMetric) => {
+    const toggleMetric = (metric: string) => {
         setOutputMetrics((prev) =>
             prev.includes(metric) ? prev.filter((m) => m !== metric) : [...prev, metric]
         );
     };
 
     // The restoration site is always mandatory and shared across all selected
-    // metrics. The reference area is only required when the R80P metric is
-    // selected, and is likewise shared.
+    // metrics. The reference area is required depending on the process and the
+    // selected metrics, and is likewise shared.
     useEffect(() => {
         onChange({
             params: {
@@ -76,21 +149,9 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                     Hover over the info icon next to each field for details.<br></br>
                     <b>Available Metrics</b>
                     <ul>
-                        <li>
-                            R80P: how far the site has recovered towards 80% of the reference
-                            area&apos;s pre-restoration level. A value of 1 means that target is reached.
-                        </li>
-                        <li>
-                            percent_change: the modelled change over the period, as a percentage
-                            of the reference area&apos;s baseline value.
-                        </li>
-                        <li>
-                            DeltaIR: the total modelled change in the index across the analysis period.
-                        </li>
-                        <li>
-                            slope_intercept: exports the raw Sen slope and intercept rasters the
-                            other metrics are derived from.
-                        </li>
+                        {metricConfig.metrics.map((m) => (
+                            <li key={m.value}>{m.value}: {m.description}</li>
+                        ))}
                     </ul>
                 </Text>
             </Box>
@@ -104,7 +165,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                     </Tooltip>
                 </Field.Label>
                 <Stack gap="1">
-                    {OUTPUT_METRIC_OPTIONS.map((metric) => (
+                    {metricConfig.metrics.map(({ value: metric }) => (
                         <label
                             key={metric}
                             style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
@@ -127,7 +188,7 @@ export function ReferenceAreaWidget({ process, onChange }: ParameterWidgetProps)
                         <Field.Root required>
                             <Field.Label>
                                 Reference Area <Field.RequiredIndicator />
-                                <Tooltip content="The undisturbed area the restoration site is compared against. Its value before restoration began — by default averaged over the three preceding years — is the baseline R80P and percent change are measured against." showArrow>
+                                <Tooltip content={metricConfig.referenceAreaHelp} showArrow>
                                     <Icon as={LuInfo} ml="1" color="gray.500" cursor="help" boxSize="3.5" />
                                 </Tooltip>
                             </Field.Label>
