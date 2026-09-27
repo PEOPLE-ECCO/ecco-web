@@ -59,7 +59,8 @@ const SENS_SLOPE_METRICS: MetricConfig = {
 };
 
 // spectral-recovery always derives a recovery target from the reference area,
-// whichever metrics are selected, so it is always required.
+// whichever metrics are selected, so it is always required. The metrics must
+// match `METRIC_STYLES` in spectral-recovery; it rejects any others.
 const SPECTRAL_RECOVERY_METRICS: MetricConfig = {
     metrics: [
         {
@@ -85,10 +86,6 @@ const SPECTRAL_RECOVERY_METRICS: MetricConfig = {
             value: "RRI",
             description:
                 "the recovery since restoration started, relative to the drop in the index caused by the disturbance.",
-        },
-        {
-            value: "percent_change",
-            description: "deltaIR as a percentage of the recovery target.",
         },
     ],
     requiresReferenceArea: () => true,
