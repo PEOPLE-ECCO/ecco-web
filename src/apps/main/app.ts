@@ -23,7 +23,12 @@ const mainUI = createCustomElement({
                     },
                     keycloakInitOptions: {
                         onLoad: "check-sso",
-                        pkceMethod: "S256"
+                        pkceMethod: "S256",
+                        // The login status iframe cannot see the Keycloak session cookie when
+                        // third-party cookies are blocked/partitioned, which makes check-sso
+                        // report "not authenticated" after a reload. Without it, keycloak-js
+                        // does a silent redirect (prompt=none) to Keycloak instead.
+                        checkLoginIframe: false
                         // additional configuration, for example:
                         // scope: "openid address phone"
                     },

@@ -14,7 +14,7 @@ import { Documentation } from "./views/Documentation/Documentation";
 import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
 import CreateJob from "./views/CreateJob/CreateJobUI";
-import { ForceAuth } from "@open-pioneer/authentication";
+import { RequireLogin } from "./components/LoginLanding/LoginLanding";
 
 const basePath = "/";
 
@@ -75,11 +75,11 @@ export function Layout() {
                     </Container>
                 </Flex>
 
-                <ForceAuth>
-                    <Box as="main" flex="1" pt={height} bg="#EFEAEA">
+                <Box as="main" flex="1" pt={height} bg="#EFEAEA">
+                    <RequireLogin>
                         <Outlet />
-                    </Box>
-                </ForceAuth>
+                    </RequireLogin>
+                </Box>
 
                 <Footer />
             </Flex>
