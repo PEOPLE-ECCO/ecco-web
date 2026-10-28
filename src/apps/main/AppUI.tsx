@@ -15,6 +15,7 @@ import { SiteDetails } from "./views/Sites/SiteDetails/SiteDetails";
 import { Footer } from "./components/Footer/Footer";
 import CreateJob from "./views/CreateJob/CreateJobUI";
 import { RequireLogin } from "./components/LoginLanding/LoginLanding";
+import { AnnouncementDialog } from "./components/Announcement/AnnouncementDialog";
 
 const basePath = "/";
 
@@ -61,6 +62,7 @@ export function Layout() {
     return (
         <>
             <Notifier />
+            <AnnouncementDialog />
             <Flex direction="column" minH="100%">
                 <Flex
                     as="header"
