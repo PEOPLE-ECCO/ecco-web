@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023-2025 Open Pioneer project (https://github.com/open-pioneer)
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, CloseButton, Dialog, Portal, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, CloseButton, Dialog, Link, List, Portal, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 
 /** sessionStorage key remembering that the announcement was already shown in this session. */
@@ -59,6 +59,21 @@ export function AnnouncementDialog() {
                                     is taken offline. After that, the platform and all data stored
                                     on it will no longer be available.
                                 </Text>
+                                <Box>
+                                    <Text>Outcomes of the project will remain available:</Text>
+                                    <List.Root ps={5} mt={1}>
+                                        <List.Item>
+                                            <Link href="https://people-ecco.github.io/" target="_blank" rel="noreferrer" color="#2C7D75" textDecoration="underline">
+                                                User Handbook
+                                            </Link>
+                                        </List.Item>
+                                        <List.Item>
+                                            <Link href="https://github.com/PEOPLE-ECCO" target="_blank" rel="noreferrer" color="#2C7D75" textDecoration="underline">
+                                                Open Source Software components
+                                            </Link>
+                                        </List.Item>
+                                    </List.Root>
+                                </Box>
                             </Stack>
                         </Dialog.Body>
                         <Dialog.Footer>
